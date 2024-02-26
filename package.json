@@ -9,7 +9,7 @@
     "start:watch": "bun --watch src/index.ts",
     "build:schemas": "bunx prisma migrate dev",
     "format:schemas": "bunx prisma format",
-    "build:client": "bunx prisma generate"
+    "build:client": "prisma generate"
   },
   "repository": {
     "type": "git",
