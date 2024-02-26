@@ -6,10 +6,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:watch": "bun --watch src/index.ts",
-    "build:schemas": "bunx prisma migrate dev",
-    "format:schemas": "bunx prisma format",
-    "build:client": "prisma generate"
+    "dev:start": "bun --watch src/index.ts",
+    "dev:migrate": "prisma migrate dev",
+    "format:schemas": "prisma format",
+    "build:client": "prisma generate",
+    "build:source": "tsc -p tsconfig.json",
+    "start:node": "PREBUILT_VERSION=true node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -32,7 +34,7 @@
     "@prisma/client": "^5.10.1",
     "@telegraf/session": "^2.0.0-beta.7",
     "dotenv": "^16.4.4",
-    "melchior": "^0.3.5",
+    "melchior": "^0.3.6",
     "redis": "^4.6.13",
     "telegraf": "^4.15.3",
     "yaml": "^2.4.0"

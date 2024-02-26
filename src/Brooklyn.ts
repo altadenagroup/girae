@@ -7,6 +7,8 @@ import * as luckyEngine from './utilities/lucky-engine.js'
 import { DittoMetadata } from './types/ditto.js'
 import argumentParser from './middleware/argument-parser.js'
 
+export const prebuiltPath = (c: string) => process.env.PREBUILT_VERSION ? `./dist${c.replace('./src', '')}` : c
+
 export default class Brooklyn extends Client {
     db: PrismaClient
     #internalCache: RedisClientType = {} as RedisClientType
@@ -17,9 +19,9 @@ export default class Brooklyn extends Client {
         super(process.env.TELEGRAM_TOKEN!, {
             plugins: [
                 new plugins.CommandLoaderPlugin({
-                    commandDirectory: './src/commands',
-                    guardDirectory: './src/guards',
-                    sceneDirectory: './src/scenes'
+                    commandDirectory: prebuiltPath('./src/commands'),
+                    guardDirectory:   prebuiltPath('./src/guards'),
+                    sceneDirectory:   prebuiltPath('./src/scenes')
                 })
             ],
             errorThreshold: 5,
