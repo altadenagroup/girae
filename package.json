@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:watch": "bun --watch src/index.ts",
     "build:schemas": "bunx prisma migrate dev",
-    "format:schemas": "bunx prisma format"
+    "format:schemas": "bunx prisma format",
+    "build:client": "bunx prisma generate"
   },
   "repository": {
     "type": "git",
