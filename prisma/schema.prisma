@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Rarity: defines the rarity of a card. chance is a float between 0 and 1, where 0 is impossible and 1 is guaranteed
+model Rarity {
+  id     Int    @id @default(autoincrement())
+  name   String
+  chance Float
+  cards  Card[]
+}
+
+// Category: defines a category of cards. it has a name and a set of tags
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  emoji         String        @default("🃏")
+  subcategories Subcategory[]
+  cards         Card[]
+}
+
+// Subcategory: defines a subcategory of cards. it has a name and a set of tags
+model Subcategory {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  cards      Card[]
+}
+
+// Card: defines a collectible card. it has a name, a description, a rarity, a set of tags, an image, and a rarity modifier
+model Card {
+  id             Int          @id @default(autoincrement())
+  name           String
+  rarity         Rarity       @relation(fields: [rarityId], references: [id])
+  rarityId       Int
+  tags           String[]
+  image          String       @default("https://placehold.co/400x624?text=Use+/setimage+id+para+trocar%20esta%20imagem.")
+  rarityModifier Float
+  category       Category     @relation(fields: [categoryId], references: [id])
+  categoryId     Int
+  subcategory    Subcategory? @relation(fields: [subcategoryId], references: [id])
+  subcategoryId  Int?
+  usersWithCard  UserCard[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+}
+
+// User: defines a user. it has a telegram id, a set of cards
+model User {
+  id             Int          @id @default(autoincrement())
+  tgId           BigInt       @unique
+  isAdmin        Boolean      @default(false)
+  isPremium      Boolean      @default(false)
+  isBanned       Boolean      @default(false)
+  banMessage     String?
+  cards          UserCard[]
+  maximumDraws   Int          @default(6)
+  usedDraws      Int          @default(0)
+  luckModifier   Float        @default(0)
+  coins          Int          @default(0)
+  profile        UserProfile?
+  isMarried      Boolean      @default(false)
+  hasGivenRep    Boolean      @default(false)
+  hasGottenDaily Boolean      @default(false)
+  dailyStreak    Int          @default(0)
+  lastDaily      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+}
+
+model UserCard {
+  id          Int           @id @default(autoincrement())
+  userId      Int
+  cardId      Int
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card        Card          @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+  userProfile UserProfile[]
+}
+
+model ProfileBackground {
+  id              Int            @id @default(autoincrement())
+  name            String         @unique
+  image           String
+  users           UserProfile[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  UserInventory   UserInventory? @relation(fields: [userInventoryId], references: [id])
+  userInventoryId Int?
+}
+
+model ProfileSticker {
+  id              Int            @id @default(autoincrement())
+  name            String         @unique
+  image           String
+  users           UserProfile[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  UserInventory   UserInventory? @relation(fields: [userInventoryId], references: [id])
+  userInventoryId Int?
+}
+
+// model to store the user's custom profile data (so, favorite color, favorite card, reputation, background, badge, stickers, background, etc)
+model UserProfile {
+  id             Int                @id @default(autoincrement())
+  userId         Int                @unique
+  favoriteColor  String             @default("#01A9DB")
+  favoriteCardId Int?
+  biography      String             @default("Eu ainda não mudei isso com /bio!")
+  reputation     Int                @default(0)
+  backgroundId   Int                @default(1)
+  stickers       ProfileSticker?    @relation(fields: [stickerId], references: [id])
+  stickerId      Int?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @default(now()) @updatedAt
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCard   UserCard?          @relation(fields: [favoriteCardId], references: [id])
+  background     ProfileBackground? @relation(fields: [backgroundId], references: [id])
+  badgeEmojis    String[]           @default([])
+}
+
+// defines a purchasable item: the marriage ring. can be used to marry two users
+model MarriageRing {
+  id        Int        @id @default(autoincrement())
+  price     Int
+  image     String
+  name      String
+  marriages Marriage[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
+}
+
+// defines the user's marriage status
+model Marriage {
+  id        Int          @id @default(autoincrement())
+  user1Id   Int
+  user2Id   Int
+  ringId    Int
+  ring      MarriageRing @relation(fields: [ringId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+}
+
+// defines the user inventory - that is, their backgrounds, stickers, and badges
+model UserInventory {
+  id         Int                 @id @default(autoincrement())
+  userId     Int
+  background ProfileBackground[]
+  stickers   ProfileSticker[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @default(now()) @updatedAt
+}
+
+// defines a series of economic markers that will be used later on to define inflation and deflation
+model EconomyMarker {
+  id            Int      @id @default(autoincrement())
+  richestValue  Int
+  poorestValue  Int
+  meanValue     Int
+  inflationRate Float
+  deflationRate Float
+  createdAt     DateTime @default(now())
+}
+
+// general markers, such as richest user
+model GeneralMarker {
+  id            Int      @id @default(autoincrement())
+  richestUserId Int
+  createdAt     DateTime @default(now())
+}

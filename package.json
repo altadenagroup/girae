@@ -1,0 +1,39 @@
+{
+  "name": "brooklyn",
+  "version": "1.0.0",
+  "description": "project brooklyn",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:watch": "bun --watch src/index.ts",
+    "build:schemas": "bunx prisma migrate dev",
+    "format:schemas": "bunx prisma format"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/altadenagroup/brooklyn.git"
+  },
+  "author": "lyricalsoul <lyricalsoul@proton.me>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/altadenagroup/brooklyn/issues"
+  },
+  "homepage": "https://github.com/altadenagroup/brooklyn#readme",
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "nodemon": "^3.1.0",
+    "prisma": "^5.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.1",
+    "@telegraf/session": "^2.0.0-beta.7",
+    "dotenv": "^16.4.4",
+    "melchior": "^0.3.5",
+    "redis": "^4.6.13",
+    "telegraf": "^4.15.3",
+    "yaml": "^2.4.0"
+  }
+}

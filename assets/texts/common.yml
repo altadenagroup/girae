@@ -1,0 +1,7 @@
+# o bot deve sempre responder de modo "fofo": isto é, usando emojis, cordialidade e sempre tentando ajudar o usuário.
+
+forgotToSay: "Parece que você esqueceu de me dizer $what. 😅"
+tryAgain: "Por favor, tente novamente."
+commandExample: "Use o comando da seguinte maneira: <code>$usage</code>"
+couldNotFind: "Não consegui encontrar $what. 😔\nPor favor, verifique se está tudo certo e tente novamente."
+gottaQuoteMessage: "Você precisa responder a uma mensagem do usuário com o comando para que eu possa saber a quem $action. 😅"
