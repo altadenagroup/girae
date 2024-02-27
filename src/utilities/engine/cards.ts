@@ -93,3 +93,24 @@ export const getCardByName = async (name: string) => {
     if (card) await _brklyn.cache.setexp('cardByName', name.toLowerCase(), card, 30 * 60)
     return card
 }
+
+export const getCardByNameAndSubcategory = async (name: string, subcategoryName: string) => {
+    const cached = await _brklyn.cache.get('cardByNameAndSubcategory', `${name.toLowerCase()}:${subcategoryName.toLowerCase()}`)
+    if (cached) return cached
+    const card = await _brklyn.db.card.findFirst({
+        where: {
+            name: {
+                equals: name,
+                mode: 'insensitive'
+            },
+            subcategory: {
+                name: {
+                    equals: subcategoryName,
+                    mode: 'insensitive'
+                }
+            }
+        }
+    })
+    if (card) await _brklyn.cache.setexp('cardByNameAndSubcategory', `${name.toLowerCase()}:${subcategoryName.toLowerCase()}`, card, 30 * 60)
+    return card
+}

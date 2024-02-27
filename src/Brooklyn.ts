@@ -6,94 +6,118 @@ import userData from './middleware/user-data.js'
 import * as luckyEngine from './utilities/lucky-engine.js'
 import { DittoMetadata } from './types/ditto.js'
 import argumentParser from './middleware/argument-parser.js'
+import { Context } from 'telegraf'
+import { OpenAI } from 'openai'
+import cloudinary from 'cloudinary'
 
 export const prebuiltPath = (c: string) => process.env.PREBUILT_VERSION ? `./dist${c.replace('./src', '')}` : c
 
 export default class Brooklyn extends Client {
-    db: PrismaClient
-    #internalCache: RedisClientType = {} as RedisClientType
-    cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
-    engine = luckyEngine
+  db: PrismaClient
+  #internalCache: RedisClientType = {} as RedisClientType
+  cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
+  engine = luckyEngine
+  ai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  })
 
-    constructor (cache: RedisClientType) {
-        super(process.env.TELEGRAM_TOKEN!, {
-            plugins: [
-                new plugins.CommandLoaderPlugin({
-                    commandDirectory: prebuiltPath('./src/commands'),
-                    guardDirectory:   prebuiltPath('./src/guards'),
-                    sceneDirectory:   prebuiltPath('./src/scenes')
-                })
-            ],
-            errorThreshold: 5,
-            sessionStore: Redis({ client: cache })
+  constructor(cache: RedisClientType) {
+    super(process.env.TELEGRAM_TOKEN!, {
+      plugins: [
+        new plugins.CommandLoaderPlugin({
+          commandDirectory: prebuiltPath('./src/commands'),
+          guardDirectory: prebuiltPath('./src/guards'),
+          sceneDirectory: prebuiltPath('./src/scenes')
         })
+      ],
+      errorThreshold: 5,
+      sessionStore: Redis({ client: cache }),
+      // @ts-ignore
+      getSessionKey: (ctx) => this.getSessionKey(ctx)
+    })
 
-        this.#internalCache = cache
-        this.cache = new BrooklynCacheLayer(cache)
-        this.db = new PrismaClient()
-        this.setUpExitHandler()
-        this.use(argumentParser)
-        this.use(userData)
-    }
+    this.#internalCache = cache
+    this.cache = new BrooklynCacheLayer(cache)
+    this.db = new PrismaClient()
+    this.setUpExitHandler()
+    this.use(argumentParser)
+    this.use(userData)
+    this.setUpCDN()
+  }
 
-    private onExit (code: number) {
-        info('bot', `Exiting with code ${code}`)
-        this.db.$disconnect()
-        this.#internalCache.quit()
-        process.exit(code)
-    }
+  private setUpCDN() {
+    cloudinary.v2.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    })
+  }
 
-    private setUpExitHandler () {
-        process.on('SIGINT', () => this.onExit(0))
-        process.on('SIGTERM', () => this.onExit(0))
-    }
+  private onExit(code: number) {
+    info('bot', `Exiting with code ${code}`)
+    this.db.$disconnect()
+    this.#internalCache.quit()
+    process.exit(code)
+  }
 
-    async generateImage (templateKey: string, data: Record<string, any>) {
-        // request to ditto
-        const res = await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Api-Key': process.env.DITTO_API_KEY!
-            },
-            body: JSON.stringify({
-                theme: templateKey,
-                story: false,
-                hide_username: false,
-                data
-            })
-        }).then(t => t.json())
-        return res
-    }
+  private setUpExitHandler() {
+    process.on('SIGINT', () => this.onExit(0))
+    process.on('SIGTERM', () => this.onExit(0))
+  }
 
-    async getDittoMetadata (): Promise<DittoMetadata> {
-        return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
-    }
+  async generateImage(templateKey: string, data: Record<string, any>) {
+    // request to ditto
+    const res = await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': process.env.DITTO_API_KEY!
+      },
+      body: JSON.stringify({
+        theme: templateKey,
+        story: false,
+        hide_username: false,
+        data
+      })
+    }).then(t => t.json())
+    return res
+  }
+
+  async getDittoMetadata(): Promise<DittoMetadata> {
+    return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
+  }
+
+  getSessionKey(ctx: Context): string | undefined {
+    const fromId = ctx.from?.id
+    const chatId = ctx.chat?.id
+    if (fromId == null || chatId == null) return undefined
+    return `${fromId}:${chatId}`
+  }
 }
 
 export class BrooklynCacheLayer {
-    #cache: RedisClientType
+  #cache: RedisClientType
 
-    constructor (cache: RedisClientType) {
-        this.#cache = cache
-    }
+  constructor(cache: RedisClientType) {
+    this.#cache = cache
+  }
 
-    async get (namespace: string, key: string) {
-        const value = await this.#cache.get(`${namespace}:${key}`)
-        return value ? JSON.parse(value) : null
-    }
+  async get(namespace: string, key: string) {
+    const value = await this.#cache.get(`${namespace}:${key}`)
+    return value ? JSON.parse(value) : null
+  }
 
-    async set (namespace: string, key: string, value: any) {
-        return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value))
-    }
+  async set(namespace: string, key: string, value: any) {
+    return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value))
+  }
 
-    async setexp (namespace: string, key: string, value: any, seconds: number) {
-        return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), {
-            EX: seconds
-        })
-    }
+  async setexp(namespace: string, key: string, value: any, seconds: number) {
+    return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), {
+      EX: seconds
+    })
+  }
 
-    async del (namespace: string, key: string) {
-        return this.#cache.del(`${namespace}:${key}`)
-    }
+  async del(namespace: string, key: string) {
+    return this.#cache.del(`${namespace}:${key}`)
+  }
 }

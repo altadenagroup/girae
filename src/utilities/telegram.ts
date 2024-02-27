@@ -30,6 +30,11 @@ export const cachedGetUserPhotoAndFile = async (id: number) => {
     return file
 }
 
+export const generatePhotoLink = async (fileID: string) => {
+  const file = await _brklyn.telegram.getFile(fileID).catch(() => null)
+  if (!file) return null
+  return `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+}
 export const determineMethodToSendMedia = (link: string) => {
     // remove query parameters
     link = link.split('?')[0]
