@@ -1,14 +1,13 @@
 import { Client, info, plugins } from 'melchior'
 import { PrismaClient } from '@prisma/client'
 import { RedisClientType } from 'redis'
-import { Redis } from '@telegraf/session/redis'
 import userData from './middleware/user-data.js'
 import * as luckyEngine from './utilities/lucky-engine.js'
 import { DittoMetadata } from './types/ditto.js'
 import argumentParser from './middleware/argument-parser.js'
-import { Context } from 'telegraf'
 import { OpenAI } from 'openai'
 import cloudinary from 'cloudinary'
+import { AdvancedRedisStore } from './utilities/session-store.js'
 
 export const prebuiltPath = (c: string) => process.env.PREBUILT_VERSION ? `./dist${c.replace('./src', '')}` : c
 
@@ -31,9 +30,7 @@ export default class Brooklyn extends Client {
         })
       ],
       errorThreshold: 5,
-      sessionStore: Redis({ client: cache }),
-      // @ts-ignore
-      getSessionKey: (ctx) => this.getSessionKey(ctx)
+      sessionStore: AdvancedRedisStore()
     })
 
     this.#internalCache = cache
@@ -42,6 +39,8 @@ export default class Brooklyn extends Client {
     this.setUpExitHandler()
     this.use(argumentParser)
     this.use(userData)
+
+
     this.setUpCDN()
   }
 
@@ -86,13 +85,6 @@ export default class Brooklyn extends Client {
   async getDittoMetadata(): Promise<DittoMetadata> {
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
-
-  getSessionKey(ctx: Context): string | undefined {
-    const fromId = ctx.from?.id
-    const chatId = ctx.chat?.id
-    if (fromId == null || chatId == null) return undefined
-    return `${fromId}:${chatId}`
-  }
 }
 
 export class BrooklynCacheLayer {
@@ -119,5 +111,10 @@ export class BrooklynCacheLayer {
 
   async del(namespace: string, key: string) {
     return this.#cache.del(`${namespace}:${key}`)
+  }
+
+  async keys (namespace: string, pattern: string) {
+    const keys = await this.#cache.keys(`${namespace}:${pattern}`)
+    return keys.map(k => k.replace(`${namespace}:`, ''))
   }
 }

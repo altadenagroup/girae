@@ -10,8 +10,6 @@ export default async (ctx, next) => {
       if (ctx.message.reply_to_message && ctx.message.reply_to_message.forum_topic_created) {
         delete ctx.message.reply_to_message
       }
-    } else {
-      return
     }
     return next()
 }

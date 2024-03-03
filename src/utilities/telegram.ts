@@ -26,7 +26,7 @@ export const cachedGetUserPhotoAndFile = async (id: number) => {
     const file = await _brklyn.telegram.getFile(userPhoto.file_id).catch(() => null)
     if (!file) return null
 
-    await _brklyn.cache.setexp('user-photo', id.toString(), file, /* 6h */ 21600)
+    await _brklyn.cache.setexp('user-photo', id.toString(), file, /* 5m */ 300)
     return file
 }
 

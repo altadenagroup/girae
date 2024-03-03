@@ -59,7 +59,9 @@ export const getCardByID = async (id: number | undefined) => {
             id
         },
         include: {
-            rarity: true
+            rarity: true,
+            category: true,
+            subcategory: true
         }
     })
 }
@@ -88,6 +90,11 @@ export const getCardByName = async (name: string) => {
                 equals: name,
                 mode: 'insensitive'
             }
+        },
+        include: {
+            rarity: true,
+            category: true,
+            subcategory: true
         }
     })
     if (card) await _brklyn.cache.setexp('cardByName', name.toLowerCase(), card, 30 * 60)

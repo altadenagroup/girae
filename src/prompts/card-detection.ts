@@ -76,5 +76,9 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
   if (!r) return null
   // remove {{ anything... }}
   const json = r.replace(/{{.*}}/, '').trim()
-  return JSON.parse(json)
+  const data = JSON.parse(json)
+  if (data.image === 'null') delete data.image
+  // add url: to image if it exists
+  if (data.image) data.image = `url:${data.image}`
+  return data
 })

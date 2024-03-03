@@ -11,14 +11,15 @@ const clean = async (val) => {
 }
 
 export default async (ctx) => {
+  const code = ctx.update.message.text.split(' ').slice(1).join(' ')
   let r = '"no assignment made"'
   try {
-    r = await eval(ctx.args.join(' '))
+    r = await eval(code)
   } catch (e: any) {
     r = e?.message || e
   }
 
-  await ctx.replyHTML(`<b>Code:</b> <pre><code class="language-javascript">${ctx.args.join(' ')}</code></pre>\n<b>Result:</b><pre><code class="language-javascript">${await clean(r)}</code></pre>`).catch((err) => {
+  await ctx.replyHTML(`<b>Code:</b> <pre><code class="language-javascript">${code}</code></pre>\n<b>Result:</b><pre><code class="language-javascript">${await clean(r)}</code></pre>`).catch((err) => {
     return ctx.replyHTML(`<pre><code class="language-javascript">${err.message}</code></pre>`)
   })
 }

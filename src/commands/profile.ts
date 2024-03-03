@@ -12,8 +12,15 @@ const rarityIdToName = {
 }
 
 export default async (ctx: BotContext) => {
+  if (ctx.args[0]?.startsWith?.('edit')) {
+    const text = `<b>🖼 Como editar o perfil?</b>\n\n/fav - define sua carta favorita (exemplo: <code>/fav ningning</code>)
+/bio - define sua biografia (exemplo: <code>/bio eu amo a ningning</code>)
+/color - define sua cor favorita (exemplo: <code>/color #ff0000</code>)`
+    return ctx.replyWithHTML(text)
+  }
     const file = await cachedGetUserPhotoAndFile(ctx.from!.id)
-    const avatarURL = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+    const avatarURL = file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+
     const completeUserData = await _brklyn.db.userProfile.findFirst({
         where: {
             userId: ctx.userData.id
@@ -49,9 +56,9 @@ export default async (ctx: BotContext) => {
     if (!dittoData?.url) {
         return ctx.reply('Desculpe, não consegui gerar a imagem do perfil. 😔\nTente novamente mais tarde. Se o problema persistir, entre em contato com meu suporte, em @giraesupport.')
     }
-    
+
     ctx.replyWithPhoto(dittoData.url, {
-        caption: `Perfil de <b>${escapeForHTML(ctx.from!.first_name)}</b>`,
+        caption: `🖼 Perfil de <b>${escapeForHTML(ctx.from!.first_name)}</b>\n\n<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
         parse_mode: 'HTML'
     })
 

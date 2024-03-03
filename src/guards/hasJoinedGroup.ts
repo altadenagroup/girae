@@ -9,7 +9,7 @@ export default async (ctx) => {
         return false
     }
 
-    if (ctx.chat?.id === -1002096118477) {
+    if (ctx.chat?.id === -1002096118477 || ctx.chat?.id === -1002058397651 || ctx.chat?.id === -1001945644138) {
       return true
     }
 

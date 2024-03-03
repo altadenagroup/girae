@@ -13,6 +13,7 @@ client.on('error', (err) => {
         process.exit(1)
     }
 })
+await client.connect()
 
 const brooklyn = new Brooklyn(client as RedisClientType)
 global._brklyn = brooklyn

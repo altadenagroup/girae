@@ -6,9 +6,10 @@ const fonts = ['lato', 'lora', 'montserrat', 'open-sans', 'oswald', 'playfair-di
 export default async (ctx: BotContext) => {
     if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o código HEX da cor', '/cor #ff0000')
     const color = ctx.args[0]
-    if (!color.match(/^#[0-9a-fA-F]{6}$/)) return ctx.responses.replyCouldNotFind('um código HEX válido')
-    await setFavoriteColor(ctx.userData.id, color)
-    const colorNoHash = color.slice(1)
+  // color may or may not start with #
+    if (!color.match(/^(#)?[0-9a-fA-F]{6}$/)) return ctx.responses.replyCouldNotFind('um código HEX válido')
+    await setFavoriteColor(ctx.userData.id, color.startsWith('#') ? color : ('#' + color))
+    const colorNoHash = color.startsWith('#') ? color.slice(1) : color
     const img = `https://placehold.co/600x400/${colorNoHash}/${getConstrastingColor(color)}.png?text=${colorNoHash}&font=${fonts[Math.floor(Math.random() * fonts.length)]}`
     return ctx.replyWithPhoto(img, {
         caption: `🌈 A cor <b>${color}</b> é agora a sua cor favorita!`,

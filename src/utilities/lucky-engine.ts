@@ -2,7 +2,7 @@
 // cards have rarities, expressed as a number from 0 to 1, where 0 is 100% chance and 1 is 0% chance.
 
 import { Category, Rarity, User, Card, Subcategory } from '@prisma/client'
-import { info } from 'melchior'
+import { error, info } from 'melchior'
 
 export const getRarities = () => {
     return _brklyn.db.rarity.findMany()
@@ -106,9 +106,16 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
             category: true,
             subcategory: true
         }
+    }).catch((e) => {
+      error('luckyEngine', `got a prisma error: ${e}`)
+      return []
     })
+
     if (cards.length === 0) {
-        if (recursing) throw new Error('No cards found')
+        if (recursing) {
+          error('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
+          throw new Error('No cards found')
+        }
         return selectRandomCard(rarity, category, subcategory, true)
     }
     return cards[Math.floor(Math.random() * cards.length)]
@@ -127,6 +134,8 @@ export const testRandomCard = async (user: User): Promise<void> => {
 export const pickFourRandomSubcategories = async (category: Category): Promise<Subcategory[]> => {
     const subcategories = await getSubcategoriesByCategory(category)
     const result: Subcategory[] = []
+    // if there are 4 or less subcategories, we will return them all.
+    if (subcategories.length <= 4) return subcategories
     while (result.length < 4) {
         const subcategory = subcategories[Math.floor(Math.random() * subcategories.length)]
         if (!result.includes(subcategory)) result.push(subcategory)
@@ -184,8 +193,11 @@ export const getCategoryById = async (id: number) => {
 }
 
 export const parseImageString = (imageString: string, modifications: string |  undefined = undefined): string => {
-    // if starts with url: then it's a url
+  // if it starts with http, return it as is
+    if (imageString.startsWith('http')) return 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
+  // if starts with url: then it's a url
     if (imageString.startsWith('url:')) {
+      if (imageString.endsWith('.mp4')) return imageString.split('url:')[1]
         const url = imageString.split('url:')[1].replace('https://', '').replace('http://', '').replace('.gifv', '.gif')
         const cloudimgURL = `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
         return cloudimgURL
