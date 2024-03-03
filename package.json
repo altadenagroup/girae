@@ -11,7 +11,7 @@
     "format:schemas": "prisma format",
     "build:client": "prisma generate",
     "build:source": "tsc -p tsconfig.json",
-    "start:node": "PREBUILT_VERSION=true node dist/index.js"
+    "start:node": "PREBUILT_VERSION=true node --experimental-modules dist/index.js"
   },
   "repository": {
     "type": "git",
