@@ -153,7 +153,6 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
       await ctx.reply('Não foi possível obter o link da foto.')
     }
   }
-  console.log(imgString)
   // infer the card data
   const cardData = await inferCardData(message)
   if (!cardData) return ctx.reply('Não foi possível inferir os dados do card.')

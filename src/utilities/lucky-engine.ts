@@ -3,6 +3,7 @@
 
 import { Category, Rarity, User, Card, Subcategory } from '@prisma/client'
 import { error, info } from 'melchior'
+import { MISSING_CARD_IMG } from '../constants.js'
 
 export const getRarities = () => {
     return _brklyn.db.rarity.findMany()
@@ -193,6 +194,7 @@ export const getCategoryById = async (id: number) => {
 }
 
 export const parseImageString = (imageString: string, modifications: string |  undefined = undefined): string => {
+  if (!imageString) return MISSING_CARD_IMG
   // if it starts with http, return it as is
     if (imageString.startsWith('http')) return 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
   // if starts with url: then it's a url

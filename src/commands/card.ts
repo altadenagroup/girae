@@ -1,7 +1,8 @@
+import type { Card, Category, Rarity, Subcategory } from "@prisma/client"
 import { BotContext } from "../types/context.js"
 import { parseImageString } from "../utilities/lucky-engine.js"
-import { getCardFromArg } from "../utilities/parser.js"
 import { determineMethodToSendMedia } from "../utilities/telegram.js"
+import { getCardByID, searchCards } from "../utilities/engine/cards.js"
 
 const medalMap = {
     'Comum': '🥉',
@@ -9,10 +10,30 @@ const medalMap = {
     'Lendário': '🎖️'
 }
 
+interface FullCard extends Card {
+  subcategory: Subcategory | undefined
+  rarity: Rarity | undefined
+  category: Category | undefined
+}
+
 export default async (ctx: BotContext) => {
     if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID do personagem a ser pesquisado', '/fav Katsuragi Misato')
-    const char = await getCardFromArg(ctx.args.join(' '))
-    if (!char) return ctx.responses.replyCouldNotFind('um personagem com esse nome ou ID')
+    if (!isNaN(parseInt(ctx.args.join(' ')))) {
+      const id = parseInt(ctx.args.join(' '))
+      const card = await getCardByID(id)
+      if (!card) return ctx.responses.replyCouldNotFind('um personagem com esse ID')
+      return viewCard(ctx, card as FullCard)
+    }
+
+    const cards = await searchCards(ctx.args.join(' & '), 100)
+    if (!cards || !cards[0]) return ctx.responses.replyCouldNotFind('um personagem com esse nome')
+    if (cards.length === 1) return viewCard(ctx, cards[0] as FullCard)
+
+    const text = cards.map(cardOnList).join('\n')
+    return ctx.replyWithHTML(`🔍 <b>${cards.length}</b> resultados encontrados:\n\n${text}\n\nPara ver um desses cards, use <code>/card id</code>`)
+}
+
+const viewCard = async (ctx: BotContext, char: FullCard) => {
     const img = parseImageString(char.image, 'ar_3:4,c_crop')
 
     const repeated = await _brklyn.engine.getUserTotalGivenCardAmount(ctx.userData, char)
@@ -29,6 +50,8 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
         parse_mode: 'HTML'
     })
 }
+
+const cardOnList = (card) => `${medalMap[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${card.category?.emoji || '?'} <i>${card.subcategory?.name || '?'}</i>`
 
 export const info = {
     guards: ['hasJoinedGroup'],

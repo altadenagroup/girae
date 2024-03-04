@@ -8,6 +8,7 @@ import argumentParser from './middleware/argument-parser.js'
 import { OpenAI } from 'openai'
 import cloudinary from 'cloudinary'
 import { AdvancedRedisStore } from './utilities/session-store.js'
+import { Context } from 'telegraf'
 
 export const prebuiltPath = (c: string) => process.env.PREBUILT_VERSION ? `./dist${c.replace('./src', '')}` : c
 
@@ -85,6 +86,15 @@ export default class Brooklyn extends Client {
   async getDittoMetadata(): Promise<DittoMetadata> {
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
+
+  getSessionKey (ctx: Context): string | undefined {
+    const fromId = ctx.from?.id
+    const chatId = ctx.chat?.id
+    if (fromId == null || chatId == null) return undefined
+
+    if (ctx.message?.message_thread_id) return `${fromId}:${chatId}:${ctx.message.message_thread_id}`
+    return `${fromId}:${chatId}`
+  }
 }
 
 export class BrooklynCacheLayer {
@@ -104,6 +114,8 @@ export class BrooklynCacheLayer {
   }
 
   async setexp(namespace: string, key: string, value: any, seconds: number) {
+    if (process.env.NO_CACHING) return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), { EX: 5 })
+
     return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), {
       EX: seconds
     })

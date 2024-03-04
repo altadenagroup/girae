@@ -1,4 +1,6 @@
+import { Card, Category, Rarity, Subcategory, User } from "@prisma/client"
 import { getSubcategoryByID } from "./subcategories.js"
+import { info, error } from "melchior"
 
 export interface CreateCardOptions {
     name: string
@@ -82,8 +84,9 @@ export const getCardFullByID = async (id: number | undefined) => {
 
 // gets the card by the name (case insensitive)
 export const getCardByName = async (name: string) => {
-    const cached = await _brklyn.cache.get('cardByName', name.toLowerCase())
+    const cached = await _brklyn.cache.get('cardByNames', name.toLowerCase())
     if (cached) return cached
+    // search given the tags, the card name and the subcategory
     const card = await _brklyn.db.card.findFirst({
         where: {
             name: {
@@ -97,7 +100,7 @@ export const getCardByName = async (name: string) => {
             subcategory: true
         }
     })
-    if (card) await _brklyn.cache.setexp('cardByName', name.toLowerCase(), card, 30 * 60)
+    if (card) await _brklyn.cache.setexp('cardByNames', name.toLowerCase(), card, 30 * 60)
     return card
 }
 
@@ -120,4 +123,79 @@ export const getCardByNameAndSubcategory = async (name: string, subcategoryName:
     })
     if (card) await _brklyn.cache.setexp('cardByNameAndSubcategory', `${name.toLowerCase()}:${subcategoryName.toLowerCase()}`, card, 30 * 60)
     return card
+}
+
+// adds a card to the user's collection.
+export const addCard = async (user: User, card: Card): Promise<void> => {
+  // before adding, we have to check the luck modifier for the card. if it's higher than 0, we will roll a random number and check if it's lower than the luck modifier.
+  // if it isn't, we will reroll the card.
+  if (card.rarityModifier > 0) {
+      info('luckyEngine', `user ${user.tgId} is rolling for a lucky card: ${card.name}`)
+      const random = Math.random()
+      if (card.rarityModifier >= random) {
+          info('luckyEngine', `user ${user.tgId} got a lucky card: ${card.name}`)
+      } else {
+          // we will reuse the same rarity, category and subcategory to get a new card.
+          const rarity = await _brklyn.db.rarity.findFirst({ where: { id: card.rarityId } })
+          const category = await _brklyn.db.category.findFirst({ where: { id: card.categoryId } })
+          const subcategory = await _brklyn.db.subcategory.findFirst({ where: { id: card.subcategoryId! } })
+          const newCard = await selectRandomCard(rarity!, category!, subcategory!)
+          return addCard(user, newCard)
+      }
+  }
+
+  await _brklyn.db.userCard.create({
+      data: {
+          userId: user.id,
+          cardId: card.id
+      }
+  })
+}
+
+// selects a random card given a rarity, a category and a subcategory.
+export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory, recursing: boolean = false): Promise<Card> => {
+  let opts: { rarityId?: number } = {}
+  if (!recursing) opts.rarityId = rarity.id
+
+  const cards = await _brklyn.db.card.findMany({
+      where: {
+          ...opts,
+          categoryId: category.id,
+          subcategoryId: subcategory.id
+      },
+      include: {
+          rarity: true,
+          category: true,
+          subcategory: true
+      }
+  }).catch((e) => {
+    error('luckyEngine', `got a prisma error: ${e}`)
+    return []
+  })
+
+  if (cards.length === 0) {
+      if (recursing) {
+        error('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
+        throw new Error('No cards found')
+      }
+      return selectRandomCard(rarity, category, subcategory, true)
+  }
+  return cards[Math.floor(Math.random() * cards.length)]
+}
+
+// performs a full text search on the cards (their name, subcategory and category)
+export const searchCards = async (query: string, limit: number = 10) => {
+    return await _brklyn.db.card.findMany({
+        where: {
+            name: {
+                search: query
+            }
+        },
+        include: {
+            rarity: true,
+            category: true,
+            subcategory: true
+        },
+        take: limit
+    })
 }

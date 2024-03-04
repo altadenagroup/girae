@@ -1,3 +1,5 @@
+import { Subcategory } from "@prisma/client"
+
 export const createSubcategory = async (name: string, categoryID: number) => {
     const subcategory = await _brklyn.db.subcategory.create({
         data: {
@@ -9,7 +11,7 @@ export const createSubcategory = async (name: string, categoryID: number) => {
     return subcategory
 }
 
-export const getSubcategoryByID = async (id: number) => {
+export const getSubcategoryByID = async (id: number): Promise<Subcategory | null | undefined> => {
     const cached = await _brklyn.cache.get('subcategories_id', id.toString())
     if (cached) return cached
 
