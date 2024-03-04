@@ -16,6 +16,9 @@ interface FullCard extends Card {
   category: Category | undefined
 }
 
+// escapes names containg chars used by pgsql full text search
+const escapeName = (name: string) => name.replace(/([!|&(){}[\]^"~*?:\\])/g, '\\$1')
+
 export default async (ctx: BotContext) => {
     if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID do personagem a ser pesquisado', '/fav Katsuragi Misato')
     if (!isNaN(parseInt(ctx.args.join(' ')))) {
@@ -25,7 +28,7 @@ export default async (ctx: BotContext) => {
       return viewCard(ctx, card as FullCard)
     }
 
-    const cards = await searchCards(ctx.args.join(' & '), 100)
+    const cards = await searchCards(escapeName(ctx.args.join(' ')).split(' ').join(' & '), 100)
     if (!cards || !cards[0]) return ctx.responses.replyCouldNotFind('um personagem com esse nome')
     if (cards.length === 1) return viewCard(ctx, cards[0] as FullCard)
 

@@ -10,7 +10,7 @@ import cloudinary from 'cloudinary'
 import { AdvancedRedisStore } from './utilities/session-store.js'
 import { Context } from 'telegraf'
 
-export const prebuiltPath = (c: string) => process.env.PREBUILT_VERSION ? `./dist${c.replace('./src', '')}` : c
+export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
 export default class Brooklyn extends Client {
   db: PrismaClient

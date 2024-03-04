@@ -13,9 +13,7 @@ export default async (ctx: BotContext) => {
   if (user.id === ctx.from!.id) return ctx.reply('Você não pode trocar cartas com você mesmo! 😅')
 
   // inline button that opens a private chat with the user
-  // @ts-expect-error
-  ctx.tradingWith = user
-  return ctx.scene.enter('START_TRADE')
+  return ctx.scene.enter('START_TRADE', { tradingWith: user })
 }
 
 export const info = {

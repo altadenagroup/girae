@@ -5,12 +5,12 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:start": "bun --watch src/index.ts",
+    "dev:start": "nodemon --watch dist --exec node dist/src/index.js",
     "dev:migrate": "prisma migrate dev",
+    "dev:build": "swc src -d dist --watch --source-maps",
     "format:schemas": "prisma format",
     "build:client": "prisma generate",
-    "build:source": "tsc -p tsconfig.json",
+    "build:source": "swc src -d dist --source-maps",
     "start:node": "PREBUILT_VERSION=true node index.mjs"
   },
   "repository": {
@@ -24,10 +24,11 @@
   },
   "homepage": "https://github.com/altadenagroup/brooklyn#readme",
   "devDependencies": {
+    "@swc/cli": "^0.3.10",
+    "@swc/core": "^1.4.2",
     "@types/node": "^20.11.19",
     "nodemon": "^3.1.0",
     "prisma": "^5.10.1",
-    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
@@ -36,11 +37,11 @@
     "cloudinary": "^2.0.1",
     "dotenv": "^16.4.4",
     "melchior": "^0.3.6",
+    "newrelic": "latest",
     "openai": "^4.28.0",
     "redis": "^4.6.13",
     "telegraf": "^4.15.3",
     "telegraf-throttler": "^0.6.0",
-    "yaml": "^2.4.0",
-    "newrelic": "latest"
+    "yaml": "^2.4.0"
   }
 }
