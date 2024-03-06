@@ -34,7 +34,10 @@ export const getSubcategoryByName = async (name: string) => {
 
     const subcategory = await _brklyn.db.subcategory.findFirst({
         where: {
-            name
+            name: {
+                equals: name,
+                mode: 'insensitive'
+            }
         }
     })
 

@@ -1,3 +1,4 @@
+import { UserCard } from "@prisma/client"
 import { debug } from "melchior"
 
 // get how many cards a user has
@@ -90,4 +91,18 @@ export const giveRep = async (from: number, to: number): Promise<boolean> => {
     })
 
     return true
+}
+
+// cached
+export const checkIfUserHasCards = async (user: number, cards: number[]): Promise<UserCard[]> => {
+    const userCards = await _brklyn.db.userCard.findMany({
+        where: {
+            userId: user,
+            cardId: {
+                in: cards
+            }
+        }
+    })
+
+    return userCards
 }

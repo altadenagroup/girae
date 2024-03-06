@@ -9,6 +9,8 @@ import { OpenAI } from 'openai'
 import cloudinary from 'cloudinary'
 import { AdvancedRedisStore } from './utilities/session-store.js'
 import { Context } from 'telegraf'
+import { functionEditing } from './middleware/function-editing.js'
+import { Sidecar } from './sidecar/index.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -20,6 +22,7 @@ export default class Brooklyn extends Client {
   ai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   })
+  sidecar = new Sidecar()
 
   constructor(cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {
@@ -38,6 +41,7 @@ export default class Brooklyn extends Client {
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.setUpExitHandler()
+    this.use(functionEditing)
     this.use(argumentParser)
     this.use(userData)
 
@@ -79,7 +83,11 @@ export default class Brooklyn extends Client {
         hide_username: false,
         data
       })
-    }).then(t => t.json())
+    }).then(t => t.json()).catch(e => {
+      info('ditto.generateImage', `got an error: ${e}`)
+      return null
+    })
+
     return res
   }
 
@@ -128,5 +136,9 @@ export class BrooklynCacheLayer {
   async keys (namespace: string, pattern: string) {
     const keys = await this.#cache.keys(`${namespace}:${pattern}`)
     return keys.map(k => k.replace(`${namespace}:`, ''))
+  }
+
+  async flushall() {
+    return this.#cache.flushAll()
   }
 }

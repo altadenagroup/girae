@@ -199,3 +199,36 @@ export const searchCards = async (query: string, limit: number = 10) => {
         take: limit
     })
 }
+
+const caseEveryInitial = (str: string) => {
+    return str.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
+export const getCardsByTag = async (tag: string) => {
+ // case insensitive search
+  return await _brklyn.db.card.findMany({
+      where: {
+          tags: {
+              hasSome: [tag, tag.toLowerCase(), tag.toUpperCase(), caseEveryInitial(tag)]
+          }
+      },
+      include: {
+          rarity: true,
+          category: true,
+          subcategory: true
+      }
+  })
+}
+
+export const getCardsBySubcategory = async (subcategory: Subcategory) => {
+    return await _brklyn.db.card.findMany({
+        where: {
+            subcategoryId: subcategory.id
+        },
+        include: {
+            rarity: true,
+            category: true,
+            subcategory: true
+        }
+    })
+}

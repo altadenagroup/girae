@@ -1,4 +1,4 @@
-import { ChatMember } from "telegraf/types"
+import { ChatMember, User } from "telegraf/types"
 import { BotContext } from "../types/context.js"
 
 export const isUserOnNewsChannel = async (id: number) => {
@@ -64,4 +64,8 @@ export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string)
   }
 
   return null
+}
+
+export const mentionUser = (user: User) => {
+  return `<a href="tg://user?id=${user.id}">${user.first_name}</a>`
 }

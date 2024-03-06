@@ -5,7 +5,7 @@ export default async (ctx: BotContext) => {
   if (ctx.chat?.id !== -1001945644138) return
   const card = ctx.args[0]
   if (!card) {
-    return ctx.reply('Você precisa especificar o ID do card para deletar.\n\nUsa-se delcard card')
+    return ctx.reply('Você precisa especificar o ID do card para editar.\n\nUsa-se editcard card')
   }
 
   const c = await getCardByID(parseInt(card))
@@ -13,14 +13,9 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Card não encontrado.')
   }
 
-  await _brklyn.db.card.delete({
-    where: {
-      id: c.id
-    }
-  })
-
-  return ctx.reply(`Card ${c.name} deletado.`)
+  return ctx.scene.enter('ADD_CARD_SCENE', { editCard: c })
 }
+
 
 export const info = {
   guards: ['hasJoinedGroup']

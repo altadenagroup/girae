@@ -7,4 +7,6 @@ export interface BotContext extends Context {
     profileData: UserProfile
     args: string[]
     responses: ResponseSystem
+    ogReply: (text: string, extra?: any) => Promise<any>
+    ogReplyWithPhoto: (photo: any, extra?: any) => Promise<any>
 }

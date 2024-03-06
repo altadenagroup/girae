@@ -1,24 +1,23 @@
 import { BotContext } from '../types/context.js'
-import { getCardByID } from '../utilities/engine/cards.js'
 import { generatePhotoLink } from '../utilities/telegram.js'
 import cloudinary from 'cloudinary'
 import { parseImageString } from '../utilities/lucky-engine.js'
+import { getSubcategoryFromArg } from '../utilities/parser.js'
 export default async (ctx: BotContext) => {
   if (ctx.chat?.id !== -1001945644138) return
-  const card = ctx.args[0]
-  if (!card) {
-    return ctx.reply('Você precisa especificar o ID do card para editar a imagem.\n\nUsa-se setimage id')
+  if (!ctx.args[0]) {
+    return ctx.reply('Você precisa especificar o ID ou nome da subcategoria para editar a imagem.\n\nUsa-se setimageclc id')
   }
 
-  const c = await getCardByID(parseInt(card))
+  const c = await getSubcategoryFromArg(ctx.args.join(' '))
   if (!c) {
-    return ctx.reply('Card não encontrado.')
+    return ctx.reply('Subcategoria não encontrada.')
   }
 
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
   const photo = photos?.[0] ? photos[photos.length - 1].file_id : null
-  let imgString = ctx.args[1] ? `url:${ctx.args[1]}` : null
+  let imgString
   if (photo) {
     const link = await generatePhotoLink(photo)
     if (link) {
@@ -35,7 +34,7 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Você precisa enviar uma foto ou passar um link para a imagem.')
   }
 
-  await _brklyn.db.card.update({
+  await _brklyn.db.subcategory.update({
     where: {
       id: c.id
     },
@@ -44,8 +43,8 @@ export default async (ctx: BotContext) => {
     }
   })
 
-  return ctx.replyWithPhoto(parseImageString(imgString, 'ar_3:4,c_crop'), {
-    caption: `Imagem do card ${c.name} atualizada.`,
+  return ctx.replyWithPhoto(parseImageString(imgString, false), {
+    caption: `Imagem da subcategoria ${c.name} atualizada.`,
     parse_mode: 'HTML'
   })
 }

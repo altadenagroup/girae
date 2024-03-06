@@ -5,6 +5,9 @@ import { parseImageString } from '../utilities/lucky-engine.js'
 import { getCardFullByID } from '../utilities/engine/cards.js'
 import { determineMethodToSendMedia } from '../utilities/telegram.js'
 
+const coolDownBucket = new Set()
+const coolDownTime = 5 * 1000
+
 const medalMap = {
     'Comum': '🥉',
     'Raro': '🥈',
@@ -28,7 +31,9 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
     const method = determineMethodToSendMedia(img)
     await ctx[method!](img, {
         caption: text,
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
+        // @ts-ignore
+        reply_to_message_id: ctx.wizard.state.ogMessage
     }).catch(async (e) => {
         if (final) return false
         if (e.message.includes('file identifier')) {
@@ -41,6 +46,13 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 }
 
 export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
+  if (coolDownBucket.has(ctx.from!.id)) {
+    await ctx.reply('Calma, você tá indo rápido demais! Espere ' + (coolDownTime / 1000) + ' segundos antes de usar este comando novamente.')
+    return ctx.scene.leave()
+  }
+  coolDownBucket.add(ctx.from!.id)
+  setTimeout(() => coolDownBucket.delete(ctx.from!.id), coolDownTime)
+
     // if there's ctx.args[0] and the userData says the author is an admin, force the card
     // @ts-ignore
     if (ctx.scene.session.state?.argZero && ctx.scene.session.state?.user.isAdmin) {// @ts-ignore
@@ -67,6 +79,8 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
     })
     // @ts-ignore
     ctx.wizard.state.msgId = msg.message_id
+    // @ts-ignore
+    ctx.wizard.state.ogMessage = ctx.message.message_id
     return ctx.wizard.next()
 }, async (ctx) => {
     // @ts-ignore

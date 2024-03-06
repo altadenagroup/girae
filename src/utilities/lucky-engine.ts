@@ -193,10 +193,10 @@ export const getCategoryById = async (id: number) => {
     return _brklyn.db.category.findFirst({ where: { id } })
 }
 
-export const parseImageString = (imageString: string, modifications: string |  undefined = undefined): string => {
+export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined): string => {
   if (!imageString) return MISSING_CARD_IMG
   // if it starts with http, return it as is
-    if (imageString.startsWith('http')) return 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
+    if (imageString.includes('placehold.co')) return MISSING_CARD_IMG
   // if starts with url: then it's a url
     if (imageString.startsWith('url:')) {
       if (imageString.endsWith('.mp4')) return imageString.split('url:')[1]
@@ -205,6 +205,6 @@ export const parseImageString = (imageString: string, modifications: string |  u
         return cloudimgURL
     }
 
-    if (!modifications) return `https://res.cloudinary.com/dpi2t98hl/image/upload/${imageString.replace('id:', '')}.jpg`
+    if (typeof modifications === 'boolean' && !modifications) return `https://res.cloudinary.com/dpi2t98hl/image/upload/${imageString.replace('id:', '')}.jpg`
     return `https://res.cloudinary.com/dpi2t98hl/image/upload/${modifications ?? 'ar_3:4,c_crop'}/${imageString.replace('id:', '')}.jpg`
 }

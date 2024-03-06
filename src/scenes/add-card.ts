@@ -10,15 +10,18 @@ import { Composer, Markup } from 'telegraf'
 import { getOrCreateCategory } from '../utilities/engine/category.js'
 import { getOrCreateSubcategory } from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
+import { Card, Category, Rarity, Subcategory } from '@prisma/client'
 
 const raritiesEnToPt = {
+  '': '',
   'Common': 'Comum',
   'Rare': 'Raro',
   'Legendary': 'Lendário'
 }
 
 const generateCardView = (cardData: any) => {
-  return `<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags.join(', ')}`
+  const isEditing = cardData.id ? `(<i>editando card ${cardData.id}</i>)\n` : ''
+  return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags?.join?.(', ')}`
 }
 
 const CARD_MARKUP = Markup.inlineKeyboard([[
@@ -39,7 +42,7 @@ const CARD_MARKUP = Markup.inlineKeyboard([[
 const composer = new Composer()
 composer.action('SWITCH_RARITY_LEGENDARY', async (ctx) => {
   // @ts-ignore
-  ctx.wizard.state.cardData.rarity = 'Lengendary'
+  ctx.wizard.state.cardData.rarity = 'Legendary'
   // @ts-ignore
   await updateCardView(ctx)
 })
@@ -63,7 +66,35 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
   const cardData = ctx.wizard.state.cardData
   const category = await getOrCreateCategory(cardData.category)
   const subcategory = await getOrCreateSubcategory(cardData.subcategory, category.id)
-  const rarity = await getRarityByName(raritiesEnToPt[cardData.rarity])
+  const rarity = await getRarityByName(raritiesEnToPt[cardData.rarity]) || await getRarityByName(cardData.rarity)
+  if (!category || !subcategory || !rarity) {
+    await ctx.reply('Não foi possível modificar o card.')
+    // @ts-ignore
+    return ctx.scene.leave()
+  }
+
+  if (cardData.id) {
+    await _brklyn.db.card.update({
+      where: {
+        id: cardData.id
+      },
+      data: {
+        name: cardData.name,
+        image: cardData.image,
+        categoryId: category.id,
+        subcategoryId: subcategory.id,
+        rarityId: rarity.id,
+        tags: cardData.tags || []
+      }
+    })
+    await ctx.reply('Card atualizado com sucesso.')
+    // @ts-ignore
+    await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.messageId).catch((e) => {
+      error('scenes.addCard', `could not delete message: ${e.stack}`)
+    })
+    // @ts-ignore
+    return ctx.scene.leave()
+  }
 
   await _brklyn.db.card.create({
     data: {
@@ -79,7 +110,9 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
 
   await ctx.reply('Card adicionado com sucesso.')
   // @ts-ignore
-  await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.messageId)
+  await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.messageId).catch((e) => {
+    error('scenes.addCard', `could not delete message: ${e.stack}`)
+  })
   // @ts-ignore
   return ctx.scene.leave()
 })
@@ -102,7 +135,7 @@ composer.action('EDIT_SUBCATEGORY', async (ctx) => {
 
 composer.action('EDIT_TAGS', async (ctx) => {
   // @ts-ignore
-  await ctx.replyWithHTML(`Envie as novas tags separadas por vírgula.\n\nAtualmente: <Code>${ctx.wizard.state.cardData.tags?.join?.(', ') || 'nenhuma'}</code>`)
+  await ctx.replyWithHTML(`Envie as novas tags separadas por vírgula.\n\nAtualmente: <Code>${ctx.wizard.state.cardData.tags?.join?.(', ') || 'nenhuma'}</code>\n\nVocê também pode mandar <code>limpar</code> para apagar as tags de um card.`)
   // @ts-ignore
   ctx.wizard.state.editingTags = true
   // @ts-ignore
@@ -128,17 +161,36 @@ composer.action('EDIT_CATEGORY', async (ctx) => {
 })
 
 export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => {
+  // if there's a card in the scenes session opt, mark this session as editing
+  let editing = false
   // @ts-ignore
-  if (!ctx.message?.reply_to_message) {
+  if (ctx.scene.session.state?.editCard) {
+    const card = (ctx.scene.session.state as any).editCard as (Card & { category: Category, subcategory: Subcategory, rarity: Rarity })
+    // @ts-ignore
+    editing = true
+    // @ts-ignore
+    ctx.wizard.state.cardData = {
+      id: card.id,
+      name: card.name,
+      subcategory: card.subcategory.name,
+      category: card.category.name,
+      rarity: card.rarity.name,
+      tags: card.tags,
+      image: card.image
+    }
+  }
+
+  // @ts-ignore
+  if (!editing && !ctx.message?.reply_to_message) {
     await ctx.reply('Você precisa responder a uma mensagem para adicionar um card.')
     return ctx.scene.leave()
   }
   // @ts-ignore
-  const message = (ctx.message as CommonMessageBundle).reply_to_message!.text || (ctx.message as CommonMessageBundle).reply_to_message!.caption
+  const message = (ctx.message as CommonMessageBundle).reply_to_message?.text || (ctx.message as CommonMessageBundle).reply_to_message?.caption
 
   // get any photos from the message
   // @ts-ignore
-  const photos = (ctx.message as CommonMessageBundle).reply_to_message.photo
+  const photos = (ctx.message as CommonMessageBundle).reply_to_message?.photo
   const photo = photos?.[0] ? photos[photos.length - 1].file_id : null
   let imgString
   if (photo) {
@@ -153,18 +205,34 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
       await ctx.reply('Não foi possível obter o link da foto.')
     }
   }
+
+  if (editing && photo) {
+    // @ts-ignore
+    ctx.wizard.state.cardData.image = imgString
+  }
   // infer the card data
-  const cardData = await inferCardData(message)
-  if (!cardData) return ctx.reply('Não foi possível inferir os dados do card.')
-  const exists = await getCardByNameAndSubcategory(cardData.name, cardData.subcategory)
+
+  // @ts-ignore
+  const cardData = !editing ? await inferCardData(message) : ctx.wizard.state.cardData
+  if (!cardData) {
+    await ctx.reply('Não foi possível inferir os dados do card.')
+    return ctx.scene.leave()
+  }
+
+  if (cardData.error) {
+    await ctx.reply(`${cardData.error}`)
+    return ctx.scene.leave()
+  }
+
+  const exists = editing ? false : await getCardByNameAndSubcategory(cardData.name, cardData.subcategory)
   if (exists) return ctx.reply('Já existe um card com esse nome e subcategoria.')
   if (cardData.image) imgString = cardData.image
 
   const img = imgString ? parseImageString(imgString) : MISSING_CARD_IMG
-  const text = `<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags.join(', ')}`
+  const text = generateCardView(cardData)
 
   // @ts-ignore
-  ctx.wizard.state.cardData = { ...cardData, image: imgString }
+  if (!editing) ctx.wizard.state.cardData = { ...cardData, image: imgString }
 
   // send card data and markup: one row contains medals to change the card rarity, the other contains a confirm button and a cancel button
   const m = await ctx.replyWithPhoto(img, {
@@ -179,6 +247,8 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   return ctx.wizard.next()
 }, composer, async (ctx) => {
   // @ts-ignore
+  if (!ctx.message?.text) return ctx.reply('Envie um texto.')
+  // @ts-ignore
   if (ctx.wizard.state.editingSubcategory) {
     // @ts-ignore
     ctx.wizard.state.cardData.subcategory = ctx.message.text
@@ -188,6 +258,15 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   }
   // @ts-ignore
   if (ctx.wizard.state.editingTags) {
+    // @ts-ignore
+    if (ctx.message.text === 'limpar') {
+      // @ts-ignore
+      ctx.wizard.state.cardData.tags = []
+      await updateCardView(ctx)
+      // @ts-ignore
+      ctx.wizard.state.editingTags = false
+      return
+    }
     // @ts-ignore
     ctx.wizard.state.cardData.tags = ctx.message.text.split(',').map(t => t.trim())
     await updateCardView(ctx)

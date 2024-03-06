@@ -34,6 +34,7 @@ model Subcategory {
   name       String   @unique
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId Int
+  image      String?
   cards      Card[]
 }
 
