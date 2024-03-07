@@ -66,7 +66,7 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
   const cardData = ctx.wizard.state.cardData
   const category = await getOrCreateCategory(cardData.category)
   const subcategory = await getOrCreateSubcategory(cardData.subcategory, category.id)
-  const rarity = await getRarityByName(raritiesEnToPt[cardData.rarity]) || await getRarityByName(cardData.rarity)
+  const rarity = await getRarityByName(raritiesEnToPt[cardData.rarity] || cardData.rarity)
   if (!category || !subcategory || !rarity) {
     await ctx.reply('Não foi possível modificar o card.')
     // @ts-ignore
