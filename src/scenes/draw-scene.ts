@@ -1,18 +1,25 @@
 import { Telegraf, error, warning } from 'melchior'
-import { Category } from '@prisma/client'
+import { Category, User } from '@prisma/client'
 import { InlineKeyboardButton } from 'telegraf/types'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getCardFullByID } from '../utilities/engine/cards.js'
 import { determineMethodToSendMedia } from '../utilities/telegram.js'
+import { WizardContext } from 'telegraf/typings/scenes/index.js'
 
 const coolDownBucket = new Set()
 const coolDownTime = 5 * 1000
 
+const waitingForDraw = new Map()
+const waitingToSend = new Map()
 const medalMap = {
     'Comum': '🥉',
     'Raro': '🥈',
     'Lendário': '🥇'
 }
+
+const CANCEL = [
+  [{ text: '❌ Cancelar', callback_data: 'CANCEL' }]
+]
 
 const sendCard = async (ctx, card, forceImg: string | undefined = undefined, final: boolean = false) => {
   if (!card.name) return ctx.reply('Oops... parece que houve um erro. 😅\nVocê obteve um card que não existe... estranho.')
@@ -36,20 +43,26 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
         reply_to_message_id: ctx.wizard.state.ogMessage
     }).catch(async (e) => {
         if (final) return false
-        if (e.message.includes('file identifier')) {
+        if (e.message.includes('file identifier') && !final) {
           error('scenes.draw', `could not send card: ${card.id} (url ${img}). msg is ${e.message}. retrying with placeholder after 5s...`)
-          await sendCard(ctx, card, 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.', true)
+          return sendCard(ctx, card, 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.', true)
         }
         await new Promise((r) => setTimeout(r, 5000))
         await sendCard(ctx, card)
     })
 }
 
-export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
+// @ts-ignore
+export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx: WizardContext & { userData: User }) => {
   if (coolDownBucket.has(ctx.from!.id)) {
     await ctx.reply('Calma, você tá indo rápido demais! Espere ' + (coolDownTime / 1000) + ' segundos antes de usar este comando novamente.')
     return ctx.scene.leave()
   }
+  if (waitingForDraw.has(ctx.from!.id)) {
+    await ctx.reply('Você já está girando um card. Termine de girar o card atual antes de girar outro.')
+    return ctx.scene.leave()
+  }
+  waitingForDraw.set(ctx.from!.id, true)
   coolDownBucket.add(ctx.from!.id)
   setTimeout(() => coolDownBucket.delete(ctx.from!.id), coolDownTime)
 
@@ -72,9 +85,19 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
         return { text: category.emoji + ' ' + category.name, callback_data: `DRAW_SCENE.${category.id}` } as InlineKeyboardButton
     })
     const chunked = keyboard.chunk(2)
-    const msg = await ctx.replyWithHTML('<b>ATENÇÃO: ESTE COMANDO ESTÁ EM DESENVOLVIMENTO. A FACILIDADE DE OBTER CERTAS CARTAS E POSSÍVEIS ERROS NÃO REPRESENTAM A QUALIDADE FINAL DO BOT.</b>\n\nEscolha uma categoria:', {
+
+    const text = `<b>ATENÇÃO: ESTE COMANDO ESTÁ EM DESENVOLVIMENTO. AS ATUAIS CARTAS E POSSÍVEIS ERROS NÃO REPRESENTAM A QUALIDADE FINAL DO BOT.</b>
+
+🎲 Olá, <b><a href="tg://user?id=${ctx.from?.id}">${ctx.from?.first_name}</a></b>! Bem-vindo de volta. Pronto para girar?
+🎨 Você tem <b>${ctx.userData.maximumDraws - ctx.userData.usedDraws}</b> de <b>${ctx.userData.maximumDraws}</b> giros restantes.
+
+🕹 Escolha uma categoria:`
+
+    const msg = await ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
+      caption: text,
+      parse_mode: 'HTML',
         reply_markup: {
-            inline_keyboard: chunked
+            inline_keyboard: [...chunked, ...CANCEL as InlineKeyboardButton[][]]
         }
     })
     // @ts-ignore
@@ -82,11 +105,22 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
     // @ts-ignore
     ctx.wizard.state.ogMessage = ctx.message.message_id
     return ctx.wizard.next()
-}, async (ctx) => {
+}, async (ctx, next) => {
+    // @ts-ignore
+    if (!ctx.callbackQuery?.data) return next()
+    // @ts-ignore
+    if (ctx.callbackQuery?.data === 'CANCEL') {
+        // @ts-ignore
+        await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.msgId).catch((e) => {
+          warning('scenes.draw', 'could not delete message: ' + e.message)
+        })
+        return ctx.scene.leave()
+    }
+    if (waitingToSend.has(ctx.from!.id)) return
     // @ts-ignore
     const category = ctx.callbackQuery?.data?.split('.')[1]
     if (!category) {
-        error('scenes.draw', 'category not found')
+        error('scenes.draw', 'category not found (callback): ' + category)
         // @ts-ignore
         await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.msgId).catch((e) => {
           warning('scenes.draw', 'could not delete message: ' + e.message)
@@ -97,7 +131,7 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
 
     const cat = await _brklyn.db.category.findUnique({ where: { id: parseInt(category) } })
     if (!cat) {
-        error('scenes.draw', 'category not found')
+        error('scenes.draw', 'category not found (from db): ' + category)
         await ctx.reply('Oops... parece que houve um erro. 😅')
         // @ts-ignore
         await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.msgId).catch((e) => warning('scenes.draw', 'could not delete message: ' + e.message))
@@ -113,16 +147,23 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
     })
     const chunked = keyboard.chunk(2)
 
-    const msg = await ctx.editMessageText('Escolha uma subcategoria:', {
+    const msg = await ctx.editMessageMedia({
+        type: 'animation',
+        media: 'https://altadena.space/assets/girar-two.mp4',
+        caption: `🎲 Escolha uma subcategoria para girar:`
+    }, {
         reply_markup: {
             inline_keyboard: chunked
         }
-    })
+    }).catch((e) => warning('scenes.draw', 'could not edit message: ' + e.message))
+    waitingToSend.delete(ctx.from!.id)
 
     // @ts-ignore
-    ctx.wizard.state.msgId = msg.message_id
+    ctx.wizard.state.msgId = msg?.message_id
     return ctx.wizard.next()
-}, async (ctx) => {
+}, async (ctx, next) => {
+  // @ts-ignore
+  if (!ctx.callbackQuery?.data) return next()
     // @ts-ignore
     const subcategory = ctx.callbackQuery?.data?.split('.')[1]
     if (!subcategory) {
@@ -132,6 +173,7 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
         await ctx.reply('Oops... parece que houve um erro. 😅')
         return ctx.scene.leave()
     }
+    if (waitingToSend.has(ctx.from!.id)) return
 
     const sub = await _brklyn.db.subcategory.findUnique({ where: { id: parseInt(subcategory) } })
     if (!sub) {
@@ -143,6 +185,7 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
     // @ts-ignore
     ctx.wizard.state.subcategory = sub
 
+    waitingToSend.set(ctx.from!.id, true)
     // @ts-ignore
     await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.msgId).catch((e) => {
       warning('scenes.draw', 'could not delete message: ' + e.message)
@@ -158,7 +201,9 @@ export default new Telegraf.Scenes.WizardScene('DRAW_SCENE', async (ctx) => {
         return ctx.scene.leave()
     }
 
+    waitingForDraw.delete(ctx.from!.id)
     await sendCard(ctx, card)
+    waitingToSend.delete(ctx.from!.id)
 
     return ctx.scene.leave()
 })

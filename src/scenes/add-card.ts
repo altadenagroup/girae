@@ -1,4 +1,4 @@
-import { Telegraf, error } from 'melchior'
+import { Telegraf, error, warning } from 'melchior'
 import cloudinary from 'cloudinary'
 import { generatePhotoLink } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
@@ -7,8 +7,8 @@ import { getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
 import { generate as inferCardData } from '../prompts/card-detection.js'
 import { CommonMessageBundle } from 'telegraf/types'
 import { Composer, Markup } from 'telegraf'
-import { getOrCreateCategory } from '../utilities/engine/category.js'
-import { getOrCreateSubcategory } from '../utilities/engine/subcategories.js'
+import { getCategoryByName, getOrCreateCategory } from '../utilities/engine/category.js'
+import { getOrCreateSubcategory, getSubcategoryByName } from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
 import { Card, Category, Rarity, Subcategory } from '@prisma/client'
 
@@ -19,9 +19,15 @@ const raritiesEnToPt = {
   'Legendary': 'Lendário'
 }
 
-const generateCardView = (cardData: any) => {
+const generateCardView = async (cardData: any) => {
+  const { missingSubcategory, missingCategory, mismatch } = await checkIfSubcategoryAndCategoryExist(cardData.subcategory, cardData.category)
+  let addText = '\n'
+  if (mismatch) addText += '\n<b>⚠️ A categoria da subcategoria e a categoria do card em si não batem. Isso pode ser um erro. </b>'
+  if (missingSubcategory) addText += '\n<b>⚠️ A subcategoria deste card não existe. Corrija.</b>'
+  if (missingCategory) addText += '\n<b>⚠️ A categoria deste card não existe. Corrija.</b>'
+
   const isEditing = cardData.id ? `(<i>editando card ${cardData.id}</i>)\n` : ''
-  return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags?.join?.(', ')}`
+  return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags?.join?.(', ')}${addText}`
 }
 
 const CARD_MARKUP = Markup.inlineKeyboard([[
@@ -225,18 +231,17 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   }
 
   const exists = editing ? false : await getCardByNameAndSubcategory(cardData.name, cardData.subcategory)
-  if (exists) return ctx.reply('Já existe um card com esse nome e subcategoria.')
   if (cardData.image) imgString = cardData.image
 
   const img = imgString ? parseImageString(imgString) : MISSING_CARD_IMG
-  const text = generateCardView(cardData)
+  const text = await generateCardView(cardData)
 
   // @ts-ignore
   if (!editing) ctx.wizard.state.cardData = { ...cardData, image: imgString }
 
   // send card data and markup: one row contains medals to change the card rarity, the other contains a confirm button and a cancel button
   const m = await ctx.replyWithPhoto(img, {
-    caption: text,
+    caption: text + (exists ? '\n\n<b>⚠️ Este card já existe, aparentemente. Confirme antes de upar.</b>' : ''),
     parse_mode: 'HTML', reply_markup: CARD_MARKUP
   })
 
@@ -250,8 +255,10 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   if (!ctx.message?.text) return ctx.reply('Envie um texto.')
   // @ts-ignore
   if (ctx.wizard.state.editingSubcategory) {
-    // @ts-ignore
+    // @ts-ignore regex to replace k-pop or kpop to K-Pop
     ctx.wizard.state.cardData.subcategory = ctx.message.text
+      .replace(/k-?pop/i, 'K-Pop')
+      .replace(/j-?pop/i, 'J-Pop')
     await updateCardView(ctx)
     // @ts-ignore
     ctx.wizard.state.editingSubcategory = false
@@ -285,6 +292,7 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   if (ctx.wizard.state.editingCategory) {
     // @ts-ignore
     ctx.wizard.state.cardData.category = ctx.message.text
+      .replace(/k-?pop/i, 'K-POP')
     await updateCardView(ctx)
     // @ts-ignore
     ctx.wizard.state.editingCategory = false
@@ -292,14 +300,29 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   return ctx.wizard.back()
 })
 
-const updateCardView = (ctx) => {
+const updateCardView = async (ctx) => {
+  const text = await generateCardView(ctx.wizard.state.cardData)
+  const shouldRemoveConfirm = text.includes('Corrija')
   // @is-ignore
-  return _brklyn.telegram.editMessageCaption(ctx.chat?.id, ctx.wizard.state.messageId, undefined, generateCardView(ctx.wizard.state.cardData), {
+  return _brklyn.telegram.editMessageCaption(ctx.chat?.id, ctx.wizard.state.messageId, undefined, text, {
     parse_mode: 'HTML',
-    reply_markup: CARD_MARKUP
+    reply_markup: !shouldRemoveConfirm ? CARD_MARKUP : { inline_keyboard: CARD_MARKUP.inline_keyboard.filter((row) => row[0].text !== '✅ Confirmar') }
   }).catch(async (e) => {
-    error('scenes.addCard', `could not edit message: ${e.stack}`)
+    warning('scenes.addCard', `could not edit message: ${e.message}`)
     await ctx.reply('Não foi possível editar a mensagem. Tente novamente? Volte ao card e salve-o ou cancele-o.')
     return false
   })
+}
+
+const checkIfSubcategoryAndCategoryExist = async (subcategory, category) => {
+  let has = { missingSubcategory: false, missingCategory: false, mismatch: false }
+  const sub = await getSubcategoryByName(subcategory)
+  if (!sub) has.missingSubcategory = true
+
+  const cat = await getCategoryByName(category)
+  if (!cat) has.missingCategory = true
+  if (has.missingSubcategory || has.missingCategory) return has
+
+  if (sub.categoryId !== cat.id) has.mismatch = true
+  return has
 }

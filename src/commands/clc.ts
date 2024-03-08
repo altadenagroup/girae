@@ -17,6 +17,7 @@ export default async (ctx: BotContext) => {
   if (!sub) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
 
   const cards = await getCardsBySubcategory(sub)
+  if (!cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
   // sort cards by rarest and get top 20
   const sorted = cards.sort((a, b) => (a.rarity?.chance || 0) - (b.rarity?.chance || 0)).slice(0, 20)
 

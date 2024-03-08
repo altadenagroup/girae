@@ -27,5 +27,18 @@ export const functionEditing = (ctx: Context, next: () => void) => {
     }
   }
 
+  // and replyWithAnimation
+  if (ctx.message) {
+    // @ts-ignore
+    ctx.ogReplyWithAnimation = ctx.replyWithAnimation
+    ctx.replyWithAnimation = (animation, extra) => {
+      // @ts-ignore
+      return ctx.ogReplyWithAnimation(animation, {
+        reply_to_message_id: ctx.message!.message_id,
+        ...extra
+      })
+    }
+  }
+
   return next()
 }

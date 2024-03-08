@@ -2,7 +2,7 @@
 // cards have rarities, expressed as a number from 0 to 1, where 0 is 100% chance and 1 is 0% chance.
 
 import { Category, Rarity, User, Card, Subcategory } from '@prisma/client'
-import { error, info } from 'melchior'
+import { error, info, warning } from 'melchior'
 import { MISSING_CARD_IMG } from '../constants.js'
 
 export const getRarities = () => {
@@ -13,7 +13,10 @@ export const getCategories = () => {
     return _brklyn.db.category.findMany()
 }
 
-export const getSubcategoriesByCategory = (category: Category) => {
+export const getSubcategoriesByCategory = (category: Category, onlySubsWithCards: boolean = false) => {
+  if (onlySubsWithCards) {
+    return _brklyn.db.subcategory.findMany({ where: { categoryId: category.id, cards: { some: {} } } })
+  }
     return _brklyn.db.subcategory.findMany({ where: { categoryId: category.id } })
 }
 
@@ -94,7 +97,7 @@ export const addCard = async (user: User, card: Card): Promise<void> => {
 // selects a random card given a rarity, a category and a subcategory.
 export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory, recursing: boolean = false): Promise<Card> => {
     let opts: { rarityId?: number } = {}
-    if (!recursing) opts.rarityId = rarity.id
+    if (!recursing) opts.rarityId = rarity?.id
 
     const cards = await _brklyn.db.card.findMany({
         where: {
@@ -114,8 +117,11 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
 
     if (cards.length === 0) {
         if (recursing) {
-          error('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
-          throw new Error('No cards found')
+          warning('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
+          // just return the first card on the subcategory
+          const card = await _brklyn.db.card.findFirst({ where: { subcategoryId: subcategory.id }, include: { rarity: true, category: true, subcategory: true } })
+          if (!card) throw new Error('No cards found')
+          return card
         }
         return selectRandomCard(rarity, category, subcategory, true)
     }
@@ -133,11 +139,12 @@ export const testRandomCard = async (user: User): Promise<void> => {
 }
 
 export const pickFourRandomSubcategories = async (category: Category): Promise<Subcategory[]> => {
-    const subcategories = await getSubcategoriesByCategory(category)
+    const subcategories = await getSubcategoriesByCategory(category, true)
     const result: Subcategory[] = []
+    const amount = category.name === 'K-POP' ? 8 : 4
     // if there are 4 or less subcategories, we will return them all.
-    if (subcategories.length <= 4) return subcategories
-    while (result.length < 4) {
+    if (subcategories.length <= amount) return subcategories
+    while (result.length < amount) {
         const subcategory = subcategories[Math.floor(Math.random() * subcategories.length)]
         if (!result.includes(subcategory)) result.push(subcategory)
     }

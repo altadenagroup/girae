@@ -1,3 +1,4 @@
+import { warning } from 'melchior'
 import { BotContext } from '../types/context.js'
 import { getCardByID } from '../utilities/engine/cards.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
@@ -57,10 +58,10 @@ export default async (ctx: BotContext) => {
         return ctx.reply('Desculpe, não consegui gerar a imagem do perfil. 😔\nTente novamente mais tarde. Se o problema persistir, entre em contato com meu suporte, em @giraesupport.')
     }
 
-    ctx.replyWithPhoto(dittoData.url, {
+    await ctx.replyWithPhoto(dittoData.url, {
         caption: `🖼 Perfil de <b>${escapeForHTML(ctx.from!.first_name)}</b>\n\n<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
         parse_mode: 'HTML'
-    })
+    }).catch((e) => warning('profile', `couldn't send profile image: ${e}`))
 
     return
 }
