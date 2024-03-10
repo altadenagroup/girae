@@ -31,8 +31,8 @@ export default async (ctx) => {
     r = e?.message || e
   }
 
-  await ctx.replyHTML(`<b>Code:</b> <pre><code class="language-javascript">${code}</code></pre>\n<b>Result:</b><pre><code class="language-javascript">${await clean(r)}</code></pre>`).catch((err) => {
-    return ctx.replyHTML(`<pre><code class="language-javascript">${err.message}</code></pre>`)
+  await ctx.replyWithHTML(`<b>Code:</b> <pre><code class="language-javascript">${code}</code></pre>\n<b>Result:</b><pre><code class="language-javascript">${await clean(r)}</code></pre>`).catch((err) => {
+    return ctx.replyWithHTML(`<pre><code class="language-javascript">${err.message}</code></pre>`)
   })
 }
 

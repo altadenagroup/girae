@@ -18,6 +18,7 @@ await client.connect()
 const brooklyn = new Brooklyn(client as RedisClientType)
 global._brklyn = brooklyn
 
+await brooklyn.prelaunch()
 await brooklyn.launch()
 
 

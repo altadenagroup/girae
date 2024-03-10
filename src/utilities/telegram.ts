@@ -35,6 +35,7 @@ export const generatePhotoLink = async (fileID: string) => {
   if (!file) return null
   return `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
 }
+
 export const determineMethodToSendMedia = (link: string) => {
     // remove query parameters
     link = link.split('?')[0]
@@ -68,4 +69,8 @@ export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string)
 
 export const mentionUser = (user: User) => {
   return `<a href="tg://user?id=${user.id}">${user.first_name}</a>`
+}
+
+export const launchStartURL = (commandName: string, args: string) => {
+  return `https://t.me/${_brklyn.botInfo!.username}?start=${commandName}-${args}`
 }

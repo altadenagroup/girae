@@ -6,3 +6,7 @@ export const generateID = (length: number) => {
   }
   return result
 }
+
+export const readableNumber = (num: number) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}

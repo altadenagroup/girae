@@ -1,6 +1,7 @@
 import { User } from 'telegraf/types'
 import { generateID } from './misc.js'
 import { Context } from 'telegraf'
+import { debug } from 'melchior'
 
 export const AdvancedRedisStore = () => {
   return {
@@ -19,6 +20,8 @@ export const AdvancedRedisStore = () => {
       return JSON.parse(session)
     },
     async set (key: string, value: any) {
+      if (!value.__scenes) return
+
       const sessionID = generateID(6)
       await _brklyn.cache.set('user_to_session', key, sessionID)
       return await _brklyn.cache.set('session', sessionID, JSON.stringify(value))

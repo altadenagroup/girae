@@ -1,3 +1,4 @@
+import { info } from "melchior"
 import { resetAllDailies, resetAllDraws, resetAllReps } from "../utilities/engine/users.js"
 import cron from 'node-cron'
 
@@ -9,6 +10,8 @@ export class Sidecar {
     cron.schedule('0 */6 * * *', () => this.resetReps())
     // reset dailies is every 24h
     cron.schedule('0 0 * * *', () => this.resetDailies())
+    // run clean up systems every 10m
+    cron.schedule('*/10 * * * *', () => this.cleanUpTasks())
   }
   async resetUserStuff () {
     await resetAllDailies()
@@ -27,5 +30,11 @@ export class Sidecar {
 
   resetDailies () {
     return resetAllDailies()
+  }
+
+  async cleanUpTasks () {
+    // remove all subcategories with no cards in them
+    const victims = await _brklyn.db.subcategory.deleteMany({ where: { cards: { none: {} } } })
+    info('sidecar', `cleaned up ${victims.count} subcategories`)
   }
 }

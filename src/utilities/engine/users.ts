@@ -1,5 +1,6 @@
-import { UserCard } from "@prisma/client"
-import { debug } from "melchior"
+import { Rarity, User, UserCard } from "@prisma/client"
+import { debug, warning } from "melchior"
+import { getAllRarities } from "./rarity.js"
 
 // get how many cards a user has
 export const getUserCardsCount = async (userId: number) => {
@@ -105,4 +106,56 @@ export const checkIfUserHasCards = async (user: number, cards: number[]): Promis
     })
 
     return userCards
+}
+
+// this function returns the rarity of the card the user will get from a draw.
+export const getRarityForUserDraw = async (user: User): Promise<Rarity> => {
+  const rarities = await getAllRarities()
+
+  const userChance = Math.random() - user.luckModifier
+  let sum = 0
+  let rarity = rarities[0]
+  for (const r of rarities) {
+    sum += r.chance
+    if (userChance < sum) {
+      rarity = r
+      break
+    }
+  }
+
+  if (sum > 1) warning('users.returnRarityForUser', `sum of rarities is greater than 1. sum: ${sum}`)
+
+  return rarity
+}
+
+export const deduceDraw = async (userId: number): Promise<boolean> => {
+  return await _brklyn.db.user.update({
+    where: { id: userId },
+    data: { usedDraws: { increment: 1 } }
+  }).then(() => true).catch(() => false)
+}
+
+// gets how many users have this cars by using a group by query
+export const getHowManyUsersHaveCard = async (cardId: number): Promise<number> => {
+  const cached = await _brklyn.cache.get('cardUserCount', cardId.toString())
+  if (cached) return cached
+
+  const count = await _brklyn.db.userCard.groupBy({
+    by: ['userId'],
+    where: {
+      cardId
+    }
+  })
+
+  await _brklyn.cache.setexp('cardUserCount', cardId.toString(), count.length, 5 * 60)
+  return count.length
+}
+
+export const getHowManyCardsUserHas = async (userId: number, cardId: number): Promise<number> => {
+  return _brklyn.db.userCard.count({
+    where: {
+      userId,
+      cardId
+    }
+  })
 }

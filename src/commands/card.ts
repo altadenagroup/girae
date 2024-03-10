@@ -2,7 +2,12 @@ import type { Card, Category, Rarity, Subcategory } from "@prisma/client"
 import { BotContext } from "../types/context.js"
 import { parseImageString } from "../utilities/lucky-engine.js"
 import { determineMethodToSendMedia } from "../utilities/telegram.js"
-import { getCardByID, searchCards } from "../utilities/engine/cards.js"
+import { deleteUserCard, getCardByID, getFirstUserCard, getHowManyCardsAreThere, searchCards } from "../utilities/engine/cards.js"
+import { getHowManyUsersHaveCard } from "../utilities/engine/users.js"
+import { readableNumber } from "../utilities/misc.js"
+import { MISSING_CARD_IMG } from "../constants.js"
+import { tcqc } from "../sessions/tcqc.js"
+import { addBalance } from "../utilities/engine/economy.js"
 
 const medalMap = {
     'Comum': '🥉',
@@ -40,17 +45,23 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
     const img = parseImageString(char.image, 'ar_3:4,c_crop')
 
     const repeated = await _brklyn.engine.getUserTotalGivenCardAmount(ctx.userData, char)
+    const userWithCard = await getHowManyUsersHaveCard(char.id)
+    const inCirc = await getHowManyCardsAreThere(char.id)
 
     const tagExtra = char.tags?.[0]  ? `\n🔖 ${char.tags[0]}` : ''
     const text = `${medalMap[char.rarity?.name || 'Comum']} <code>${char.id}</code>. <b>${char.name}</b>
 ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra}
 
+👨‍👨‍👧‍👧 ${readableNumber(userWithCard)} pessoa${userWithCard === 1 ? '' : 's'} com este card
+📦 ${readableNumber(inCirc)} vez${inCirc === 1 ? '' : 'es'} girado
 👾 ${ctx.from?.first_name} tem ${repeated} card${repeated === 1 ? '' : 's'}`
 
     const method = determineMethodToSendMedia(img)
     return ctx[method!](img, {
         caption: text,
         parse_mode: 'HTML'
+    }).catch(() => {
+      return ctx.replyWithPhoto(MISSING_CARD_IMG, { caption: text, parse_mode: 'HTML' })
     })
 }
 

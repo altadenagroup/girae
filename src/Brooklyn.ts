@@ -8,9 +8,10 @@ import argumentParser from './middleware/argument-parser.js'
 import { OpenAI } from 'openai'
 import cloudinary from 'cloudinary'
 import { AdvancedRedisStore } from './utilities/session-store.js'
-import { Context } from 'telegraf'
+import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
 import { Sidecar } from './sidecar/index.js'
+import { SessionManager } from './sessions/manager.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -23,6 +24,7 @@ export default class Brooklyn extends Client {
     apiKey: process.env.OPENAI_API_KEY
   })
   sidecar = new Sidecar()
+  es2: SessionManager
 
   constructor(cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {
@@ -30,23 +32,29 @@ export default class Brooklyn extends Client {
         new plugins.CommandLoaderPlugin({
           commandDirectory: prebuiltPath('./src/commands'),
           guardDirectory: prebuiltPath('./src/guards'),
-          sceneDirectory: prebuiltPath('./src/scenes')
+          sceneDirectory: prebuiltPath('./src/legacy-scenes')
         })
       ],
       errorThreshold: 5,
-      sessionStore: AdvancedRedisStore()
+      useSessions: false
     })
 
     this.#internalCache = cache
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
-    this.setUpExitHandler()
+    this.es2 = new SessionManager(this)
+
     this.use(functionEditing)
     this.use(argumentParser)
     this.use(userData)
-
+    // @ts-ignore
+    this.use((...args) => this.es2.middleware(...args))
+    this.use(session({
+      store: AdvancedRedisStore()
+    }))
 
     this.setUpCDN()
+    this.setUpExitHandler()
   }
 
   private setUpCDN() {
@@ -102,6 +110,10 @@ export default class Brooklyn extends Client {
 
     if (ctx.message?.message_thread_id) return `${fromId}:${chatId}:${ctx.message.message_thread_id}`
     return `${fromId}:${chatId}`
+  }
+
+  async prelaunch() {
+    await this.sidecar.cleanUpTasks()
   }
 }
 

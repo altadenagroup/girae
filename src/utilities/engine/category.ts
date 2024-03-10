@@ -31,3 +31,30 @@ export const createCategory = async (name: string) => {
 
     return category
 }
+
+export const getAllCategories = async () => {
+    const cached = await _brklyn.cache.get('categories_all', 'all')
+    if (cached) return cached
+
+    const categories = await _brklyn.db.category.findMany()
+    await _brklyn.cache.setexp('categories_all', 'all', categories, 24 * 60 * 60)
+
+    return categories
+}
+
+export const getCategoryByID = async (id: number) => {
+    const cached = await _brklyn.cache.get('categories_id', id.toString())
+    if (cached) return cached
+
+    const category = await _brklyn.db.category.findFirst({
+        where: {
+            id
+        }
+    })
+
+    if (category) {
+        await _brklyn.cache.setexp('categories_id', id.toString(), category, 60 * 60 * 24)
+    }
+
+    return category
+}

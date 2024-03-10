@@ -5,10 +5,7 @@ export default async (ctx: BotContext) => {
         return ctx.reply('Ah... sinto muito, mas você já girou os dados que podia hoje. 😣\nTente novamente amanhã!')
     }
 
-    return ctx.scene.enter('DRAW_SCENE', {
-        user: { isAdmin: ctx.userData.isAdmin },
-        argZero: ctx.args[0]
-    })
+   ctx.es2.enter('START_DRAW').catch(() => undefined)
 }
 
 export const info = {
