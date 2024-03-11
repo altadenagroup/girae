@@ -2,7 +2,7 @@
 // cards have rarities, expressed as a number from 0 to 1, where 0 is 100% chance and 1 is 0% chance.
 
 import { Category, Rarity, User, Card, Subcategory } from '@prisma/client'
-import { error, info, warning } from 'melchior'
+import { error, info, warn } from 'melchior'
 import { MISSING_CARD_IMG } from '../constants.js'
 
 export const getRarities = () => {
@@ -117,7 +117,7 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
 
     if (cards.length === 0) {
         if (recursing) {
-          warning('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
+          warn('luckyEngine', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
           // just return the first card on the subcategory
           const card = await _brklyn.db.card.findFirst({ where: { subcategoryId: subcategory.id }, include: { rarity: true, category: true, subcategory: true } })
           if (!card) throw new Error('No cards found')

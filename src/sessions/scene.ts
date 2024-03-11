@@ -26,7 +26,7 @@ export class SceneController {
   }
 }
 
-interface CurrentSceneStatus {
+export interface CurrentSceneStatus {
   nextStep: number | undefined
 }
 

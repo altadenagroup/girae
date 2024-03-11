@@ -36,7 +36,7 @@
     "@telegraf/session": "^2.0.0-beta.7",
     "cloudinary": "^2.0.1",
     "dotenv": "^16.4.4",
-    "melchior": "^0.4.0",
+    "melchior": "^0.5.0",
     "newrelic": "latest",
     "node-cron": "^3.0.3",
     "openai": "^4.28.0",

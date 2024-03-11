@@ -1,6 +1,5 @@
 import { Card, Category, Rarity, Subcategory, User } from "@prisma/client"
 import { getSubcategoryByID } from "./subcategories.js"
-import { warning } from "melchior"
 import { deduceDraw, getRarityForUserDraw } from "./users.js"
 
 export interface CreateCardOptions {
@@ -167,7 +166,6 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
   })
 
   if (cards.length === 0) {
-        warning('cards.selectRandomCard', `no cards found for rarity ${rarity.name}, category ${category.name} and subcategory ${subcategory.name}`)
         // just return the first card in the subcategory
         return _brklyn.db.card.findFirst({
             where: {

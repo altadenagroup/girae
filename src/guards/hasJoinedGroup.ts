@@ -10,11 +10,11 @@ export default async (ctx) => {
     }
 
     // if it's a dm, return
-    if (ctx.chat?.type === 'private' && process.env.ALLOW_DM) {
+    if (ctx.chat?.type === 'private' && !ctx.message?.text?.includes?.('girar')) {
         return true
     }
 
-    if (ctx.chat?.id === -1002096118477 || /* ctx.chat?.id === -1002058397651 ||*/ ctx.chat?.id === -1001945644138) {
+    if (ctx.chat?.id === -1002096118477 /*|| ctx.chat?.id === -1002058397651*/ || ctx.chat?.id === -1001945644138) {
       return true
     }
 

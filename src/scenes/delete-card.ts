@@ -4,6 +4,7 @@ import { AdvancedScene } from '../sessions/scene.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { determineMethodToSendMedia } from '../utilities/telegram.js'
 import { addBalance } from '../utilities/engine/economy.js'
+import { warn } from 'melchior'
 
 interface DeleteData {
   card: Card
@@ -63,22 +64,27 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
       where: {
         id: ctx.session.data.usercardId
       }
+    }).catch((e) => {
+      warn('es²', `failed to delete card: ${e.message}`)
+      return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente novamente mais tarde.')
     })
 
     const money = rarityIdToPrice[ctx.session.data.card.rarityId][1]
     await addBalance(ctx.userData.id, money)
     await ctx.session.deleteMainMessage()
-    return ctx.replyWithHTML(`👍 <b>${ctx.session.data.card.name}</b> foi deletado com sucesso! Você recebeu <b>${money}</b> moedas.`)
-  // @ts-ignore
-  } else if (ctx.message?.text?.startsWith?.('/cancelar')) {
+    await ctx.replyWithHTML(`👍 <b>${ctx.session.data.card.name}</b> foi deletado com sucesso! Você recebeu <b>${money}</b> moedas.`)
+  return
+    // @ts-ignore
+  } else if (ctx.message?.text?.startsWith?.('/cancel')) {
     ctx.session.steps.leave()
-    return ctx.reply('Operação cancelada.')
+    await ctx.reply('Operação cancelada.')
+    return
   }
 
-  return ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.')
+  await ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.')
 }
 
-export default new AdvancedScene('DELETE_CARD', [
+export default new AdvancedScene('DELETE_CARD_ES2', [
   // @ts-ignore
   firstStep,
   // @ts-ignore

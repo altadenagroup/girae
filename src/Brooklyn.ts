@@ -2,7 +2,6 @@ import { Client, info, plugins } from 'melchior'
 import { PrismaClient } from '@prisma/client'
 import { RedisClientType } from 'redis'
 import userData from './middleware/user-data.js'
-import * as luckyEngine from './utilities/lucky-engine.js'
 import { DittoMetadata } from './types/ditto.js'
 import argumentParser from './middleware/argument-parser.js'
 import { OpenAI } from 'openai'
@@ -12,6 +11,7 @@ import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
 import { Sidecar } from './sidecar/index.js'
 import { SessionManager } from './sessions/manager.js'
+import userCooldown from './middleware/user-cooldown.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -19,7 +19,6 @@ export default class Brooklyn extends Client {
   db: PrismaClient
   #internalCache: RedisClientType = {} as RedisClientType
   cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
-  engine = luckyEngine
   ai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   })
@@ -36,17 +35,19 @@ export default class Brooklyn extends Client {
         })
       ],
       errorThreshold: 5,
-      useSessions: false
+      useSessions: false,
+      middlewares: []
     })
 
     this.#internalCache = cache
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.es2 = new SessionManager(this)
-
+    this.use(userCooldown)
     this.use(functionEditing)
     this.use(argumentParser)
     this.use(userData)
+
     // @ts-ignore
     this.use((...args) => this.es2.middleware(...args))
     this.use(session({
@@ -64,6 +65,8 @@ export default class Brooklyn extends Client {
       api_secret: process.env.CLOUDINARY_API_SECRET
     })
   }
+
+
 
   private onExit(code: number) {
     info('bot', `Exiting with code ${code}`)

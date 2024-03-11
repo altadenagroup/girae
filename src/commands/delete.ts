@@ -6,7 +6,7 @@ export default async (ctx: BotContext) => {
     const char = await getCardFromArg(ctx.args.join(' '))
     if (!char) return ctx.responses.replyCouldNotFind('um personagem com esse nome ou ID')
 
-    return ctx.es2.enter('DELETE_CARD', { card: char })
+    return ctx.es2.enter('DELETE_CARD_ES2', { card: char })
 }
 
 export const info = {

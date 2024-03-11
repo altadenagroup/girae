@@ -34,7 +34,7 @@ export class Sidecar {
 
   async cleanUpTasks () {
     // remove all subcategories with no cards in them
-    const victims = await _brklyn.db.subcategory.deleteMany({ where: { cards: { none: {} } } })
-    info('sidecar', `cleaned up ${victims.count} subcategories`)
+    // const victims = await _brklyn.db.subcategory.deleteMany({ where: { cards: { none: {} } } })
+    // info('sidecar', `cleaned up ${victims.count} subcategories`)
   }
 }

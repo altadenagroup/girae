@@ -1,4 +1,4 @@
-import { Telegraf, error, warning } from 'melchior'
+import { Telegraf, error, warn } from 'melchior'
 import cloudinary from 'cloudinary'
 import { generatePhotoLink } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
@@ -308,7 +308,7 @@ const updateCardView = async (ctx) => {
     parse_mode: 'HTML',
     reply_markup: !shouldRemoveConfirm ? CARD_MARKUP : { inline_keyboard: CARD_MARKUP.inline_keyboard.filter((row) => row[0].text !== '✅ Confirmar') }
   }).catch(async (e) => {
-    warning('scenes.addCard', `could not edit message: ${e.message}`)
+    warn('scenes.addCard', `could not edit message: ${e.message}`)
     await ctx.reply('Não foi possível editar a mensagem. Tente novamente? Volte ao card e salve-o ou cancele-o.')
     return false
   })

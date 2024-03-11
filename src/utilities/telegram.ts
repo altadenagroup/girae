@@ -74,3 +74,9 @@ export const mentionUser = (user: User) => {
 export const launchStartURL = (commandName: string, args: string) => {
   return `https://t.me/${_brklyn.botInfo!.username}?start=${commandName}-${args}`
 }
+
+
+export const escapeHTML = (text: string) => {
+  return text.replaceAll(/</g, '&lt;')
+  .replaceAll(/>/g, '&gt;')
+}

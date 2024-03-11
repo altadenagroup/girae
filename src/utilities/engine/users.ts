@@ -1,5 +1,5 @@
 import { Rarity, User, UserCard } from "@prisma/client"
-import { debug, warning } from "melchior"
+import { debug, warn } from "melchior"
 import { getAllRarities } from "./rarity.js"
 
 // get how many cards a user has
@@ -123,7 +123,7 @@ export const getRarityForUserDraw = async (user: User): Promise<Rarity> => {
     }
   }
 
-  if (sum > 1) warning('users.returnRarityForUser', `sum of rarities is greater than 1. sum: ${sum}`)
+  if (sum > 1) warn('users.returnRarityForUser', `sum of rarities is greater than 1. sum: ${sum}`)
 
   return rarity
 }

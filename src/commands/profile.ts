@@ -1,4 +1,3 @@
-import { warning } from 'melchior'
 import { BotContext } from '../types/context.js'
 import { getCardByID } from '../utilities/engine/cards.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
@@ -38,7 +37,7 @@ export default async (ctx: BotContext) => {
 
     const data = {
         avatarURL,
-        username: ctx.from!.first_name,
+        username: ctx.from!.raw_first_name,
         bio: ctx.profileData.biography,
         favoriteColor: ctx.profileData.favoriteColor,
         reputation: ctx.profileData.reputation,
@@ -61,7 +60,7 @@ export default async (ctx: BotContext) => {
     await ctx.replyWithPhoto(dittoData.url, {
         caption: `🖼 Perfil de <b>${escapeForHTML(ctx.from!.first_name)}</b>\n\n<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
         parse_mode: 'HTML'
-    }).catch((e) => warning('profile', `couldn't send profile image: ${e}`))
+    })
 
     return
 }

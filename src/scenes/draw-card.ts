@@ -4,7 +4,7 @@ import { AdvancedScene } from '../sessions/scene.js'
 import { Category } from '@prisma/client'
 import { getAllCategories, getCategoryByID } from '../utilities/engine/category.js'
 import { getRandomSubcategories, getSubcategoryByID } from '../utilities/engine/subcategories.js'
-import { error, warning } from 'melchior'
+import { error, warn } from 'melchior'
 import { drawCard } from '../utilities/engine/cards.js'
 import { MEDAL_MAP } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
@@ -23,6 +23,7 @@ interface DrawData {
 
 const peopleUsingCommand = new Set()
 const coolDownBucket = new Set()
+const peopleOnGroup: number[] = []
 
 const firstStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
@@ -34,6 +35,11 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   if (coolDownBucket.has(ctx.from?.id)) {
     ctx.session.steps.leave()
     return ctx.reply('Você está girando cartas muito rápido. Por favor, espere um pouco antes de girar novamente.')
+  }
+
+  if (peopleOnGroup.filter((id) => id === ctx.chat?.id).length > 3) {
+    ctx.session.steps.leave()
+    return ctx.reply('Há muitas pessoas girando neste grupo ao mesmo tempo. Por favor, espere um pouco antes de girar novamente.')
   }
 
   const categories: Category[] = await getAllCategories()
@@ -51,11 +57,14 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 🕹 Escolha uma categoria:`
 
   ctx.session.steps.next()
+  ctx.session.setAttribute('replayOnRateLimit', true)
 
   peopleUsingCommand.add(ctx.from?.id)
   coolDownBucket.add(ctx.from?.id)
+  peopleOnGroup.push(ctx.chat!.id)
   setTimeout(() => coolDownBucket.delete(ctx.from?.id), 5000)
   setTimeout(() => peopleUsingCommand.delete(ctx.from?.id), 5000)
+  setTimeout(() => peopleOnGroup.splice(peopleOnGroup.indexOf(ctx.chat!.id), 1), 5000)
   return ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
@@ -97,11 +106,12 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
       reply_markup: {
           inline_keyboard: chunked
       }
-  }).catch((e) => warning('scenes.draw', 'could not edit message: ' + e.message))
+  }).catch((e) => warn('scenes.draw', 'could not edit message: ' + e.message))
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
   const subcategoryId = ctx.callbackQuery?.data.split('.')[1]
+  console.log(ctx.callbackQuery.data)
   const sub = await getSubcategoryByID(parseInt(subcategoryId))
   if (!sub) {
     await ctx.session.deleteMainMessage()

@@ -1,14 +1,15 @@
 import { BotContext } from '../types/context.js'
 import type Brooklyn from '../Brooklyn.js'
 import { User } from 'telegraf/types'
-import { AdvancedScene, SceneController } from './scene.js'
+import { AdvancedScene, CurrentSceneStatus, SceneController } from './scene.js'
 import startTrade from '../scenes/start-trade.js'
 import { generateID } from '../utilities/misc.js'
-import { debug, warning } from 'melchior'
+import { debug, error, warn } from 'melchior'
 import { SessionContext } from './context.js'
 import drawCard from '../scenes/draw-card.js'
 import deleteCard from '../scenes/delete-card.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
+import { TelegramError } from 'telegraf'
 
 export interface ES2Methods {
   enter (sceneID: string, args?: { [key: string]: any } | undefined): Promise<void>
@@ -30,7 +31,7 @@ export class SessionManager {
   }
 
   async middleware (ctx: BotContext, next: () => void) {
-    if (!ctx.from) {
+    if (!ctx.from || ctx.chatBoost) {
       return next()
     }
 
@@ -41,6 +42,9 @@ export class SessionManager {
       if (await tcqc.handle(ctx as ExtendedBotContext<any>)) {
         return
       }
+    // @ts-ignore
+    } else if (ctx.callbackQuery?.data?.endsWith?.('ADD_CARD')) {
+      return next()
     }
 
     this.addES2Methods(ctx)
@@ -57,7 +61,7 @@ export class SessionManager {
     // resume scene
     const scene = this.scenes.find(s => s.id === session.scene)
     if (!scene) {
-      warning('es²', `tried to resume scene ${session.scene} but it was not found`)
+      warn('es²', `tried to resume scene ${session.scene} but it was not found`)
       return next()
     }
     const allowedUpdates = scene.allowedEvents
@@ -104,7 +108,7 @@ export class SessionManager {
         },
         deleteMainMessage: () => {
           return this.bot.telegram.deleteMessage(ctx.chat!.id, ctx.session.data._mainMessage).catch((e) => {
-            warning('es²', `(${sessionKey}) failed to delete main message: ${e.message}`)
+            warn('es²', `(${sessionKey}) failed to delete main message: ${e.message}`)
           })
         },
         setAttribute: (key, value) => {
@@ -114,7 +118,8 @@ export class SessionManager {
 
     this.applyCtxMutations(ctx)
 
-    const status = await scene.run(ctx, session.currentStep)
+    const status = await this.runScene(ctx, session, scene)
+    if (!status) return
 
     if (status.nextStep !== undefined) {
       session.currentStep = status.nextStep
@@ -125,6 +130,22 @@ export class SessionManager {
     } else {
       await this.deleteSession(sessionKey)
     }
+  }
+
+  runScene (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>): Promise<CurrentSceneStatus | undefined> {
+    const ogSession = session
+    return scene.run(ctx, session.currentStep).catch((e: TelegramError) => {
+      if (e.message.includes('Too Many Requests') && ctx.session.data._replayOnRateLimit) {
+        debug('es²', `got a 429, retrying in speficied time / 2`)
+        return new Promise<CurrentSceneStatus | undefined>((resolve) => {
+          setTimeout(() => {
+            resolve(this.runScene(ctx, ogSession, scene))
+            // @ts-ignore
+          }, e.response.retry_after * 500)
+        })
+      }
+      error('es²', `error while running scene: ${e.stack}`)
+    })
   }
 
   applyCtxMutations (ctx: SessionContext<any>) {
@@ -224,5 +245,20 @@ export class SessionManager {
     }
 
     await this.handleSession(ctx as SessionContext<any>, session, scene, sessionID, args)
+  }
+
+  // ephemeral contexts are a type of context that does not intercept user messages, but simply saves it so commands can ceck for it and use a defined behavior.
+  // this is useful, as an example, in the trade command. once a user starts the trade, a EC with the parameter isTrading will be saved for their id, so they can select a card to trade using the /card command.
+  // once the trade is finished, the EC is deleted.
+  async setEC (userID: number, key: string, value: any) {
+    await this.bot.cache.set('es2_ephemeral_contexts', `${userID}.${key}`, value)
+  }
+
+  async getEC (userID: number, key: string) {
+    return this.bot.cache.get('es2_ephemeral_contexts', `${userID}.${key}`)
+  }
+
+  async delEC (userID: number, key: string) {
+    return this.bot.cache.del('es2_ephemeral_contexts', `${userID}.${key}`)
   }
 }

@@ -2,12 +2,11 @@ import type { Card, Category, Rarity, Subcategory } from "@prisma/client"
 import { BotContext } from "../types/context.js"
 import { parseImageString } from "../utilities/lucky-engine.js"
 import { determineMethodToSendMedia } from "../utilities/telegram.js"
-import { deleteUserCard, getCardByID, getFirstUserCard, getHowManyCardsAreThere, searchCards } from "../utilities/engine/cards.js"
-import { getHowManyUsersHaveCard } from "../utilities/engine/users.js"
+import { getCardByID, getHowManyCardsAreThere, searchCards } from "../utilities/engine/cards.js"
+import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from "../utilities/engine/users.js"
 import { readableNumber } from "../utilities/misc.js"
 import { MISSING_CARD_IMG } from "../constants.js"
 import { tcqc } from "../sessions/tcqc.js"
-import { addBalance } from "../utilities/engine/economy.js"
 
 const medalMap = {
     'Comum': '🥉',
@@ -44,7 +43,7 @@ export default async (ctx: BotContext) => {
 const viewCard = async (ctx: BotContext, char: FullCard) => {
     const img = parseImageString(char.image, 'ar_3:4,c_crop')
 
-    const repeated = await _brklyn.engine.getUserTotalGivenCardAmount(ctx.userData, char)
+    const repeated = await getHowManyCardsUserHas(ctx.userData.id, char.id)
     const userWithCard = await getHowManyUsersHaveCard(char.id)
     const inCirc = await getHowManyCardsAreThere(char.id)
 
@@ -56,10 +55,27 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
 📦 ${readableNumber(inCirc)} vez${inCirc === 1 ? '' : 'es'} girado
 👾 ${ctx.from?.first_name} tem ${repeated} card${repeated === 1 ? '' : 's'}`
 
+    // check if is currently trading
+    let additionOpts = {}
+    const ec = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
+    if (ec && repeated > 0) {
+      additionOpts = {
+        reply_markup: {
+          inline_keyboard: [
+            [{
+              text: '➕ Trocar este card',
+              callback_data: tcqc.generateCallbackQuery('add-card', { cid: char.id })
+            }]
+          ]
+        }
+      }
+    }
+
     const method = determineMethodToSendMedia(img)
     return ctx[method!](img, {
         caption: text,
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
+        ...additionOpts
     }).catch(() => {
       return ctx.replyWithPhoto(MISSING_CARD_IMG, { caption: text, parse_mode: 'HTML' })
     })

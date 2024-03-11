@@ -1,6 +1,6 @@
 // timeless callback query commands handler
 
-import { debug, error, warning } from 'melchior'
+import { debug, error, warn } from 'melchior'
 import { BotContext } from '../types/context.js'
 
 export type ExtendedBotContext<T> = BotContext & { data: T }
@@ -27,7 +27,7 @@ class TCQC {
     debug('tcqc', `got query ES2.${command}`)
     const handler = this.handlers.get(command)
     if (!handler) {
-      warning('tcqc', `no handler for ${command}`)
+      warn('tcqc', `no handler for ${command}`)
       return false
     }
 
