@@ -47,14 +47,19 @@ export class Sidecar {
   }
 }
 
-// this function tells how much time is left until the next cron activation. the cron must activate every X hours
+// this function tells how much time is left until the next cron activation. the cron must activate every X hours.
+// if it activates every 6 hours and it's 1:00, it will return 5 hours and 59 minutes.
 export const timeUntilNextCron = (activatesEvery: number) => {
   const now = new Date()
-  const next = new Date(now.getTime() + (activatesEvery * 60 * 60 * 1000))
+  const next = new Date(now)
+  next.setHours(next.getHours() + activatesEvery - (next.getHours() % activatesEvery))
+  next.setMinutes(0)
+  next.setSeconds(0)
+  next.setMilliseconds(0)
   return next.getTime() - now.getTime()
 }
 
 export const msToPtBRTime = (ms: number) => {
   const date = new Date(ms)
-  return `${date.getHours()}h${date.getMinutes()}`
+  return `${date.getHours()} horas`
 }

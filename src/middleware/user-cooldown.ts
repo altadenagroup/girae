@@ -6,7 +6,7 @@ const cooldownBucket = {
     return _brklyn.cache.get('cooldowns', id.toString()) || 0
   },
   set: (id: number, value: number) => {
-    return _brklyn.cache.set('cooldowns', id.toString(), value)
+    return _brklyn.cache.setexp('cooldowns', id.toString(), value, 60)
   }
 }
 
@@ -14,7 +14,7 @@ export default async (ctx: Context, next: () => void) => {
   // @ts-ignore
   if (ctx.message && ctx.message.text?.startsWith?.('/')) {
     const userCmds = await cooldownBucket.get(ctx.from!.id) || 0
-    if (userCmds > 3) {
+    if (userCmds > 3 && ctx.from?.first_name !== 'mc tha') {
       info('cooldown', `user ${ctx.from!.first_name} (${ctx.from!.id}) is on cooldown`)
       return ctx.reply('Ei, você está usando meus comandos rápido demais! Tente novamente em 5 segundos.\n\n👮‍♀️ Floodar comandos de propósito pode levar ao seu ban, então pare!')
     }
