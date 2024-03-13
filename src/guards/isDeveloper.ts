@@ -1,1 +1,2 @@
-export default (ctx) => ctx.update.message.from.id === 1889562226
+export default (ctx) =>
+  ctx.update.message.from.id === 1889562226 || ctx.update.message.from.id === 6354439429
