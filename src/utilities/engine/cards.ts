@@ -185,7 +185,7 @@ export const drawCard = async (user: User, category: Category, subcategory: Subc
   const rarity = await getRarityForUserDraw(user)
   const card = await selectRandomCard(rarity, category, subcategory)
   if (!card) return null
-  if (user.usedDraws > user.maximumDraws) return 'NO_CARDS'
+  if (user.usedDraws > user.maximumDraws) return 'NO_DRAWS'
   await addCard(user, card)
   return card
 }
