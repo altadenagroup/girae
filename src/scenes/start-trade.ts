@@ -164,7 +164,7 @@ Para cancelar, use /cancelar.
   await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
     type: 'photo',
     media: imgURL.url
-  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, text, {
     parse_mode: 'HTML' as ParseMode,
     ...msgData
