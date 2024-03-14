@@ -97,6 +97,8 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   })
   const chunked = keyboard.chunk(2)
 
+  await deduceDraw(ctx.userData.id)
+  
   ctx.session.steps.next()
   return ctx.editMessageMedia({
     type: 'animation',
@@ -106,8 +108,6 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
       reply_markup: {
           inline_keyboard: chunked
       }
-  }).then(async () => {
-    await deduceDraw(ctx.userData.id)
   }).catch((e) => warn('scenes.draw', 'could not edit message: ' + e.message))
 }
 
