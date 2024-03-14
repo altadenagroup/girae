@@ -1,20 +1,21 @@
 import { resetAllDailies, resetAllDraws, resetAllReps } from "../utilities/engine/users.js"
-import cron from 'node-cron'
+import * as cron from 'cron'
+import { msToDate } from "../utilities/misc.js"
+
+export const REP_CRON = '0 */12 * * *'
+export const DRAW_CRON = '0 */6 * * *'
+export const DAILY_CRON = '0 0 * * *'
 
 export class Sidecar {
-  sixHours: any
-  tenMinutes: any
-  midnight: any
+  draws: cron.CronJob
+  reps: cron.CronJob
+  dailies: cron.CronJob
+
   constructor () {
     // reset reps is every 6h
-    this.sixHours = cron.schedule('0 */6 * * *', () => {
-      this.resetReps()
-      this.increaseUserDraws()
-    })
-    // reset dailies is every 24h
-    this.midnight = cron.schedule('0 0 * * *', () => this.resetDailies())
-    // run clean up systems every 10m
-    this.tenMinutes = cron.schedule('*/10 * * * *', () => this.cleanUpTasks())
+    this.reps = new cron.CronJob(REP_CRON, () => this.resetReps(), null, true, 'America/Sao_Paulo')
+    this.draws = new cron.CronJob(DRAW_CRON, () => this.increaseUserDraws(), null, true, 'America/Sao_Paulo')
+    this.dailies = new cron.CronJob(DAILY_CRON, () => this.resetDailies(), null, true, 'America/Sao_Paulo')
   }
 
   async resetUserStuff () {
@@ -23,13 +24,13 @@ export class Sidecar {
     await resetAllDraws()
   }
 
-  increaseUserDraws () {
+  async increaseUserDraws () {
     // decrement one till it reaches 0
-    return _brklyn.db.user.updateMany({ where: { usedDraws: { gt: 0 } }, data: { usedDraws: { decrement: 2 } } })
+    await _brklyn.db.user.updateMany({ where: { usedDraws: { gt: 0 } }, data: { usedDraws: { decrement: 2 } } })
   }
 
-  resetReps () {
-    return _brklyn.db.user.updateMany({ data: { hasGivenRep: false } })
+  async resetReps () {
+    await _brklyn.db.user.updateMany({ data: { hasGivenRep: false } })
   }
 
   resetDailies () {
@@ -42,24 +43,7 @@ export class Sidecar {
     // info('sidecar', `cleaned up ${victims.count} subcategories`)
   }
 
-  nextSixHours () {
-    return msToPtBRTime(timeUntilNextCron(6))
+  async willRunIn (expr: string) {
+    return msToDate(cron.timeout(expr))
   }
-}
-
-// this function tells how much time is left until the next cron activation. the cron must activate every X hours.
-// if it activates every 6 hours and it's 1:00, it will return 5 hours and 59 minutes.
-export const timeUntilNextCron = (activatesEvery: number) => {
-  const now = new Date()
-  const next = new Date(now)
-  next.setHours(next.getHours() + activatesEvery - (next.getHours() % activatesEvery))
-  next.setMinutes(0)
-  next.setSeconds(0)
-  next.setMilliseconds(0)
-  return next.getTime() - now.getTime()
-}
-
-export const msToPtBRTime = (ms: number) => {
-  const date = new Date(ms)
-  return `${date.getHours()} horas`
 }
