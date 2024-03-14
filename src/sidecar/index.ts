@@ -1,6 +1,7 @@
 import { resetAllDailies, resetAllDraws, resetAllReps } from "../utilities/engine/users.js"
 import * as cron from 'cron'
 import { msToDate } from "../utilities/misc.js"
+import { warn } from 'melchior'
 
 export const REP_CRON = '0 */12 * * *'
 export const DRAW_CRON = '0 */6 * * *'
@@ -19,12 +20,14 @@ export class Sidecar {
   }
 
   async resetUserStuff () {
+    warn('sidecar', 'called resetUserStuff')
     await resetAllDailies()
     await resetAllReps()
     await resetAllDraws()
   }
 
   async increaseUserDraws () {
+    warn('sidecar', 'called increaseUserDraws')
     // decrement one till it reaches 0
     await _brklyn.db.user.updateMany({ where: { usedDraws: { gt: 0 } }, data: { usedDraws: { decrement: 2 } } })
   }
