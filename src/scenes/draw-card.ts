@@ -113,13 +113,12 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
   const subcategoryId = ctx.callbackQuery?.data.split('.')[1]
-  console.log(ctx.callbackQuery.data)
   const sub = await getSubcategoryByID(parseInt(subcategoryId))
   if (!sub) {
     await addDraw(ctx.userData.id)
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
-    return ctx.reply('🚪 Comando cancelado.')
+    return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NOT_FOUND_DB(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
   }
 
   await ctx.session.deleteMainMessage()
@@ -128,7 +127,7 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   const card = await drawCard(ctx.userData, ctx.session.data.chosenCategory, sub)
   if (!card) {
     await addDraw(ctx.userData.id)
-    return ctx.reply('🚪 Comando cancelado.')
+    return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NO_CARDS_FOUND(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
   }
 
   await sendCard(ctx, card)
