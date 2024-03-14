@@ -3,9 +3,9 @@ import * as cron from 'cron'
 import { msToDate } from "../utilities/misc.js"
 import { warn } from 'melchior'
 
-export const REP_CRON = '0 */12 * * *'
-export const DRAW_CRON = '0 */6 * * *'
-export const DAILY_CRON = '0 0 * * *'
+export const REP_CRON   = '0 0 */12 * * *'
+export const DRAW_CRON  = '0 0 */6 * * *'
+export const DAILY_CRON = '0 0 0 * * *'
 
 export class Sidecar {
   draws: cron.CronJob
