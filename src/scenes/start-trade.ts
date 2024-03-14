@@ -7,7 +7,7 @@ import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 import { fromReadableStream } from 'telegraf/typings/input.js'
-import { debug } from 'melchior'
+import { debug, warn } from 'melchior'
 
 const ACCEPT_TRADE = 'accept_trade'
 const DECLINE_TRADE = 'decline_trade'
@@ -140,13 +140,13 @@ Para cancelar, use /cancelar.
     media: imgURL.url,
     caption: text,
     parse_mode: 'HTML' as ParseMode
-  }, msgData).catch(() => undefined)
+  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
     type: 'photo',
     media: imgURL.url,
     caption: text,
     parse_mode: 'HTML' as ParseMode
-  }, msgData).catch(() => undefined)
+  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
 }
 
 export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boolean> => {
