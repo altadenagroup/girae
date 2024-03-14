@@ -8,7 +8,7 @@ import { error, warn } from 'melchior'
 import { drawCard } from '../utilities/engine/cards.js'
 import { MEDAL_MAP } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { getHowManyCardsUserHas } from '../utilities/engine/users.js'
+import { deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
 import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
 
 const CANCEL = 'cancel'
@@ -106,6 +106,8 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
       reply_markup: {
           inline_keyboard: chunked
       }
+  }).then(async () => {
+    await deduceDraw(ctx.userData.id)
   }).catch((e) => warn('scenes.draw', 'could not edit message: ' + e.message))
 }
 

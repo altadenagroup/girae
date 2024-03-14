@@ -187,7 +187,6 @@ export const drawCard = async (user: User, category: Category, subcategory: Subc
   if (!card) return null
   if (user.usedDraws >= user.maximumDraws) return null
   await addCard(user, card)
-  await deduceDraw(user.id)
   return card
 }
 

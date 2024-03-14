@@ -80,3 +80,5 @@ export const escapeHTML = (text: string) => {
   return text.replaceAll(/</g, '&lt;')
   .replaceAll(/>/g, '&gt;')
 }
+
+export const getAvatarURL = (file) => file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'

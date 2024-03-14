@@ -1,7 +1,7 @@
 import { ParseMode, User } from 'telegraf/types.js'
 import { SessionContext } from '../sessions/context.js'
 import { AdvancedScene } from '../sessions/scene.js'
-import { cachedGetUserPhotoAndFile, launchStartURL, mentionUser } from '../utilities/telegram.js'
+import { cachedGetUserPhotoAndFile, getAvatarURL, launchStartURL, mentionUser } from '../utilities/telegram.js'
 import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
@@ -52,7 +52,7 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
       id: tradeID,
       users: [ctx.session.data.ogUser.id, ctx.session.data.tradingWith.id],
       names: [ctx.session.data.ogUser.first_name, ctx.session.data.tradingWith.first_name],
-      photos: [photo1, photo2],
+      photos: [getAvatarURL(photo1), getAvatarURL(photo2)],
       msgToEdit: ctx.session.data._mainMessage,
       chatId: ctx.session.data.chatId,
       threadId: ctx.session.data.threadId || 1

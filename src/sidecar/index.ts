@@ -43,7 +43,7 @@ export class Sidecar {
     // info('sidecar', `cleaned up ${victims.count} subcategories`)
   }
 
-  async willRunIn (expr: string) {
+  willRunIn (expr: string) {
     return msToDate(cron.timeout(expr))
   }
 }
