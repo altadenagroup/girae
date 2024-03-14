@@ -98,6 +98,22 @@ export const setUserDisplayMessageID = async (ctx: BotContext, messageID: number
   await _brklyn.cache.set(`ongoing_trades_display_message${userNumber}`, tradeID, messageID)
 }
 
+export const hasUserDisplayMessageID = async (ctx: BotContext) => {
+  const tradeID = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
+  const userNumber = await getUserNumber(ctx)
+  return await _brklyn.cache.has(`ongoing_trades_display_message${userNumber}`, tradeID)
+}
+
+export const generateImageURL = async (tradeID: string) => {
+  const trade = await _brklyn.cache.get('ongoing_trades', tradeID)
+  const cards1 = await _brklyn.cache.get('ongoing_trades_cards1', tradeID)
+  const cards2 = await _brklyn.cache.get('ongoing_trades_cards2', tradeID)
+  return await _brklyn.generateImage('trade', {
+    user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
+    user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
+  }).then(a => a.url)
+}
+
 const mention = (name: string, id: number) => `<a href="tg://user?id=${id}">${name}</a>`
 const formatCard = (c) => MEDAL_MAP[c.rarity] +` <code>${c.id}</code>. <b>${c.name}</b> (${c.subcategory})`
 

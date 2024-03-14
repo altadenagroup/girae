@@ -153,6 +153,10 @@ export class BrooklynCacheLayer {
     return keys.map(k => k.replace(`${namespace}:`, ''))
   }
 
+  async has (namespace: string, key: string) {
+    return this.#cache.exists(`${namespace}:${key}`)
+  }
+
   async flushall() {
     return this.#cache.flushAll()
   }

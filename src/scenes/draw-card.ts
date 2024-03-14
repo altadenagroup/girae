@@ -8,7 +8,7 @@ import { error, warn } from 'melchior'
 import { drawCard } from '../utilities/engine/cards.js'
 import { MEDAL_MAP } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
+import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
 import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
 
 const CANCEL = 'cancel'
@@ -116,6 +116,7 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   console.log(ctx.callbackQuery.data)
   const sub = await getSubcategoryByID(parseInt(subcategoryId))
   if (!sub) {
+    await addDraw(ctx.userData.id)
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
     return ctx.reply('🚪 Comando cancelado.')
@@ -126,6 +127,7 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
 
   const card = await drawCard(ctx.userData, ctx.session.data.chosenCategory, sub)
   if (!card) {
+    await addDraw(ctx.userData.id)
     return ctx.reply('🚪 Comando cancelado.')
   }
 
