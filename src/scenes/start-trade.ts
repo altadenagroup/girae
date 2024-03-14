@@ -1,7 +1,7 @@
 import { ParseMode, User } from 'telegraf/types.js'
 import { SessionContext } from '../sessions/context.js'
 import { AdvancedScene } from '../sessions/scene.js'
-import { launchStartURL, mentionUser } from '../utilities/telegram.js'
+import { cachedGetUserPhotoAndFile, launchStartURL, mentionUser } from '../utilities/telegram.js'
 import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
@@ -44,11 +44,15 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
     if (ctx.from?.id !== ctx.session.data.tradingWith.id) return ctx.answerCbQuery('Você não pode aceitar a troca por outra pessoa!', { show_alert: true })
     ctx.session.steps.leave()
 
+    const photo1 = await cachedGetUserPhotoAndFile(ctx.session.data.ogUser.id)
+    const photo2 = await cachedGetUserPhotoAndFile(ctx.session.data.tradingWith.id)
+
     const tradeID = generateID(12)
     await _brklyn.cache.set('ongoing_trades', tradeID, {
       id: tradeID,
       users: [ctx.session.data.ogUser.id, ctx.session.data.tradingWith.id],
       names: [ctx.session.data.ogUser.first_name, ctx.session.data.tradingWith.first_name],
+      photos: [photo1, photo2],
       msgToEdit: ctx.session.data._mainMessage,
       chatId: ctx.session.data.chatId,
       threadId: ctx.session.data.threadId || 1
@@ -118,18 +122,31 @@ export const updateDisplayMessages = async (tradeID: string) => {
 Quando estiverem prontos, cliquem no botão abaixo.
 Para cancelar, use /cancelar.
   `
+  const imgURL = await _brklyn.generateImage('trade', {
+    user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
+    user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
+  })
 
   const msgData = {
     reply_markup: {
       inline_keyboard: [
         [{ text: '🤝 Estou pronto', callback_data: tcqc.generateCallbackQuery('ready-trade', {}) }]
       ]
-    },
-    parse_mode: 'HTML' as ParseMode
+    }
   }
 
-  await _brklyn.telegram.editMessageText(trade.users[0], displayMessageID1, undefined, text, msgData).catch(() => undefined)
-  await _brklyn.telegram.editMessageText(trade.users[1], displayMessageID2, undefined, text, msgData).catch(() => undefined)
+  await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
+    type: 'photo',
+    media: imgURL.url,
+    caption: text,
+    parse_mode: 'HTML' as ParseMode
+  }, msgData).catch(() => undefined)
+  await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
+    type: 'photo',
+    media: imgURL.url,
+    caption: text,
+    parse_mode: 'HTML' as ParseMode
+  }, msgData).catch(() => undefined)
 }
 
 export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boolean> => {
@@ -197,13 +214,22 @@ Cliquem em <b>✅ Finalizar troca</b> para finalizar a troca, ou <b>❌ Cancelar
 Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Preste atenção!
     `
 
-  await _brklyn.telegram.editMessageText(trade.chatId, trade.msgToEdit, undefined, text, {
+    const imgURL = await _brklyn.generateImage('trade', {
+      user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
+      user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
+    })
+
+  await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
+    type: 'photo',
+    media: imgURL.url,
+    caption: text,
+    parse_mode: 'HTML' as ParseMode
+  }, {
     reply_markup: {
       inline_keyboard: [
         [{ text: '✅ Finalizar troca', callback_data: tcqc.generateCallbackQuery('finish-trade', {}) }, { text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('cancel-trade', {}) }]
       ]
-    },
-    parse_mode: 'HTML' as ParseMode
+    }
   })
 }
 
@@ -353,7 +379,13 @@ export const finishTrade = async (tradeID: string) => {
     data: [...newCards1, ...newCards2]
   })
 
-  await _brklyn.telegram.sendMessage(trade.chatId, text, {
+  const imgURL = await _brklyn.generateImage('trade', {
+    user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
+    user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
+  })
+
+  await _brklyn.telegram.sendPhoto(trade.chatId, imgURL.url, {
+    caption: text,
     parse_mode: 'HTML' as ParseMode,
     ...adds
   })
