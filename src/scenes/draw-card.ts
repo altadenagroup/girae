@@ -130,6 +130,10 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
     return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NO_CARDS_FOUND(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
   }
 
+  if (card === 'NO_DRAWS') {
+    return ctx.replyWithHTML('Seus giros já acabaram. Você acha que é <i>tão</i> fácil assim roubar giros?')
+  }
+
   await sendCard(ctx, card)
 }
 
