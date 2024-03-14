@@ -30,12 +30,14 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   ctx.session.data.threadId = ctx.message?.message_thread_id || 0
   ctx.session.steps.next()
 
-  return ctx.replyWithHTML(`<b>${mentionUser(user)}</b>, você quer trocar cartas com <b>${ctx.from!.first_name}</b>?\n\n<b>${ctx.from!.first_name}</b>, você ainda pode cancelar clicando em recusar!`, {
+  return ctx.sendPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
+    caption: `<b>${mentionUser(user)}</b>, você quer trocar cartas com <b>${ctx.from!.first_name}</b>?\n\n<b>${ctx.from!.first_name}</b>, você ainda pode cancelar clicando em recusar!`,
     reply_markup: {
       inline_keyboard: [
         [{ text: '✅ Aceitar', callback_data: ACCEPT_TRADE }, { text: '❌ Recusar', callback_data: DECLINE_TRADE }]
       ]
-    }
+    },
+    parse_mode: 'HTML'
   }).then((t) => ctx.session.setMainMessage(t.message_id))
 }
 
@@ -66,7 +68,7 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
     await _brklyn.es2.setEC(ctx.session.data.tradingWith.id, 'tradeData', tradeID)
 
     // starts the trade
-    await ctx.editMessageText(`Hora de trocar, <b>${mentionUser(ctx.session.data.ogUser)}</b> e <b>${mentionUser(ctx.session.data.tradingWith)}</b>! 🤝\n\nCliquem no botão abaixo para inicar a troca.`, {
+    await ctx.editMessageCaption(`Hora de trocar, <b>${mentionUser(ctx.session.data.ogUser)}</b> e <b>${mentionUser(ctx.session.data.tradingWith)}</b>! 🤝\n\nCliquem no botão abaixo para inicar a troca.`, {
       reply_markup: {
         inline_keyboard: [
           [{ text: '💱 Iniciar troca', url: launchStartURL('trade', ctx.session.data.tradingWith.id) }]
@@ -153,16 +155,24 @@ Para cancelar, use /cancelar.
 
   await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
     type: 'photo',
-    media: imgURL.url,
-    caption: text,
-    parse_mode: 'HTML' as ParseMode
+    media: imgURL.url
   }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
     type: 'photo',
-    media: imgURL.url,
-    caption: text,
-    parse_mode: 'HTML' as ParseMode
+    media: imgURL.url
   }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
+    type: 'photo',
+    media: imgURL.url
+  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, text, {
+    parse_mode: 'HTML' as ParseMode,
+    ...msgData
+  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, text, {
+    parse_mode: 'HTML' as ParseMode,
+    ...msgData
+  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
 }
 
 export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boolean> => {
@@ -209,8 +219,8 @@ export const finishDMStage = async (tradeID: string) => {
     parse_mode: 'HTML' as ParseMode
   }
 
-  await _brklyn.telegram.editMessageText(trade.users[0], displayMessageID1, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
-  await _brklyn.telegram.editMessageText(trade.users[1], displayMessageID2, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
+  await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
+  await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
 
   const cards1 = await _brklyn.cache.get('ongoing_trades_cards1', tradeID)
   const cards2 = await _brklyn.cache.get('ongoing_trades_cards2', tradeID)
@@ -235,12 +245,8 @@ Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Pres
       user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
     })
 
-  await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
-    type: 'photo',
-    media: imgURL.url,
-    caption: text,
-    parse_mode: 'HTML' as ParseMode
-  }, {
+  await _brklyn.telegram.editMessageCaption(trade.chatId, trade.msgToEdit, undefined, text, {
+    parse_mode: 'HTML' as ParseMode,
     reply_markup: {
       inline_keyboard: [
         [{ text: '✅ Finalizar troca', callback_data: tcqc.generateCallbackQuery('finish-trade', {}) }, { text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('cancel-trade', {}) }]
