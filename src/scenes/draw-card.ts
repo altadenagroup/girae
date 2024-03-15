@@ -91,14 +91,14 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   ctx.session.data.chosenCategory = cat
-  const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 8 : 4)
+  const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 6 : 4)
   const keyboard = subcategories.map((sub) => {
     return { text: sub.name, callback_data: `DRAW_SCENE.${sub.id}` } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
 
   await deduceDraw(ctx.userData.id)
-  
+
   ctx.session.steps.next()
   return ctx.editMessageMedia({
     type: 'animation',

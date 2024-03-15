@@ -2,7 +2,6 @@ import { BotContext } from '../types/context.js'
 import { getSubcategoryByID } from '../utilities/engine/subcategories.js'
 
 export default async (ctx: BotContext) => {
-  if (ctx.chat?.id !== -1001945644138) return
   const firstCategory = ctx.args[0]
   const secondCategory = ctx.args[1]
   if (!firstCategory || !secondCategory) {
@@ -41,5 +40,5 @@ export default async (ctx: BotContext) => {
 
 
 export const info = {
-  guards: ['isAdmin']
+  guards: ['isAdmin', 'isAdmin']
 }

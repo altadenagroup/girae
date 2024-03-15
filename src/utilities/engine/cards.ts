@@ -1,6 +1,6 @@
 import { Card, Category, Rarity, Subcategory, User } from "@prisma/client"
 import { getSubcategoryByID } from "./subcategories.js"
-import { deduceDraw, getRarityForUserDraw } from "./users.js"
+import { getRarityForUserDraw } from "./users.js"
 
 export interface CreateCardOptions {
     name: string
@@ -127,18 +127,6 @@ export const getCardByNameAndSubcategory = async (name: string, subcategoryName:
 
 // adds a card to the user's collection.
 export const addCard = async (user: User, card: Card & { rarity: Rarity, category: Category, subcategory: Subcategory | null }): Promise<void> => {
-  // before adding, we have to check the luck modifier for the card. if it's higher than 0, we will roll a random number and check if it's lower than the luck modifier.
-  // if it isn't, we will reroll the card.
-  if (card.rarityModifier !== 0) {
-      const roll = Math.random()
-      const totalRarity = card.rarityModifier + card.rarity!.chance
-
-      if (roll > totalRarity) {
-          const newCard = await selectRandomCard(card.rarity!, card.category!, card.subcategory!)
-          return addCard(user, newCard!)
-      }
-  }
-
   await _brklyn.db.userCard.create({
       data: {
           userId: user.id,
@@ -178,7 +166,19 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
             }
         })
   }
-  return cards[Math.floor(Math.random() * cards.length)]
+
+
+  const card = cards[Math.floor(Math.random() * cards.length)]
+  if (card.rarityModifier !== 0) {
+    const roll = Math.random()
+    const totalRarity = card.rarityModifier + card.rarity!.chance
+
+    if (roll > totalRarity) {
+        return selectRandomCard(card.rarity!, card.category!, card.subcategory!)
+    }
+  }
+
+  return card
 }
 
 export const drawCard = async (user: User, category: Category, subcategory: Subcategory) => {

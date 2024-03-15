@@ -2,7 +2,6 @@ import { BotContext } from '../types/context.js'
 import { getSubcategoryByID } from '../utilities/engine/subcategories.js'
 
 export default async (ctx: BotContext) => {
-  if (ctx.chat?.id !== -1001945644138) return
   const firstCategory = ctx.args[0]
   if (!firstCategory) {
     return ctx.reply('Você precisa especificar o ID da subcategoria para deletar.\n\nUsa-se delsubcategory subcategoria')

@@ -2,7 +2,6 @@ import { BotContext } from "../types/context.js"
 import { getCardByID } from "../utilities/engine/cards.js"
 
 export default async (ctx: BotContext) => {
-  if (ctx.chat?.id !== -1001945644138) return
   const card = ctx.args[0]
   if (!card) {
     return ctx.reply('Você precisa especificar o ID do card para deletar.\n\nUsa-se delcard card')
@@ -23,5 +22,5 @@ export default async (ctx: BotContext) => {
 }
 
 export const info = {
-  guards: ['hasJoinedGroup']
+  guards: ['hasJoinedGroup', 'isAdmin']
 }

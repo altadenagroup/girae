@@ -4,7 +4,6 @@ import { generatePhotoLink } from '../utilities/telegram.js'
 import cloudinary from 'cloudinary'
 import { parseImageString } from '../utilities/lucky-engine.js'
 export default async (ctx: BotContext) => {
-  if (ctx.chat?.id !== -1001945644138) return
   const card = ctx.args[0]
   if (!card) {
     return ctx.reply('Você precisa especificar o ID do card para editar a imagem.\n\nUsa-se setimage id')
@@ -51,5 +50,5 @@ export default async (ctx: BotContext) => {
 }
 
 export const info = {
-  guards: ['hasJoinedGroup']
+  guards: ['hasJoinedGroup', 'isAdmin']
 }

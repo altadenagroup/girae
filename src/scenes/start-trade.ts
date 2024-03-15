@@ -6,7 +6,6 @@ import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
-import { fromReadableStream } from 'telegraf/typings/input.js'
 import { debug, warn } from 'melchior'
 
 const ACCEPT_TRADE = 'accept_trade'
@@ -220,7 +219,9 @@ export const finishDMStage = async (tradeID: string) => {
   }
 
   await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
+    .catch(() => undefined)
   await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, `Agora que vocês escolheram seus cards, cliquem no botão abaixo para voltar ao chat e finalizar sua troca.`, msgData)
+    .catch(() => undefined)
 
   const cards1 = await _brklyn.cache.get('ongoing_trades_cards1', tradeID)
   const cards2 = await _brklyn.cache.get('ongoing_trades_cards2', tradeID)
@@ -240,11 +241,6 @@ Cliquem em <b>✅ Finalizar troca</b> para finalizar a troca, ou <b>❌ Cancelar
 Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Preste atenção!
     `
 
-    const imgURL = await _brklyn.generateImage('trade', {
-      user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
-      user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
-    })
-
   await _brklyn.telegram.editMessageCaption(trade.chatId, trade.msgToEdit, undefined, text, {
     parse_mode: 'HTML' as ParseMode,
     reply_markup: {
@@ -252,7 +248,7 @@ Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Pres
         [{ text: '✅ Finalizar troca', callback_data: tcqc.generateCallbackQuery('finish-trade', {}) }, { text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('cancel-trade', {}) }]
       ]
     }
-  })
+  }).catch(() => undefined)
 }
 
 export const clearTradeData = async (tradeID: string) => {
