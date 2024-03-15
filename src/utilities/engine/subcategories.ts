@@ -47,6 +47,9 @@ export const searchSubcategories = async (name: string) => {
         contains: name,
         mode: 'insensitive'
       }
+    },
+    include: {
+      category: true
     }
   })
 
