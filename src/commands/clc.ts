@@ -13,9 +13,14 @@ const medalMap = {
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID da subcategoria a ser vista', '/clc Red Velvet')
-  let sub = await getSubcategoryFromArg(ctx.args.join(' '))
-  if (!sub) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
+  let subs = await getSubcategoryFromArg(ctx.args.join(' '))
+  if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
+  if (subs.length > 1) {
+    const text = subs.map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
+    return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas subcategorias, use <code>/clc id</code>`)
+  }
 
+  const sub = subs[0]
   const cards = await getCardsBySubcategory(sub)
   if (!cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
   // sort cards by rarest and get top 20

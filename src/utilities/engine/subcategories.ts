@@ -37,6 +37,26 @@ export const getSubcategoryByName = async (name: string) => {
   return subcategory
 }
 
+export const searchSubcategories = async (name: string) => {
+  const cached = await _brklyn.cache.get('subcategories_search', name)
+  if (cached) return cached
+
+  const subcategories = await _brklyn.db.subcategory.findMany({
+    where: {
+      name: {
+        contains: name,
+        mode: 'insensitive'
+      }
+    }
+  })
+
+  if (subcategories) {
+    await _brklyn.cache.setexp('subcategories_search', name, subcategories, 5 * 60)
+  }
+
+  return subcategories
+}
+
 export const getOrCreateSubcategory = async (name: string, categoryID: number) => {
   const sub = await getSubcategoryByName(name)
   if (sub) return sub

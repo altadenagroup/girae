@@ -40,3 +40,5 @@ export const msToDate = (ms: number) => {
 
   return `${seconds} ${secondWord}`
 }
+
+export const escapeNamePG = (name: string) => name.replace(/([!|&(){}[\]^"~*?:\\])/g, '\\$1')

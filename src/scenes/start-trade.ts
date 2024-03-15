@@ -279,7 +279,7 @@ export const finishTrade = async (tradeID: string) => {
 
 🃏 <b>${trade.names[1]}</b> ofereceu:
 
-    ${cards2.map(formatCard).join('\n  ') || '<i>Nenhum card.</i>'}`
+  ${cards2.map(formatCard).join('\n  ') || '<i>Nenhum card.</i>'}`
 
   await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
 

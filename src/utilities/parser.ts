@@ -2,7 +2,8 @@ import { getCardByID, getCardByName } from './engine/cards.js'
 import { CommonMessageBundle, User } from 'telegraf/types'
 import { BotContext } from '../types/context.js'
 import { getUserByMentionOrID } from './telegram.js'
-import { getSubcategoryByID, getSubcategoryByName } from './engine/subcategories.js'
+import { getSubcategoryByID, searchSubcategories } from './engine/subcategories.js'
+import { escapeNamePG } from './misc.js'
 
 // gets a card argument. it can be a number (which would be the card id) or a string (which would be the card name)
 export const getCardFromArg = async (arg: string)  => {
@@ -17,9 +18,9 @@ export const getCardFromArg = async (arg: string)  => {
 export const getSubcategoryFromArg = async (arg: string) => {
   if (!arg) return null
   if (!isNaN(Number(arg))) {
-    return getSubcategoryByID(Number(arg))
+    return [await getSubcategoryByID(Number(arg))]
   } else {
-    return getSubcategoryByName(arg)
+    return searchSubcategories(escapeNamePG(arg).split(' ').join(' & '))
   }
 }
 
