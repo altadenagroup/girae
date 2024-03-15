@@ -44,8 +44,7 @@ export const searchSubcategories = async (name: string) => {
   const subcategories = await _brklyn.db.subcategory.findMany({
     where: {
       name: {
-        contains: name,
-        mode: 'insensitive'
+        search: name
       }
     },
     include: {
