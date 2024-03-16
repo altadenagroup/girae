@@ -14,6 +14,6 @@ Sentry.init({
         metricsAggregator: true,
       }
     })
-  }
+  
 
 import './dist/src/index.js'
