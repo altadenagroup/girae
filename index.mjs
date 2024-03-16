@@ -8,8 +8,7 @@ Sentry.init({
         new Sentry.Integrations.Prisma({ client: this.db }),
         Sentry.anrIntegration({ captureStackTrace: true })
       ],
-      tracesSampleRate: 0.5,
-      profilesSampleRate: 1.0,
+      tracesSampleRate: 1.0,
       _experiments: {
         metricsAggregator: true,
       }
