@@ -2,6 +2,7 @@
 
 import { debug, error, warn } from 'melchior'
 import { BotContext } from '../types/context.js'
+import * as Sentry from '@sentry/node'
 
 export type ExtendedBotContext<T> = BotContext & { data: T }
 export type HandlerFunction<T> = (ctx: ExtendedBotContext<T>) => Promise<any>
@@ -32,8 +33,13 @@ class TCQC {
     }
 
     ctx.data = data
-    await handler(ctx).catch((e) => {
-      error('tcqc', `error while handling ${command}: ${e}`)
+    Sentry.metrics.increment('tcqc-runs', 1, { tags: { command } })
+    await Sentry.startSpan({ op: 'es2.tcqc', name: command }, () => {
+      Sentry.setContext('tcqc', { command, data, user: ctx.from, chat: ctx.chat })
+      return handler(ctx).catch((e) => {
+        error('tcqc', `error while handling ${command}: ${e}`)
+        Sentry.captureException(e)
+      })
     })
 
     return true

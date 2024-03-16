@@ -12,6 +12,8 @@ import { functionEditing } from './middleware/function-editing.js'
 import { Sidecar } from './sidecar/index.js'
 import { SessionManager } from './sessions/manager.js'
 import userCooldown from './middleware/user-cooldown.js'
+import * as Sentry from '@sentry/node'
+import { nodeProfilingIntegration } from '@sentry/profiling-node'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -117,6 +119,24 @@ export default class Brooklyn extends Client {
 
   async prelaunch() {
     await this.sidecar.cleanUpTasks()
+  }
+
+  setUpSentry () {
+    if (!process.env.SENTRY_DSN) return
+
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      integrations: [
+        nodeProfilingIntegration(),
+        new Sentry.Integrations.Prisma({ client: this.db }),
+        Sentry.anrIntegration({ captureStackTrace: true })
+      ],
+      tracesSampleRate: 0.5,
+      profilesSampleRate: 1.0,
+      _experiments: {
+        metricsAggregator: true,
+      }
+    })
   }
 }
 

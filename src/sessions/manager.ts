@@ -10,6 +10,7 @@ import drawCard from '../scenes/draw-card.js'
 import deleteCard from '../scenes/delete-card.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
+import * as Sentry from '@sentry/node'
 
 export interface ES2Methods {
   enter (sceneID: string, args?: { [key: string]: any } | undefined): Promise<void>
@@ -134,17 +135,27 @@ export class SessionManager {
 
   runScene (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>): Promise<CurrentSceneStatus | undefined> {
     const ogSession = session
-    return scene.run(ctx, session.currentStep).catch((e: TelegramError) => {
-      if (e.message.includes('Too Many Requests') && ctx.session.data._replayOnRateLimit) {
-        debug('es²', `got a 429, retrying in speficied time / 2`)
-        return new Promise<CurrentSceneStatus | undefined>((resolve) => {
-          setTimeout(() => {
-            resolve(this.runScene(ctx, ogSession, scene))
-            // @ts-ignore
-          }, e.response.retry_after * 500)
-        })
-      }
-      error('es²', `error while running scene: ${e.stack}`)
+    Sentry.metrics.increment('es2-runs', 1, { tags: { scene: scene.id } })
+    return Sentry.startSpan({
+      op: 'es2.runScene',
+      name: `running scene ${scene.id} (step ${session.currentStep})`
+    }, async (span) => {
+      Sentry.setContext('es2', { scene: scene.id, step: session.currentStep, user: ctx.from, chat: ctx.chat })
+      return scene.run(ctx, session.currentStep).catch((e: TelegramError) => {
+        if (e.message.includes('Too Many Requests') && ctx.session.data._replayOnRateLimit) {
+          debug('es²', `got a 429, retrying in speficied time / 2`)
+          // @ts-ignore
+          span?.setAttribute('retry_after', e.response.retry_after)
+          return new Promise<CurrentSceneStatus | undefined>((resolve) => {
+            setTimeout(() => {
+              resolve(this.runScene(ctx, ogSession, scene))
+              // @ts-ignore
+            }, e.response.retry_after * 500)
+          })
+        }
+        error('es²', `error while running scene: ${e.stack}`)
+        Sentry.captureException(e)
+      })
     })
   }
 
