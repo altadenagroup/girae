@@ -58,6 +58,7 @@ export default class Brooklyn extends Client {
 
     this.setUpCDN()
     this.setUpExitHandler()
+    this.setUpSentry()
   }
 
   private setUpCDN() {
@@ -131,7 +132,7 @@ export default class Brooklyn extends Client {
         new Sentry.Integrations.Prisma({ client: this.db }),
         Sentry.anrIntegration({ captureStackTrace: true })
       ],
-      tracesSampleRate: 0.5,
+      tracesSampleRate: 1.0,
       profilesSampleRate: 1.0,
       _experiments: {
         metricsAggregator: true,
