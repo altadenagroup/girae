@@ -12,13 +12,13 @@
     "build:client": "prisma generate",
     "build:source": "swc src -d dist --source-maps && npm run sentry:sourcemaps",
     "start:node": "PREBUILT_VERSION=true node index.mjs",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org lyricalsoul --project girae ./dist && sentry-cli sourcemaps upload --org lyricalsoul --project girae ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org altadena --project girae ./dist && sentry-cli sourcemaps upload --org altadena --project girae ./dist"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/altadenagroup/brooklyn.git"
   },
-  "author": "lyricalsoul <lyricalsoul@pro§ton.me>",
+  "author": "lyricalsoul <lyricalsoul@proton.me>",
   "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/altadenagroup/brooklyn/issues"
