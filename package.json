@@ -10,9 +10,10 @@
     "dev:build": "swc src -d dist --watch --source-maps",
     "format:schemas": "prisma format",
     "build:client": "prisma generate",
-    "build:source": "swc src -d dist --source-maps && npm run sentry:sourcemaps",
+    "build:source": "swc src -d dist --source-maps",
     "start:node": "PREBUILT_VERSION=true node index.mjs",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org altadena --project girae ./dist && sentry-cli sourcemaps upload --org altadena --project girae ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org altadena --project girae ./dist && sentry-cli sourcemaps upload --org altadena --project girae ./dist",
+    "prepare": "npm run sentry:sourcemaps"
   },
   "repository": {
     "type": "git",

@@ -81,7 +81,6 @@ jobs:
           SENTRY_ORG: altadena
           SENTRY_PROJECT: girae
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_RELEASE: ${{ github.sha }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
