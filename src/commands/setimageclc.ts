@@ -8,11 +8,12 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Você precisa especificar o ID ou nome da subcategoria para editar a imagem.\n\nUsa-se setimageclc id')
   }
 
-  const c = await getSubcategoryFromArg(ctx.args.join(' '))
-  if (!c) {
+  const cs = await getSubcategoryFromArg(ctx.args.join(' '))
+  if (!cs || !cs[0]) {
     return ctx.reply('Subcategoria não encontrada.')
   }
 
+  const c = cs[0]
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
   const photo = photos?.[0] ? photos[photos.length - 1].file_id : null
