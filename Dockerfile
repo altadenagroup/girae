@@ -5,7 +5,7 @@ WORKDIR /
 COPY package*.json ./
 
 RUN npm ci --force
-RUN npm i @sentry/node @sentry/profiling-node
+RUN npm i @sentry/node @sentry/profiling-node --force
 
 COPY . .
 
