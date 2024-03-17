@@ -1,10 +1,10 @@
-import {resetAllDailies, resetAllDraws, resetAllReps} from "../utilities/engine/users.js"
+import { resetAllDailies, resetAllDraws, resetAllReps } from "../utilities/engine/users.js"
 import * as cron from 'cron'
-import {msToDate} from "../utilities/misc.js"
-import {debug} from 'melchior'
+import { msToDate } from "../utilities/misc.js"
+import { debug } from 'melchior'
 
 export const REP_CRON = '0 0 */12 * * *'
-export const DRAW_CRON = '0 0 */6 * * *'
+export const DRAW_CRON = '0 0 */3 * * *'
 export const DAILY_CRON = '0 0 0 * * *'
 
 export class Sidecar {
@@ -29,11 +29,11 @@ export class Sidecar {
   async increaseUserDraws() {
     debug('sidecar', 'called increaseUserDraws')
     // decrement one till it reaches 0
-    await _brklyn.db.user.updateMany({where: {usedDraws: {gt: 0}}, data: {usedDraws: {decrement: 2}}})
+    await _brklyn.db.user.updateMany({ where: { usedDraws: { gt: 0 } }, data: { usedDraws: { decrement: 1 } } })
   }
 
   async resetReps() {
-    await _brklyn.db.user.updateMany({data: {hasGivenRep: false}})
+    await _brklyn.db.user.updateMany({ data: { hasGivenRep: false } })
   }
 
   resetDailies() {
