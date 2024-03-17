@@ -69,7 +69,7 @@ model User {
   isBanned       Boolean      @default(false)
   banMessage     String?
   cards          UserCard[]
-  maximumDraws   Int          @default(6)
+  maximumDraws   Int          @default(12)
   usedDraws      Int          @default(0)
   luckModifier   Float        @default(0)
   coins          Int          @default(0)
@@ -101,8 +101,6 @@ model ProfileBackground {
   users           UserProfile[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @default(now()) @updatedAt
-  UserInventory   UserInventory? @relation(fields: [userInventoryId], references: [id])
-  userInventoryId Int?
 }
 
 model ProfileSticker {
@@ -112,8 +110,6 @@ model ProfileSticker {
   users           UserProfile[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @default(now()) @updatedAt
-  UserInventory   UserInventory? @relation(fields: [userInventoryId], references: [id])
-  userInventoryId Int?
 }
 
 // model to store the user's custom profile data (so, favorite color, favorite card, reputation, background, badge, stickers, background, etc)
@@ -138,7 +134,6 @@ model UserProfile {
 // defines a purchasable item: the marriage ring. can be used to marry two users
 model MarriageRing {
   id        Int        @id @default(autoincrement())
-  price     Int
   image     String
   name      String
   marriages Marriage[]
@@ -161,26 +156,35 @@ model Marriage {
 model UserInventory {
   id         Int                 @id @default(autoincrement())
   userId     Int
-  background ProfileBackground[]
-  stickers   ProfileSticker[]
+  backgroundIDs Int[]
+  stickerIDs Int[]
+  ringIDs    Int[]
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @default(now()) @updatedAt
 }
 
-// defines a series of economic markers that will be used later on to define inflation and deflation
-model EconomyMarker {
-  id            Int      @id @default(autoincrement())
-  richestValue  Int
-  poorestValue  Int
-  meanValue     Int
-  inflationRate Float
-  deflationRate Float
-  createdAt     DateTime @default(now())
+// model with an enum to represent items that can be bought with coins
+model ShopItem {
+  id        Int      @id @default(autoincrement())
+  type      ItemType
+  price     Int
+  itemId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
-// general markers, such as richest user
-model GeneralMarker {
-  id            Int      @id @default(autoincrement())
-  richestUserId Int
-  createdAt     DateTime @default(now())
+enum ItemType {
+  BACKGROUND
+  STICKER
+  MARRIAGE_RING
+  DRAWS
+}
+
+model ConsumedTrade {
+  id        Int      @id @default(autoincrement())
+  user1Id   Int
+  user2Id   Int
+  cardsUser1 Int[]
+  cardsUser2 Int[]
+  createdAt DateTime @default(now())
 }

@@ -28,7 +28,8 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   ctx.session.data.ogUser = ctx.from!
   // @ts-ignore
   ctx.session.data.chatId = ctx.chat!.username ? `@${ctx.chat!.username}` : ctx.chat!.id
-  ctx.session.data.threadId = ctx.message?.message_thread_id || undefined
+  // @ts-ignore
+  ctx.session.data.threadId = ctx.chat!.is_forum ? ctx.message?.message_thread_id : undefined
   ctx.session.steps.next()
 
   return ctx.sendPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
@@ -403,6 +404,15 @@ export const finishTrade = async (tradeID: string) => {
       cardId: parseInt(id)
     }))
   }
+
+  await _brklyn.db.consumedTrade.create({
+    data: {
+      user1Id: user1!.id,
+      user2Id: user2!.id,
+      cardsUser1: cards1.map((c) => c.id),
+      cardsUser2: cards2.map((c) => c.id)
+    }
+  })
 
   await _brklyn.db.userCard.createMany({
     data: [...newCards1, ...newCards2]
