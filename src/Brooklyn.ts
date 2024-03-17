@@ -22,7 +22,7 @@ export default class Brooklyn extends Client {
   db: PrismaClient
   cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
   ai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: process.env.OPENAI_API_KEY || ''
   })
   sidecar = new Sidecar()
   es2: SessionManager
@@ -89,6 +89,15 @@ export default class Brooklyn extends Client {
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
 
+  healthCheck(): Promise<boolean> {
+    // check if we can set and get from cache and database
+    return Promise.all([
+      this.cache.set('health', 'check', 'ok'),
+      this.cache.get('health', 'check'),
+      this.db.user.findFirst({ take: 1 })
+    ]).then(() => true).catch(() => false)
+  }
+
   getSessionKey (ctx: Context): string | undefined {
     const fromId = ctx.from?.id
     const chatId = ctx.chat?.id
@@ -124,10 +133,15 @@ export default class Brooklyn extends Client {
     if (process.env.SENTRY_DSN && !process.env.MAIN_CONTAINER) return
     info('bot', 'considering this instance as the main container')
     this.sidecar.scheduleAll()
-    return bootstrap()
+  }
+
+  setUpNetworkingFeatures () {
+    bootstrap()
   }
 
   private setUpCDN () {
+    if (!process.env.CLOUDINARY_CLOUD_NAME) return
+
     cloudinary.v2.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,

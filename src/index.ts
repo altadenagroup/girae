@@ -2,7 +2,7 @@
 // the altadena group, 2024
 import 'dotenv/config'
 import './utilities/prototypes.js'
-import {createClient, RedisClientType} from 'redis'
+import { createClient, RedisClientType } from 'redis'
 import 'reflect-metadata'
 import Brooklyn from './Brooklyn.js'
 
@@ -16,10 +16,12 @@ client.on('error', (err) => {
 })
 await client.connect()
 
-const brooklyn = new Brooklyn(client as RedisClientType)
-global._brklyn = brooklyn
+global._brklyn = new Brooklyn(client as RedisClientType)
+if (!process.env.MAIN_CONTAINER) _brklyn.launchPlugins()
+_brklyn.setUpNetworkingFeatures()
 
-await brooklyn.prelaunch()
-await brooklyn.launch()
+if (process.env.LAUNCH_POLLING) {
+  await _brklyn.launch()
+}
 
 
