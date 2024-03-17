@@ -1,7 +1,7 @@
 import { ParseMode, User } from 'telegraf/types.js'
 import { SessionContext } from '../sessions/context.js'
 import { AdvancedScene } from '../sessions/scene.js'
-import { cachedGetUserPhotoAndFile, getAvatarURL, launchStartURL, mentionUser } from '../utilities/telegram.js'
+import { cachedGetUserPhotoAndFile, generateMessageLink, getAvatarURL, launchStartURL, mentionUser } from '../utilities/telegram.js'
 import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
@@ -25,8 +25,9 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   await ctx.session.attachUserToSession(user)
   ctx.session.data.tradingWith = user
   ctx.session.data.ogUser = ctx.from!
-  ctx.session.data.chatId = ctx.chat!.id
-  ctx.session.data.threadId = ctx.message?.message_thread_id || 0
+  // @ts-ignore
+  ctx.session.data.chatId = ctx.chat!.username ? `@${ctx.chat!.username}` : ctx.chat!.id
+  ctx.session.data.threadId = ctx.message?.message_thread_id || undefined
   ctx.session.steps.next()
 
   return ctx.sendPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
@@ -56,7 +57,7 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
       photos: [getAvatarURL(photo1), getAvatarURL(photo2)],
       msgToEdit: ctx.session.data._mainMessage,
       chatId: ctx.session.data.chatId,
-      threadId: ctx.session.data.threadId || 1
+      threadId: ctx.session.data.threadId || undefined
     })
     await _brklyn.cache.set('ongoing_trades_cards1', tradeID, [])
     await _brklyn.cache.set('ongoing_trades_cards2', tradeID, [])
@@ -214,7 +215,7 @@ export const finishDMStage = async (tradeID: string) => {
       inline_keyboard: [
         [{
           text: '🔙 Voltar à mensagem',
-          url: `https://t.me/c/${trade.chatId.toString().replace('-100', '')}/${trade.threadId}/${trade.msgToEdit}`
+          url: generateMessageLink(trade.chatId, trade.msgToEdit, trade.threadId)
         }]
       ]
     },
@@ -290,7 +291,7 @@ export const finishTrade = async (tradeID: string) => {
   await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
 
   const adds = {}
-  if (trade.threadId !== 1) {
+  if (trade.threadId) {
     debug('finishTrade', 'threadId is ' + trade.threadId)
     adds['message_thread_id'] = trade.threadId
   }
@@ -422,7 +423,7 @@ export const cancelTrade = async (tradeID: string) => {
   await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
   const text = `😬 Vish... ${mention(trade.names[0], trade.users[0])} e ${mention(trade.names[1], trade.users[1])} cancelaram a troca de última hora. Brigaram?`
   const adds = {}
-  if (trade.threadId !== 1) {
+  if (trade.threadId) {
     adds['message_thread_id'] = trade.threadId
   }
   await _brklyn.telegram.sendMessage(trade.chatId, text, {

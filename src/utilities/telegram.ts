@@ -82,3 +82,9 @@ export const escapeHTML = (text: string) => {
 }
 
 export const getAvatarURL = (file) => file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+
+export const generateMessageLink = (chatID: number | string, messageID: number, threadId: number | undefined) => {
+  // if the chatId is a string, it's a public group, so we have to drop the /c/ part
+  if (typeof chatID === 'string') return `https://t.me/${chatID}/${threadId ? `${threadId}/` : ''}${messageID}`
+  else return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
+}
