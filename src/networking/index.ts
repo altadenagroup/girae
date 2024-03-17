@@ -21,7 +21,8 @@ export const bootstrap = async () => {
     await bootstrapGQLServer()
   } else {
     const webhook = await _brklyn.createWebhook({
-      domain: process.env.WEBHOOK_URL ?? 'girae-ingress.altadena.space'
+      domain: process.env.WEBHOOK_URL ?? 'girae-ingress.altadena.space',
+      max_connections: 100
     })
 
     // @ts-ignore
