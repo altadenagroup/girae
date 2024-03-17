@@ -20,7 +20,7 @@ export const bootstrap = async () => {
   if (process.env.MAIN_CONTAINER) {
     await bootstrapGQLServer()
   } else {
-    const webhook = process.env.REGISTER_WEBHOOK && await _brklyn.createWebhook({
+    const webhook = await _brklyn.createWebhook({
       domain: process.env.WEBHOOK_URL ?? 'girae-ingress.altadena.space'
     })
 
