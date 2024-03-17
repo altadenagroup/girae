@@ -10,7 +10,8 @@ export const bootstrapGQLServer = async () => {
 
   const server = new ApolloServer({ schema })
   startStandaloneServer(server, {
-    listen: { port: process.env.PORT ? parseInt(process.env.PORT) : 6788 }
+    listen: { port: process.env.PORT ? parseInt(process.env.PORT) : 6788 },
+    context: () => ({ prisma: _brklyn.db })
   }).then((d) => {
     info('graphql', `server started @ ${d.url}`)
   })
