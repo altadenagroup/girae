@@ -21,7 +21,7 @@ export default async (ctx, next) => {
     }
 
     ctx.profileData = await _brklyn.db.userProfile.findFirst({
-      where: { userId: ctx.userData.id },
+      where: { userId: ctx.userData.id }
     }).catch((err) => {
       error('middleware.userData', `could not find user profile: ${err}`)
       return {}

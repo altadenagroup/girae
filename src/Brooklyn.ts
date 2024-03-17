@@ -20,15 +20,15 @@ export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
 export default class Brooklyn extends Client {
   db: PrismaClient
-  #internalCache: RedisClientType = {} as RedisClientType
   cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
   ai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   })
   sidecar = new Sidecar()
   es2: SessionManager
+  #internalCache: RedisClientType = {} as RedisClientType
 
-  constructor(cache: RedisClientType) {
+  constructor (cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {
       plugins: [
         new plugins.CommandLoaderPlugin({
@@ -63,36 +63,7 @@ export default class Brooklyn extends Client {
     this.setUpMainContainerTasks()
   }
 
-  private setUpMainContainerTasks() {
-    if (process.env.SENTRY_DSN && !process.env.MAIN_CONTAINER) return
-    info('bot', 'considering this instance as the main container')
-    this.sidecar.scheduleAll()
-    return bootstrap()
-  }
-
-  private setUpCDN() {
-    cloudinary.v2.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
-    })
-  }
-
-
-
-  private onExit(code: number) {
-    info('bot', `Exiting with code ${code}`)
-    this.db.$disconnect()
-    this.#internalCache.quit()
-    process.exit(code)
-  }
-
-  private setUpExitHandler() {
-    process.on('SIGINT', () => this.onExit(0))
-    process.on('SIGTERM', () => this.onExit(0))
-  }
-
-  async generateImage(templateKey: string, data: Record<string, any>) {
+  async generateImage (templateKey: string, data: Record<string, any>) {
     // request to ditto
     const res = await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
       method: 'POST',
@@ -114,7 +85,7 @@ export default class Brooklyn extends Client {
     return res
   }
 
-  async getDittoMetadata(): Promise<DittoMetadata> {
+  async getDittoMetadata (): Promise<DittoMetadata> {
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
 
@@ -127,7 +98,7 @@ export default class Brooklyn extends Client {
     return `${fromId}:${chatId}`
   }
 
-  async prelaunch() {
+  async prelaunch () {
     await this.sidecar.cleanUpTasks()
   }
 
@@ -144,29 +115,56 @@ export default class Brooklyn extends Client {
       tracesSampleRate: 0.5,
       profilesSampleRate: 1.0,
       _experiments: {
-        metricsAggregator: true,
+        metricsAggregator: true
       }
     })
+  }
+
+  private setUpMainContainerTasks () {
+    if (process.env.SENTRY_DSN && !process.env.MAIN_CONTAINER) return
+    info('bot', 'considering this instance as the main container')
+    this.sidecar.scheduleAll()
+    return bootstrap()
+  }
+
+  private setUpCDN () {
+    cloudinary.v2.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET
+    })
+  }
+
+  private onExit (code: number) {
+    info('bot', `Exiting with code ${code}`)
+    this.db.$disconnect()
+    this.#internalCache.quit()
+    process.exit(code)
+  }
+
+  private setUpExitHandler () {
+    process.on('SIGINT', () => this.onExit(0))
+    process.on('SIGTERM', () => this.onExit(0))
   }
 }
 
 export class BrooklynCacheLayer {
   #cache: RedisClientType
 
-  constructor(cache: RedisClientType) {
+  constructor (cache: RedisClientType) {
     this.#cache = cache
   }
 
-  async get(namespace: string, key: string) {
+  async get (namespace: string, key: string) {
     const value = await this.#cache.get(`${namespace}:${key}`)
     return value ? JSON.parse(value) : null
   }
 
-  async set(namespace: string, key: string, value: any) {
+  async set (namespace: string, key: string, value: any) {
     return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value))
   }
 
-  async setexp(namespace: string, key: string, value: any, seconds: number) {
+  async setexp (namespace: string, key: string, value: any, seconds: number) {
     if (process.env.NO_CACHING) return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), { EX: 5 })
 
     return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), {
@@ -174,7 +172,7 @@ export class BrooklynCacheLayer {
     })
   }
 
-  async del(namespace: string, key: string) {
+  async del (namespace: string, key: string) {
     return this.#cache.del(`${namespace}:${key}`)
   }
 
@@ -187,7 +185,7 @@ export class BrooklynCacheLayer {
     return this.#cache.exists(`${namespace}:${key}`)
   }
 
-  async flushall() {
+  async flushall () {
     return this.#cache.flushAll()
   }
 }

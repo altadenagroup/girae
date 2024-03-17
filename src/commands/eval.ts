@@ -4,10 +4,10 @@ const clean = async (val) => {
   if (val && val.constructor?.name === 'Promise') val = await val
   if (typeof val !== 'string') val = inspect(val, { depth: 2 })
   return val
-  .replaceAll(_brklyn.telegram.token, '<REDACTED>')
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
+    .replaceAll(_brklyn.telegram.token, '<REDACTED>')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
 }
 
 export default async (ctx) => {

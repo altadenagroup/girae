@@ -116,7 +116,7 @@ export const generateImageURL = async (tradeID: string) => {
 }
 
 const mention = (name: string, id: number) => `<a href="tg://user?id=${id}">${name}</a>`
-const formatCard = (c) => MEDAL_MAP[c.rarity] +` <code>${c.id}</code>. <b>${c.name}</b> (${c.subcategory})`
+const formatCard = (c) => MEDAL_MAP[c.rarity] + ` <code>${c.id}</code>. <b>${c.name}</b> (${c.subcategory})`
 
 export const updateDisplayMessages = async (tradeID: string) => {
   // get the cards, the session and the display mesage ids
@@ -212,7 +212,10 @@ export const finishDMStage = async (tradeID: string) => {
   const msgData = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🔙 Voltar à mensagem', url: `https://t.me/c/${trade.chatId.toString().replace('-100', '')}/${trade.threadId}/${trade.msgToEdit}` }]
+        [{
+          text: '🔙 Voltar à mensagem',
+          url: `https://t.me/c/${trade.chatId.toString().replace('-100', '')}/${trade.threadId}/${trade.msgToEdit}`
+        }]
       ]
     },
     parse_mode: 'HTML' as ParseMode
@@ -245,7 +248,10 @@ Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Pres
     parse_mode: 'HTML' as ParseMode,
     reply_markup: {
       inline_keyboard: [
-        [{ text: '✅ Finalizar troca', callback_data: tcqc.generateCallbackQuery('finish-trade', {}) }, { text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('cancel-trade', {}) }]
+        [{
+          text: '✅ Finalizar troca',
+          callback_data: tcqc.generateCallbackQuery('finish-trade', {})
+        }, { text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('cancel-trade', {}) }]
       ]
     }
   }).catch(() => undefined)

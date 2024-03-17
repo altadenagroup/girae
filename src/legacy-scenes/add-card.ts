@@ -1,4 +1,4 @@
-import { Telegraf, error, warn } from 'melchior'
+import { error, Telegraf, warn } from 'melchior'
 import cloudinary from 'cloudinary'
 import { generatePhotoLink } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
@@ -20,7 +20,11 @@ const raritiesEnToPt = {
 }
 
 const generateCardView = async (cardData: any) => {
-  const { missingSubcategory, missingCategory, mismatch } = await checkIfSubcategoryAndCategoryExist(cardData.subcategory, cardData.category)
+  const {
+    missingSubcategory,
+    missingCategory,
+    mismatch
+  } = await checkIfSubcategoryAndCategoryExist(cardData.subcategory, cardData.category)
   let addText = '\n'
   if (mismatch) addText += '\n<b>⚠️ A categoria da subcategoria e a categoria do card em si não batem. Isso pode ser um erro. </b>'
   if (missingSubcategory) addText += '\n<b>⚠️ A subcategoria deste card não existe. Corrija.</b>'
@@ -40,7 +44,7 @@ const CARD_MARKUP = Markup.inlineKeyboard([[
   Markup.button.callback('📓 Nome', 'EDIT_NAME'),
   Markup.button.callback('📁 Categoria', 'EDIT_CATEGORY')
 ], [
-  Markup.button.callback('✅ Confirmar', 'CONFIRM_ADD_CARD'),
+  Markup.button.callback('✅ Confirmar', 'CONFIRM_ADD_CARD')
 ], [
   Markup.button.callback('❌ Cancelar', 'CANCEL_ADD_CARD')
 ]]).reply_markup
@@ -171,7 +175,11 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   let editing = false
   // @ts-ignore
   if (ctx.scene.session.state?.editCard) {
-    const card = (ctx.scene.session.state as any).editCard as (Card & { category: Category, subcategory: Subcategory, rarity: Rarity })
+    const card = (ctx.scene.session.state as any).editCard as (Card & {
+      category: Category,
+      subcategory: Subcategory,
+      rarity: Rarity
+    })
     // @ts-ignore
     editing = true
     // @ts-ignore

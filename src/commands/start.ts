@@ -1,6 +1,6 @@
-import { generateImageURL, hasUserDisplayMessageID, setUserDisplayMessageID } from "../scenes/start-trade.js"
-import { BotContext } from "../types/context.js"
-import deleteCommand from "./delete.js"
+import { generateImageURL, hasUserDisplayMessageID, setUserDisplayMessageID } from '../scenes/start-trade.js'
+import { BotContext } from '../types/context.js'
+import deleteCommand from './delete.js'
 
 export default async (ctx: BotContext) => {
   if (ctx.args[0]) {

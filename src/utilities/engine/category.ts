@@ -1,60 +1,60 @@
 export const getCategoryByName = async (name: string) => {
-    const cached = await _brklyn.cache.get('categories_name', name)
-    if (cached) return cached
+  const cached = await _brklyn.cache.get('categories_name', name)
+  if (cached) return cached
 
-    const category = await _brklyn.db.category.findFirst({
-        where: {
-            name
-        }
-    })
-
-    if (category) {
-        await _brklyn.cache.setexp('categories_name', name, category, 60 * 60 * 24)
+  const category = await _brklyn.db.category.findFirst({
+    where: {
+      name
     }
+  })
 
-    return category
+  if (category) {
+    await _brklyn.cache.setexp('categories_name', name, category, 60 * 60 * 24)
+  }
+
+  return category
 }
 
 export const getOrCreateCategory = async (name: string) => {
-    const cat = await getCategoryByName(name)
-    if (cat) return cat
-    return createCategory(name)
+  const cat = await getCategoryByName(name)
+  if (cat) return cat
+  return createCategory(name)
 }
 
 export const createCategory = async (name: string) => {
-    const category = await _brklyn.db.category.create({
-        data: {
-            name,
-            emoji: '🎨'
-        }
-    })
+  const category = await _brklyn.db.category.create({
+    data: {
+      name,
+      emoji: '🎨'
+    }
+  })
 
-    return category
+  return category
 }
 
 export const getAllCategories = async () => {
-    const cached = await _brklyn.cache.get('categories_all', 'all')
-    if (cached) return cached
+  const cached = await _brklyn.cache.get('categories_all', 'all')
+  if (cached) return cached
 
-    const categories = await _brklyn.db.category.findMany()
-    await _brklyn.cache.setexp('categories_all', 'all', categories, 24 * 60 * 60)
+  const categories = await _brklyn.db.category.findMany()
+  await _brklyn.cache.setexp('categories_all', 'all', categories, 24 * 60 * 60)
 
-    return categories
+  return categories
 }
 
 export const getCategoryByID = async (id: number) => {
-    const cached = await _brklyn.cache.get('categories_id', id.toString())
-    if (cached) return cached
+  const cached = await _brklyn.cache.get('categories_id', id.toString())
+  if (cached) return cached
 
-    const category = await _brklyn.db.category.findFirst({
-        where: {
-            id
-        }
-    })
-
-    if (category) {
-        await _brklyn.cache.setexp('categories_id', id.toString(), category, 60 * 60 * 24)
+  const category = await _brklyn.db.category.findFirst({
+    where: {
+      id
     }
+  })
 
-    return category
+  if (category) {
+    await _brklyn.cache.setexp('categories_id', id.toString(), category, 60 * 60 * 24)
+  }
+
+  return category
 }

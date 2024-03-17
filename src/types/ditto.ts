@@ -1,7 +1,7 @@
 export interface DittoMetadata {
-    name: string
-    engine: 'ditto'
-    version: string
-    themes: string[]
-    scheme: number
+  name: string
+  engine: 'ditto'
+  version: string
+  themes: string[]
+  scheme: number
 }

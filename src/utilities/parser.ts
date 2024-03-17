@@ -6,13 +6,13 @@ import { getSubcategoryByID, searchSubcategories } from './engine/subcategories.
 import { escapeNamePG } from './misc.js'
 
 // gets a card argument. it can be a number (which would be the card id) or a string (which would be the card name)
-export const getCardFromArg = async (arg: string)  => {
-    if (!arg) return null
-    if (!isNaN(Number(arg))) {
-        return getCardByID(Number(arg))
-    } else {
-        return getCardByName(arg)
-    }
+export const getCardFromArg = async (arg: string) => {
+  if (!arg) return null
+  if (!isNaN(Number(arg))) {
+    return getCardByID(Number(arg))
+  } else {
+    return getCardByName(arg)
+  }
 }
 
 export const getSubcategoryFromArg = async (arg: string) => {

@@ -1,7 +1,7 @@
-import type { User } from 'telegraf/types.js'
-import type { BotContext } from '../types/context.js'
-import type { SessionManager } from './manager.js'
-import type { SceneController } from './scene.js'
+import type {User} from 'telegraf/types.js'
+import type {BotContext} from '../types/context.js'
+import type {SessionManager} from './manager.js'
+import type {SceneController} from './scene.js'
 
 export interface SessionContext<T> extends BotContext {
   session: {

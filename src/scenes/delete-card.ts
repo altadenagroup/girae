@@ -1,10 +1,10 @@
-import { Card } from '@prisma/client'
-import { SessionContext } from '../sessions/context.js'
-import { AdvancedScene } from '../sessions/scene.js'
-import { parseImageString } from '../utilities/lucky-engine.js'
-import { determineMethodToSendMedia } from '../utilities/telegram.js'
-import { addBalance } from '../utilities/engine/economy.js'
-import { warn } from 'melchior'
+import {Card} from '@prisma/client'
+import {SessionContext} from '../sessions/context.js'
+import {AdvancedScene} from '../sessions/scene.js'
+import {parseImageString} from '../utilities/lucky-engine.js'
+import {determineMethodToSendMedia} from '../utilities/telegram.js'
+import {addBalance} from '../utilities/engine/economy.js'
+import {warn} from 'melchior'
 
 interface DeleteData {
   card: Card
@@ -73,7 +73,7 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
     await addBalance(ctx.userData.id, money)
     await ctx.session.deleteMainMessage()
     await ctx.replyWithHTML(`👍 <b>${ctx.session.data.card.name}</b> foi deletado com sucesso! Você recebeu <b>${money}</b> moedas.`)
-  return
+    return
     // @ts-ignore
   } else if (ctx.message?.text?.startsWith?.('/cancel')) {
     ctx.session.steps.leave()

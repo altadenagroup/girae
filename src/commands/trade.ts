@@ -1,11 +1,19 @@
-import { CommonMessageBundle, User } from "telegraf/types"
-import { BotContext } from "../types/context.js"
-import { getUserFromQuotesOrAt } from "../utilities/parser.js"
-import { tcqc } from "../sessions/tcqc.js"
-import { getCardFullByID } from "../utilities/engine/cards.js"
-import { getHowManyCardsUserHas } from "../utilities/engine/users.js"
-import { parseImageString } from "../utilities/lucky-engine.js"
-import { appendCards, cancelTrade, finishDMStage, finishTrade, getUserNumber, setUserDone, setUserReady } from "../scenes/start-trade.js"
+import { CommonMessageBundle, User } from 'telegraf/types'
+import { BotContext } from '../types/context.js'
+import { getUserFromQuotesOrAt } from '../utilities/parser.js'
+import { tcqc } from '../sessions/tcqc.js'
+import { getCardFullByID } from '../utilities/engine/cards.js'
+import { getHowManyCardsUserHas } from '../utilities/engine/users.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import {
+  appendCards,
+  cancelTrade,
+  finishDMStage,
+  finishTrade,
+  getUserNumber,
+  setUserDone,
+  setUserReady
+} from '../scenes/start-trade.js'
 
 export interface TradeContext extends BotContext {
   tradingWith: User
@@ -42,7 +50,13 @@ tcqc.add<AddCardData>('add-card', async (ctx) => {
   if (userCardCount === 0) return ctx.answerCbQuery('Você não tem essa carta! 😅')
   const card = await getCardFullByID(cid)
   if (!card) return ctx.reply('Essa carta não existe! 😅')
-  const cardData = { name: card.name, id: card.id, rarity: card.rarity.name, subcategory: card.subcategory?.name || '?', imageURL: parseImageString(card.image) }
+  const cardData = {
+    name: card.name,
+    id: card.id,
+    rarity: card.rarity.name,
+    subcategory: card.subcategory?.name || '?',
+    imageURL: parseImageString(card.image)
+  }
   const r = await appendCards(ctx, cardData)
   if (r === false) return ctx.answerCbQuery('Você só pode trocar 3 cards de uma vez! 😅')
   return ctx.answerCbQuery('Carta adicionada! 😄')

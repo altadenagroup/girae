@@ -1,4 +1,4 @@
-import { Subcategory } from "@prisma/client"
+import {Subcategory} from "@prisma/client"
 
 export const createSubcategory = async (name: string, categoryID: number) => {
   return _brklyn.db.subcategory.create({
@@ -70,7 +70,7 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
   const subcategories = await _brklyn.db.subcategory.findMany({
     where: {
       categoryId: categoryID,
-      cards: { some: {} }
+      cards: {some: {}}
     }
   })
 

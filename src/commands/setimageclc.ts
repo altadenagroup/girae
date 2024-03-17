@@ -3,6 +3,7 @@ import { generatePhotoLink } from '../utilities/telegram.js'
 import cloudinary from 'cloudinary'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
+
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) {
     return ctx.reply('Você precisa especificar o ID ou nome da subcategoria para editar a imagem.\n\nUsa-se setimageclc id')

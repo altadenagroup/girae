@@ -1,20 +1,20 @@
-import { InlineKeyboardButton } from 'telegraf/types.js'
-import { SessionContext } from '../sessions/context.js'
-import { AdvancedScene } from '../sessions/scene.js'
-import { Category } from '@prisma/client'
-import { getAllCategories, getCategoryByID } from '../utilities/engine/category.js'
-import { getRandomSubcategories, getSubcategoryByID } from '../utilities/engine/subcategories.js'
-import { error, warn } from 'melchior'
-import { drawCard } from '../utilities/engine/cards.js'
-import { MEDAL_MAP } from '../constants.js'
-import { parseImageString } from '../utilities/lucky-engine.js'
-import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
-import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
+import {InlineKeyboardButton} from 'telegraf/types.js'
+import {SessionContext} from '../sessions/context.js'
+import {AdvancedScene} from '../sessions/scene.js'
+import {Category} from '@prisma/client'
+import {getAllCategories, getCategoryByID} from '../utilities/engine/category.js'
+import {getRandomSubcategories, getSubcategoryByID} from '../utilities/engine/subcategories.js'
+import {error, warn} from 'melchior'
+import {drawCard} from '../utilities/engine/cards.js'
+import {MEDAL_MAP} from '../constants.js'
+import {parseImageString} from '../utilities/lucky-engine.js'
+import {addDraw, deduceDraw, getHowManyCardsUserHas} from '../utilities/engine/users.js'
+import {determineMethodToSendMedia, launchStartURL} from '../utilities/telegram.js'
 
 const CANCEL = 'cancel'
 
 const CANCEL_BUTTON = [
-  [{ text: '❌ Cancelar', callback_data: CANCEL }]
+  [{text: '❌ Cancelar', callback_data: CANCEL}]
 ]
 
 interface DrawData {
@@ -45,7 +45,10 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   const categories: Category[] = await getAllCategories()
   // inline keyboard with categories
   const keyboard = categories.map((category) => {
-    return { text: category.emoji + ' ' + category.name, callback_data: `DRAW_SCENE.${category.id}` } as InlineKeyboardButton
+    return {
+      text: category.emoji + ' ' + category.name,
+      callback_data: `DRAW_SCENE.${category.id}`
+    } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
 
@@ -93,7 +96,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.data.chosenCategory = cat
   const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 6 : 4)
   const keyboard = subcategories.map((sub) => {
-    return { text: sub.name, callback_data: `DRAW_SCENE.${sub.id}` } as InlineKeyboardButton
+    return {text: sub.name, callback_data: `DRAW_SCENE.${sub.id}`} as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
 
@@ -105,9 +108,9 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
     media: 'https://altadena.space/assets/girar-two.mp4',
     caption: `🎲 Escolha uma subcategoria para girar:`
   }, {
-      reply_markup: {
-          inline_keyboard: chunked
-      }
+    reply_markup: {
+      inline_keyboard: chunked
+    }
   }).catch((e) => warn('scenes.draw', 'could not edit message: ' + e.message))
 }
 
@@ -139,36 +142,36 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
 
 const sendCard = async (ctx, card, forceImg: string | undefined = undefined, final: boolean = false) => {
   const repeated = await getHowManyCardsUserHas(ctx.userData.id, card.id)
-    const tagExtra = card.tags?.[0]  ? `\n🔖 ${card.tags[0]}` : ''
-    const text = `🎰 Parabéns, você ganhou e vai levar:
+  const tagExtra = card.tags?.[0] ? `\n🔖 ${card.tags[0]}` : ''
+  const text = `🎰 Parabéns, você ganhou e vai levar:
 
 ${MEDAL_MAP[card.rarity.name]} <code>${card.id}</code>. <b>${card.name}</b>
 ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 
 👾 ${ctx.from?.first_name} (${repeated || 1}x)`
 
-    const img = forceImg || parseImageString(card.image, 'ar_3:4,c_crop') || 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
+  const img = forceImg || parseImageString(card.image, 'ar_3:4,c_crop') || 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
 
-    peopleUsingCommand.delete(ctx.from?.id)
-    const method = determineMethodToSendMedia(img)
-    return ctx[method!](img, {
-        caption: text,
-        parse_mode: 'HTML',
-        reply_to_message_id: ctx.session.data._messageToBeQuoted,
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '❌ Deletar card', url: launchStartURL('delete', card.id.toString()) }],
-            ]
-        }
-    }).catch(async (e) => {
-        if (final) return false
-        if (e.message.includes('file identifier') && !final) {
-          error('scenes.draw', `could not send card: ${card.id} (url ${img}). msg is ${e.message}. retrying with placeholder after 5s...`)
-          return sendCard(ctx, card, 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.', true)
-        }
-        await new Promise((r) => setTimeout(r, 5000))
-        await sendCard(ctx, card)
-    })
+  peopleUsingCommand.delete(ctx.from?.id)
+  const method = determineMethodToSendMedia(img)
+  return ctx[method!](img, {
+    caption: text,
+    parse_mode: 'HTML',
+    reply_to_message_id: ctx.session.data._messageToBeQuoted,
+    reply_markup: {
+      inline_keyboard: [
+        [{text: '❌ Deletar card', url: launchStartURL('delete', card.id.toString())}],
+      ]
+    }
+  }).catch(async (e) => {
+    if (final) return false
+    if (e.message.includes('file identifier') && !final) {
+      error('scenes.draw', `could not send card: ${card.id} (url ${img}). msg is ${e.message}. retrying with placeholder after 5s...`)
+      return sendCard(ctx, card, 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.', true)
+    }
+    await new Promise((r) => setTimeout(r, 5000))
+    await sendCard(ctx, card)
+  })
 }
 
 // @ts-ignore

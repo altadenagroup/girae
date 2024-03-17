@@ -1,14 +1,14 @@
-import { BotContext } from "../types/context.js"
-import { getCardsBySubcategory } from "../utilities/engine/cards.js"
-import { checkIfUserHasCards } from "../utilities/engine/users.js"
-import { parseImageString } from "../utilities/lucky-engine.js"
-import { getSubcategoryFromArg } from "../utilities/parser.js"
-import { determineMethodToSendMedia } from "../utilities/telegram.js"
+import { BotContext } from '../types/context.js'
+import { getCardsBySubcategory } from '../utilities/engine/cards.js'
+import { checkIfUserHasCards } from '../utilities/engine/users.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { getSubcategoryFromArg } from '../utilities/parser.js'
+import { determineMethodToSendMedia } from '../utilities/telegram.js'
 
 const medalMap = {
-    'Comum': '🥉',
-    'Raro': '🥈',
-    'Lendário': '🎖️'
+  'Comum': '🥉',
+  'Raro': '🥈',
+  'Lendário': '🎖️'
 }
 
 export default async (ctx: BotContext) => {
@@ -54,6 +54,6 @@ const cardOnList = (userCards) => {
 }
 
 export const info = {
-    guards: ['hasJoinedGroup'],
-    aliases: ['sub']
+  guards: ['hasJoinedGroup'],
+  aliases: ['sub']
 }

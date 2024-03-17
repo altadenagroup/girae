@@ -1,11 +1,10 @@
-import { User } from 'telegraf/types'
-import { generateID } from './misc.js'
-import { Context } from 'telegraf'
-import { debug } from 'melchior'
+import {User} from 'telegraf/types'
+import {generateID} from './misc.js'
+import {Context} from 'telegraf'
 
 export const AdvancedRedisStore = () => {
   return {
-    async get (key: string) {
+    async get(key: string) {
       const sessionKey = await _brklyn.cache.get('user_to_session', key)
       if (!sessionKey) {
         // try to find the session in attached_sessions
@@ -19,14 +18,14 @@ export const AdvancedRedisStore = () => {
       if (!session) return undefined
       return JSON.parse(session)
     },
-    async set (key: string, value: any) {
+    async set(key: string, value: any) {
       if (!value.__scenes) return
 
       const sessionID = generateID(6)
       await _brklyn.cache.set('user_to_session', key, sessionID)
       return await _brklyn.cache.set('session', sessionID, JSON.stringify(value))
     },
-    async delete (key: string) {
+    async delete(key: string) {
       const sessionKey = await _brklyn.cache.get('user_to_session', key)
       await _brklyn.cache.del('user_to_session', key)
       const sessions = await _brklyn.cache.get('attached_sessions_data', key)

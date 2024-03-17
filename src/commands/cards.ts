@@ -8,7 +8,7 @@ export default async (ctx: BotContext) => {
           {
             text: '⭕ Clique aqui',
             web_app: {
-              url: 'https://girae-web-app-dev.altadena.space/cards',
+              url: 'https://girae-web-app-dev.altadena.space/cards'
             }
           }
         ]

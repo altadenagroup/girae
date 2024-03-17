@@ -1,7 +1,7 @@
 // timeless callback query commands handler
 
-import { debug, error, warn } from 'melchior'
-import { BotContext } from '../types/context.js'
+import {debug, error, warn} from 'melchior'
+import {BotContext} from '../types/context.js'
 import * as Sentry from '@sentry/node'
 
 export type ExtendedBotContext<T> = BotContext & { data: T }
@@ -10,15 +10,15 @@ export type HandlerFunction<T> = (ctx: ExtendedBotContext<T>) => Promise<any>
 class TCQC {
   handlers: Map<string, HandlerFunction<any>> = new Map()
 
-  add<T> (command: string, handler: HandlerFunction<T>) {
+  add<T>(command: string, handler: HandlerFunction<T>) {
     this.handlers.set(command, handler)
   }
 
-  generateCallbackQuery (command: string, data: any) {
+  generateCallbackQuery(command: string, data: any) {
     return `ES2.${command}:${JSON.stringify(data)}`
   }
 
-  async handle (ctx: ExtendedBotContext<any>): Promise<boolean> {
+  async handle(ctx: ExtendedBotContext<any>): Promise<boolean> {
     // @ts-ignore
     const cbData = ctx.callbackQuery?.data
     if (!cbData) return false
@@ -33,9 +33,9 @@ class TCQC {
     }
 
     ctx.data = data
-    Sentry.metrics.increment('tcqc-runs', 1, { tags: { command } })
-    await Sentry.startSpan({ op: 'es2.tcqc', name: command }, () => {
-      Sentry.setContext('tcqc', { command, data, user: ctx.from, chat: ctx.chat })
+    Sentry.metrics.increment('tcqc-runs', 1, {tags: {command}})
+    await Sentry.startSpan({op: 'es2.tcqc', name: command}, () => {
+      Sentry.setContext('tcqc', {command, data, user: ctx.from, chat: ctx.chat})
       return handler(ctx).catch((e) => {
         error('tcqc', `error while handling ${command}: ${e}`)
         Sentry.captureException(e)

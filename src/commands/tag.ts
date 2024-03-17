@@ -1,10 +1,10 @@
-import { BotContext } from "../types/context.js"
-import { getCardsByTag } from "../utilities/engine/cards.js"
+import { BotContext } from '../types/context.js'
+import { getCardsByTag } from '../utilities/engine/cards.js'
 
 const medalMap = {
-    'Comum': '🥉',
-    'Raro': '🥈',
-    'Lendário': '🎖️'
+  'Comum': '🥉',
+  'Raro': '🥈',
+  'Lendário': '🎖️'
 }
 
 export default async (ctx: BotContext) => {
@@ -22,6 +22,6 @@ export default async (ctx: BotContext) => {
 const cardOnList = (card) => `${medalMap[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${card.category?.emoji || '?'} <i>${card.subcategory?.name || '?'}</i>`
 
 export const info = {
-    guards: ['hasJoinedGroup'],
-    aliases: ['tag', 'searchtag']
+  guards: ['hasJoinedGroup'],
+  aliases: ['tag', 'searchtag']
 }

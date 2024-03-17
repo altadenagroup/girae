@@ -1,5 +1,5 @@
-import { debug, info } from 'melchior'
-import { Context } from 'telegraf'
+import {debug, info} from 'melchior'
+import {Context} from 'telegraf'
 
 const cooldownBucket = {
   get: (id: number) => {

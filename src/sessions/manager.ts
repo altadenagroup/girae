@@ -25,6 +25,7 @@ interface SessionData {
 
 export class SessionManager {
   scenes: AdvancedScene<any>[] = []
+
   constructor (private bot: Brooklyn) {
     this.scenes.push(startTrade)
     this.scenes.push(drawCard)
@@ -43,7 +44,7 @@ export class SessionManager {
       if (await tcqc.handle(ctx as ExtendedBotContext<any>)) {
         return
       }
-    // @ts-ignore
+      // @ts-ignore
     } else if (ctx.callbackQuery?.data?.endsWith?.('ADD_CARD')) {
       return next()
     }
@@ -91,31 +92,33 @@ export class SessionManager {
     return true
   }
 
-  async handleSession (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>, sessionKey: string, args: { [key: string]: any } | undefined = undefined) {
+  async handleSession (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>, sessionKey: string, args: {
+    [key: string]: any
+  } | undefined = undefined) {
     const sceneController = new SceneController()
 
     ctx.session = {
-        data: session.data || {},
-        key: sessionKey,
-        manager: this,
-        steps: sceneController,
-        arguments: args,
-        attachUserToSession: (user: User) => this.attachUser(sessionKey, ctx, user),
-        setMainMessage: (messageId: number) => {
-          ctx.session.data._mainMessage = messageId
-        },
-        setMessageToBeQuoted: (messageId) => {
-          ctx.session.data._messageToBeQuoted = messageId
-        },
-        deleteMainMessage: () => {
-          return this.bot.telegram.deleteMessage(ctx.chat!.id, ctx.session.data._mainMessage).catch((e) => {
-            warn('es²', `(${sessionKey}) failed to delete main message: ${e.message}`)
-          })
-        },
-        setAttribute: (key, value) => {
-          ctx.session.data[`_${key}`] = value
-        }
+      data: session.data || {},
+      key: sessionKey,
+      manager: this,
+      steps: sceneController,
+      arguments: args,
+      attachUserToSession: (user: User) => this.attachUser(sessionKey, ctx, user),
+      setMainMessage: (messageId: number) => {
+        ctx.session.data._mainMessage = messageId
+      },
+      setMessageToBeQuoted: (messageId) => {
+        ctx.session.data._messageToBeQuoted = messageId
+      },
+      deleteMainMessage: () => {
+        return this.bot.telegram.deleteMessage(ctx.chat!.id, ctx.session.data._mainMessage).catch((e) => {
+          warn('es²', `(${sessionKey}) failed to delete main message: ${e.message}`)
+        })
+      },
+      setAttribute: (key, value) => {
+        ctx.session.data[`_${key}`] = value
       }
+    }
 
     this.applyCtxMutations(ctx)
 

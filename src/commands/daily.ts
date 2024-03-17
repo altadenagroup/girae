@@ -6,7 +6,7 @@ const DAILY_REWARD = 100
 
 export default async (ctx: BotContext) => {
   if (ctx.userData!.hasGottenDaily) {
-    return ctx.reply('Você já pegou sua recompensa diária hoje. 😊\nVolte daqui '+ _brklyn.sidecar.willRunIn(DAILY_CRON) + '.')
+    return ctx.reply('Você já pegou sua recompensa diária hoje. 😊\nVolte daqui ' + _brklyn.sidecar.willRunIn(DAILY_CRON) + '.')
   }
 
   await addBalance(ctx.userData!.id, DAILY_REWARD)

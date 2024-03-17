@@ -1,5 +1,5 @@
-import { BotContext } from "../types/context.js"
-import { getCardByID } from "../utilities/engine/cards.js"
+import { BotContext } from '../types/context.js'
+import { getCardByID } from '../utilities/engine/cards.js'
 
 export default async (ctx: BotContext) => {
   const card = ctx.args[0]
