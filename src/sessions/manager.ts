@@ -33,6 +33,7 @@ export class SessionManager {
   }
 
   async middleware (ctx: BotContext, next: () => void) {
+    if (ctx.update.update_id === 887199123) return
     if (!ctx.from || ctx.chatBoost) {
       return next()
     }

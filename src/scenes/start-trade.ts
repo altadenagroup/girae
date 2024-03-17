@@ -7,6 +7,7 @@ import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 import { debug, warn } from 'melchior'
+import * as Sentry from '@sentry/node'
 
 const ACCEPT_TRADE = 'accept_trade'
 const DECLINE_TRADE = 'decline_trade'
@@ -278,6 +279,9 @@ export const finishTrade = async (tradeID: string) => {
   const cards1 = await _brklyn.cache.get('ongoing_trades_cards1', tradeID)
   const cards2 = await _brklyn.cache.get('ongoing_trades_cards2', tradeID)
 
+  Sentry.setContext('trade', trade)
+  Sentry.setTag('tradeID', tradeID)
+
   const text = `💱 Troca entre <b>${mention(trade.names[0], trade.users[0])}</b> e <b>${mention(trade.names[1], trade.users[1])}</b> FINALIZADA! ✅
 
 🃏 <b>${trade.names[0]}</b> ofereceu:
@@ -288,7 +292,7 @@ export const finishTrade = async (tradeID: string) => {
 
   ${cards2.map(formatCard).join('\n  ') || '<i>Nenhum card.</i>'}`
 
-  await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
+  await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit).catch(() => undefined)
 
   const adds = {}
   if (trade.threadId) {
@@ -409,19 +413,24 @@ export const finishTrade = async (tradeID: string) => {
     user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
   })
 
+  await clearTradeData(tradeID)
+
   await _brklyn.telegram.sendPhoto(trade.chatId, imgURL.url, {
     caption: text,
     parse_mode: 'HTML' as ParseMode,
     ...adds
   })
-
-  await clearTradeData(tradeID)
 }
 
 export const cancelTrade = async (tradeID: string) => {
   const trade = await _brklyn.cache.get('ongoing_trades', tradeID)
+  Sentry.setContext('trade', trade)
+  Sentry.setTag('tradeID', tradeID)
   await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
   const text = `😬 Vish... ${mention(trade.names[0], trade.users[0])} e ${mention(trade.names[1], trade.users[1])} cancelaram a troca de última hora. Brigaram?`
+
+  await clearTradeData(tradeID)
+
   const adds = {}
   if (trade.threadId) {
     adds['message_thread_id'] = trade.threadId
@@ -430,8 +439,6 @@ export const cancelTrade = async (tradeID: string) => {
     parse_mode: 'HTML' as ParseMode,
     ...adds
   })
-
-  await clearTradeData(tradeID)
 }
 
 export const setUserDone = async (ctx: BotContext, done: boolean): Promise<boolean> => {
