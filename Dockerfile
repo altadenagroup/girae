@@ -4,7 +4,7 @@ WORKDIR /
 
 COPY package*.json ./
 
-RUN npm ci
+RUN npm ci --force
 RUN npm i @sentry/node @sentry/profiling-node
 
 COPY . .
