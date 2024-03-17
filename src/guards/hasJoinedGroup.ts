@@ -14,7 +14,7 @@ export default async (ctx) => {
         return true
     }
 
-    if (ctx.chat?.id === -1002096118477 /*|| ctx.chat?.id === -1002058397651*/ || ctx.chat?.id === -1001945644138) {
+    if (ctx.chat?.id === -1002096118477 /*|| ctx.chat?.id === -1002058397651*/ || ctx.chat?.id === -1001945644138 || ctx.chat?.id === -1001786847999) {
       return true
     }
 
