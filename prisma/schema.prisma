@@ -6,6 +6,10 @@ generator client {
   previewFeatures = ["fullTextSearch"]
 }
 
+generator typegraphql {
+  provider = "typegraphql-prisma"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

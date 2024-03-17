@@ -14,6 +14,7 @@ import { SessionManager } from './sessions/manager.js'
 import userCooldown from './middleware/user-cooldown.js'
 import * as Sentry from '@sentry/node'
 import { nodeProfilingIntegration } from '@sentry/profiling-node'
+import { bootstrap } from './networking/index.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -59,6 +60,14 @@ export default class Brooklyn extends Client {
     this.setUpCDN()
     this.setUpExitHandler()
     this.setUpSentry()
+    this.setUpMainContainerTasks()
+  }
+
+  private setUpMainContainerTasks() {
+    if (process.env.SENTRY_DSN && !process.env.MAIN_CONTAINER) return
+    info('bot', 'considering this instance as the main container')
+    this.sidecar.scheduleAll()
+    return bootstrap()
   }
 
   private setUpCDN() {

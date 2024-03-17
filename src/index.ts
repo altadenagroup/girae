@@ -3,6 +3,7 @@
 import 'dotenv/config'
 import './utilities/prototypes.js'
 import { createClient, RedisClientType } from 'redis'
+import 'reflect-metadata'
 import Brooklyn from './Brooklyn.js'
 
 const client = createClient({ url: process.env.REDIS_URL })
