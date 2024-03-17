@@ -28,7 +28,7 @@ export const bootstrap = async () => {
     // @ts-ignore
     app!.post(`/telegraf/${_brklyn.secretPathComponent()}`, webhook)
 
-    app!.get('/status', async (req, res) => {
+    app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
 
       // 4xx for false, 200 for true
