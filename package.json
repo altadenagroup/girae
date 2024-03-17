@@ -43,7 +43,7 @@
     "cloudinary": "^2.0.1",
     "cron": "^3.1.6",
     "dotenv": "^16.4.4",
-    "graphql": "^16.6.0",
+    "graphql": "^15.3.0",
     "graphql-fields": "^2.0.3",
     "graphql-scalars": "^1.22.5",
     "melchior": "^0.5.1",
