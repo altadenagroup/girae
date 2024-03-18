@@ -19,7 +19,7 @@ import { bootstrap } from './networking/index.js'
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
 const middlewareSafety = (fun) => {
-  return (...args) => {
+  return async (...args) => {
     try {
       const data = await fun(...args)
       return data
