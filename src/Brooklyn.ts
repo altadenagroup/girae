@@ -18,6 +18,17 @@ import { bootstrap } from './networking/index.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
+const middlewareSafety = (fun) => {
+  return (...args) => {
+    try {
+      const data = await fun(...args)
+      return data
+    } catch (e: any) {
+      Sentry.captureException(e)
+    }
+  }
+}
+
 export default class Brooklyn extends Client {
   db: PrismaClient
   cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
@@ -46,10 +57,10 @@ export default class Brooklyn extends Client {
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.es2 = new SessionManager(this)
-    this.use(userCooldown)
-    this.use(functionEditing)
-    this.use(argumentParser)
-    this.use(userData)
+    this.use(middlewareSafety(userCooldown))
+    this.use(middlewareSafety(functionEditing))
+    this.use(middlewareSafety(argumentParser))
+    this.use(middlewareSafety(userData))
 
     // @ts-ignore
     this.use((...args) => this.es2.middleware(...args))
