@@ -16,7 +16,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{ van der Woodsen is a character of Gossip GIrl, which is a TV show, so TV > Séries }} {\n    "name": "Serena van der Woodsen",\n    "subcategory": "Séries",\n    "rarity": "Legendary",\n    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PeDHnb0aYghQYfqJ-oh4wO3TKMhGyoWVZy5Z5kJ6fvNFt9EZKq1dpVE&s=10",\n    "category": "TV",\n    "tags": ["Gossip Girl"]\n}'
+      'content': '{{ van der Woodsen is a character of Gossip GIrl, which is a TV show, so TV > Gossip Girl. }} {\n    "name": "Serena van der Woodsen",\n    "subcategory": "Gossip Girl",\n    "rarity": "Legendary",\n    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PeDHnb0aYghQYfqJ-oh4wO3TKMhGyoWVZy5Z5kJ6fvNFt9EZKq1dpVE&s=10",\n    "category": "TV",\n    "tags": ["Gossip Girl"]\n}'
     },
     {
       'role': 'user',
@@ -24,7 +24,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Presto is a character from the TV series Dungeons & Dragons, so TV > Séries.}} {\n    "name": "Presto",\n    "subcategory": "Séries",\n    "rarity": "Rare",\n    "image": "https://brandedinthe80s.com/6790/cartoon-commentary-14-presto-the-giant-killer",\n    "category": "TV",\n    "tags": ["Dungeons & Dragons"]\n}'
+      'content': '{{Presto is a character from the TV series Dungeons & Dragons , so TV > Dungeons & Dragons. }} {\n    "name": "Presto",\n    "subcategory": "Dungeons & Dragons",\n    "rarity": "Rare",\n    "image": "https://brandedinthe80s.com/6790/cartoon-commentary-14-presto-the-giant-killer",\n    "category": "TV",\n    "tags": ["Dungeons & Dragons"]\n}'
     },
     {
       'role': 'user',
@@ -40,7 +40,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Carminha is a character from the Brazilian soap opera Avenida Brasil, so Novelas.}}{\n    "name": "Carminha",\n    "subcategory": "Novelas",\n    "rarity": "Legendary",\n    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTz1-TfA4cNMYkNoktravO7e6Cghuzym5O_B9hYQzq0DOdMpAPMO4Mm5w&s=10",\n    "category": "TV",\n    "tags": ["Avenida Brasil"]\n}'
+      'content': '{{Carminha is a character from the Brazilian soap opera Avenida Brasil, so TV > Avenida Brasil.}}{\n    "name": "Carminha",\n    "subcategory": "Avenida Brasil",\n    "rarity": "Legendary",\n    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTz1-TfA4cNMYkNoktravO7e6Cghuzym5O_B9hYQzq0DOdMpAPMO4Mm5w&s=10",\n    "category": "TV",\n    "tags": ["Avenida Brasil"]\n}'
     },
     {
       'role': 'user',
@@ -56,7 +56,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Nunew Chawarin is a Thai actor, so Variedades > Atores Thailandeses.}}{\n    "name": "Nunew Chawarin",\n    "subcategory": "Atores Tailandeses",\n    "rarity": "Common",\n    "image": null,\n    "category": "Variedades",\n    "tags": []\n}'
+      'content': '{{Nunew Chawarin is a Thai actor, so Variedades > Atores Tailandeses.}}{\n    "name": "Nunew Chawarin",\n    "subcategory": "Atores Tailandeses",\n    "rarity": "Common",\n    "image": null,\n    "category": "Variedades",\n    "tags": []\n}'
     },
     {
       'role': 'user',
