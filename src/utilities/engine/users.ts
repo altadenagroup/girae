@@ -166,6 +166,6 @@ export const getHowManyCardsUserHas = async (userId: number, cardId: number): Pr
 export const addDraw = async (userId: number, amount: number = 1): Promise<boolean> => {
   return await _brklyn.db.user.update({
     where: { id: userId },
-    data: { usedDraws: { increment: amount } }
+    data: { usedDraws: { decrement: amount } }
   }).then(() => true).catch(() => false)
 }
