@@ -274,16 +274,7 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   // @ts-ignore
   if (ctx.wizard.state.editingTags) {
     // @ts-ignore
-    if (ctx.message.text === 'limpar') {
-      // @ts-ignore
-      ctx.wizard.state.cardData.tags = []
-      await updateCardView(ctx)
-      // @ts-ignore
-      ctx.wizard.state.editingTags = false
-      return
-    }
-    // @ts-ignore
-    ctx.wizard.state.cardData.tags = ctx.message.text.split(',').map(t => t.trim())
+    ctx.wizard.state.cardData.tags = ctx.message.text === 'limpar' ? [] : ctx.message.text.split(',').map(t => t.trim())
     await updateCardView(ctx)
     // @ts-ignore
     ctx.wizard.state.editingTags = false
