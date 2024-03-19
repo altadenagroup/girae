@@ -68,7 +68,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   setTimeout(() => coolDownBucket.delete(ctx.from?.id), 5000)
   setTimeout(() => peopleUsingCommand.delete(ctx.from?.id), 5000)
   setTimeout(() => peopleOnGroup.splice(peopleOnGroup.indexOf(ctx.chat!.id), 1), 5000)
-  return ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
+  await ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {
@@ -96,14 +96,14 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.data.chosenCategory = cat
   const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 6 : 4)
   const keyboard = subcategories.map((sub) => {
-    return {text: sub.name, callback_data: `DRAW_SCENE.${sub.id}`} as InlineKeyboardButton
+    return {text: sub.name, callback_data: `DRAW_SUB.${sub.id}`} as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
 
   await deduceDraw(ctx.userData.id)
 
   ctx.session.steps.next()
-  return ctx.editMessageMedia({
+  await ctx.editMessageMedia({
     type: 'animation',
     media: 'https://altadena.space/assets/girar-two.mp4',
     caption: `🎲 Escolha uma subcategoria para girar:`
@@ -115,6 +115,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
+  if (!ctx.callbackQuery?.data?.startsWith('DRAW_SUB')) return
   const subcategoryId = ctx.callbackQuery?.data.split('.')[1]
   const sub = await getSubcategoryByID(parseInt(subcategoryId))
   if (!sub) {
