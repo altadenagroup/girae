@@ -1,6 +1,7 @@
 import { Card, Category, Rarity, Subcategory, User } from '@prisma/client'
 import { getSubcategoryByID } from './subcategories.js'
 import { getRarityForUserDraw } from './users.js'
+import { getRarityById } from '../lucky-engine.js'
 
 export interface CreateCardOptions {
   name: string
@@ -175,9 +176,14 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
   const card = cards[Math.floor(Math.random() * cards.length)]
   if (card.rarityModifier !== 0) {
     const roll = Math.random()
-    const totalRarity = card.rarityModifier + card.rarity!.chance
+    const totalRarity = card.rarityModifier + card!.rarity.chance
 
     if (roll > totalRarity) {
+      let rarityToUse = 1
+      if (roll > 0.65) rarityToUse = 3
+      if (roll > 0.85) rarityToUse = 4
+      card.rarity = await getRarityById(rarityToUse) as Rarity
+
       return selectRandomCard(card.rarity!, card.category!, card.subcategory!)
     }
   }
