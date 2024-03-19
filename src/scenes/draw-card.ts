@@ -115,7 +115,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
-  if (!ctx.callbackQuery?.data?.startsWith('DRAW_SUB')) return
+  if (!ctx.callbackQuery?.data?.startsWith?.('DRAW_SUB')) return
   const subcategoryId = ctx.callbackQuery?.data.split('.')[1]
   const sub = await getSubcategoryByID(parseInt(subcategoryId))
   if (!sub) {
