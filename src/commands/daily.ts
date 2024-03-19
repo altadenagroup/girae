@@ -64,6 +64,6 @@ const increaseStreak = async (ctx: BotContext): Promise<number> => {
 }
 
 export const info = {
-  guards: ['hasJoinedGroup'],
+  guards: ['hasJoinedGroup', 'isWhitelistedGroup'],
   aliases: ['reward', 'recompensa', 'diario']
 }
