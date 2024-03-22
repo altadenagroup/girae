@@ -8,7 +8,7 @@ export default async (ctx) => {
   }
   
   if (ctx.chat?.type === 'private') {
-    return true
+    return false
   }
 
   await ctx.reply(`Atualmente, este comando só pode ser executado nos grupos de testes!\n\nPara usá-los, considere doar para a Giraê, ou aguarde o lançamento oficial.`)
