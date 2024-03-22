@@ -7,7 +7,7 @@ export default async (ctx) => {
     return true
   }
   
-  if (ctx.chat?.id === ctx.from.id) {
+  if (ctx.chat?.type === 'private') {
     return true
   }
 
