@@ -1,4 +1,4 @@
-import { Client, info, plugins } from 'melchior'
+import { Client, error, info, plugins } from 'melchior'
 import { PrismaClient } from '@prisma/client'
 import { RedisClientType } from 'redis'
 import userData from './middleware/user-data.js'
@@ -24,6 +24,8 @@ const middlewareSafety = (fun) => {
       const data = await fun(...args)
       return data
     } catch (e: any) {
+      error('middleware', `an exception was thrown in a middleware. THIS IS UNACCEPTABLE! (${e.message})`)
+      Sentry.setTag('wasMiddleware', 'true')
       Sentry.captureException(e)
     }
   }
@@ -141,7 +143,8 @@ export default class Brooklyn extends Client {
   }
 
   private setUpMainContainerTasks () {
-    if (process.env.SENTRY_DSN && !process.env.MAIN_CONTAINER) return
+    if (!process.env.MAIN_CONTAINER) return
+
     info('bot', 'considering this instance as the main container')
     this.sidecar.scheduleAll()
   }
