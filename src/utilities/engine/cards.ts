@@ -265,6 +265,10 @@ export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory,
       card: {
         subcategoryId: subcategory.id
       }
+    },
+    include: {
+      card: {
+      }
     }
   })
 }

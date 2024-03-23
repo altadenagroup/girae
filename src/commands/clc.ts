@@ -16,6 +16,8 @@ export default async (ctx: BotContext) => {
   const cardCount = await getCountOfCardsBySubcategory(sub)
   if (cardCount === 0) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
   // sort cards by rarest and get top 20
+  const uc = await getCardsOnSubcategoryOwnedByUser(sub, ctx.userData).then((g) => g.map((r) => r.card.id))
+  console.log(uc)
 
   const args = {
     totalPages: Math.ceil(cardCount / 20),
@@ -24,7 +26,7 @@ export default async (ctx: BotContext) => {
     id: sub.id,
     name: sub.name,
     emoji: sub.category?.emoji,
-    userOwned: await getCardsOnSubcategoryOwnedByUser(sub, ctx.userData).then((g) => g.map((r) => r.id)),
+    userOwned: uc,
     imageURL: sub.image ? parseImageString(sub.image, false) : undefined
   }
 
