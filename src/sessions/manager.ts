@@ -7,6 +7,7 @@ import { generateID } from '../utilities/misc.js'
 import { debug, error, warn } from 'melchior'
 import { SessionContext } from './context.js'
 import drawCard from '../scenes/draw-card.js'
+import showCollection from '../scenes/col.js'
 import deleteCard from '../scenes/delete-card.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
@@ -30,6 +31,8 @@ export class SessionManager {
     this.scenes.push(startTrade)
     this.scenes.push(drawCard)
     this.scenes.push(deleteCard)
+    // @ts-ignore
+    this.scenes.push(showCollection)
   }
 
   async middleware (ctx: BotContext, next: () => void) {
@@ -133,13 +136,13 @@ export class SessionManager {
       nextStepData: (data) => {
         return `ES2S.${session.scene}.${(session.currentStep || 0) + 1}.${data}`
       },
-      getCurrentStepData: (parseFn) => {
+      getCurrentStepData: (parseFn = undefined) => {
         // @ts-ignore
         const data = ctx.callbackQuery?.data
         if (!data) return
         // @ts-ignore
         const d = data.split('.').slice(3).join('.')
-        return parseFn(d)
+        return parseFn ? parseFn(d) : d as any
       }
     }
 

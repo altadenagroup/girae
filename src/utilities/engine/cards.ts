@@ -250,6 +250,36 @@ export const getCardsBySubcategory = async (subcategory: Subcategory) => {
   })
 }
 
+export const getCountOfCardsBySubcategory = async (subcategory: Subcategory) => {
+  return await _brklyn.db.card.count({
+    where: {
+      subcategoryId: subcategory.id
+    }
+  })
+}
+
+export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
+  return await _brklyn.db.userCard.findMany({
+    where: {
+      userId: user.id,
+      card: {
+        subcategoryId: subcategory.id
+      }
+    }
+  })
+}
+
+export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
+  return await _brklyn.db.userCard.count({
+    where: {
+      userId: user.id,
+      card: {
+        subcategoryId: subcategory.id
+      }
+    }
+  })
+}
+
 export const getHowManyCardsAreThere = async (cardID: number) => {
   return await _brklyn.db.userCard.count({
     where: {

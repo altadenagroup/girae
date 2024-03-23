@@ -1,15 +1,7 @@
 import { BotContext } from '../types/context.js'
-import { getCardsBySubcategory } from '../utilities/engine/cards.js'
-import { checkIfUserHasCards } from '../utilities/engine/users.js'
+import { getCountCardsOnSubcategoryOwnedByUser, getCardsOnSubcategoryOwnedByUser, getCountOfCardsBySubcategory } from '../utilities/engine/cards.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
-import { determineMethodToSendMedia } from '../utilities/telegram.js'
-
-const medalMap = {
-  'Comum': '🥉',
-  'Raro': '🥈',
-  'Lendário': '🎖️'
-}
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID da subcategoria a ser vista', '/clc Red Velvet')
@@ -21,39 +13,25 @@ export default async (ctx: BotContext) => {
   }
 
   const sub = subs[0]
-  const cards = await getCardsBySubcategory(sub)
-  if (!cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
+  const cardCount = await getCountOfCardsBySubcategory(sub)
+  if (cardCount === 0) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
   // sort cards by rarest and get top 20
-  const sorted = cards.sort((a, b) => (a.rarity?.chance || 0) - (b.rarity?.chance || 0)).slice(0, 20)
 
-  const userCards = await checkIfUserHasCards(ctx.userData.id, sorted.map(c => c.id))
-  const uniqueCardsOwned = userCards.filter((card, index, self) => self.findIndex(c => c.cardId === card.cardId) === index)
-
-  const text = sorted.map(cardOnList(userCards)).join('\n')
-  const msg = `${cards[0].category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>
-🎲 <code>${cards.length}</code> cards no total, <code>${uniqueCardsOwned.length}</code> na sua coleção.
-
-${text}
-
-Para ver um desses cards, use <code>/card id</code>`
-
-  if (sub.image) {
-    const imgURL = parseImageString(sub.image, false)!
-    const method = determineMethodToSendMedia(imgURL)
-    return ctx[method](imgURL, { parse_mode: 'HTML', caption: msg })
+  const args = {
+    totalPages: Math.ceil(cardCount / 20),
+    totalCards: cardCount,
+    userOwnedCards: await getCountCardsOnSubcategoryOwnedByUser(sub, ctx.userData),
+    id: sub.id,
+    name: sub.name,
+    emoji: sub.category?.emoji,
+    userOwned: await getCardsOnSubcategoryOwnedByUser(sub, ctx.userData).then((g) => g.map((r) => r.id)),
+    imageURL: sub.image ? parseImageString(sub.image, false) : undefined
   }
 
-  return ctx.replyWithHTML(msg)
-}
-
-const cardOnList = (userCards) => {
-  return (card) => {
-    const userOwnsCard = userCards.filter(uc => uc.cardId === card.id).length
-    return `${medalMap[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${userOwnsCard > 0 ? `<code>${userOwnsCard}x</code>` : card.category?.emoji}`
-  }
+  return ctx.es2.enter('SHOW_COLLECTION', args)
 }
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['sub']
+  aliases: ['sub', 'colec', 'collec', 'col']
 }

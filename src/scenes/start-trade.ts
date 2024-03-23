@@ -73,7 +73,7 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
     await ctx.editMessageCaption(`Hora de trocar, <b>${mentionUser(ctx.session.data.ogUser)}</b> e <b>${mentionUser(ctx.session.data.tradingWith)}</b>! 🤝\n\nCliquem no botão abaixo para inicar a troca.`, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '💱 Iniciar troca', url: launchStartURL('trade', ctx.session.data.tradingWith.id) }]
+          [{ text: '💱 Iniciar troca', url: launchStartURL('trade', ctx.session.data.tradingWith.id?.toString?.()) }]
         ]
       },
       parse_mode: 'HTML' as ParseMode

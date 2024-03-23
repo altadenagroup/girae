@@ -4,7 +4,16 @@ import 'dotenv/config'
 import './utilities/prototypes.js'
 import { createClient, RedisClientType } from 'redis'
 import 'reflect-metadata'
+import { info } from 'melchior'
+
+if (process.env.RUN_BETA) {
+  info('giraê', 'running in beta mode')
+  process.env.TELEGRAM_TOKEN = process.env.BETA_TELEGRAM_TOKEN
+  process.env.LAUNCH_POLLING = 'true'
+}
+
 import Brooklyn from './Brooklyn.js'
+
 
 const client = createClient({url: process.env.REDIS_URL})
 client.on('error', (err) => {
@@ -17,11 +26,12 @@ client.on('error', (err) => {
 await client.connect()
 
 global._brklyn = new Brooklyn(client as RedisClientType)
-if (!process.env.MAIN_CONTAINER) _brklyn.launchPlugins()
-_brklyn.setUpNetworkingFeatures()
+if (!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) _brklyn.launchPlugins()
 
 if (process.env.LAUNCH_POLLING) {
   await _brklyn.launch()
+} else {
+  _brklyn.setUpNetworkingFeatures()
 }
 
 

@@ -5,8 +5,9 @@ import type {SceneController} from './scene.js'
 
 export interface SessionContext<T> extends BotContext {
   session: {
-    data: T | {
-      [key: string]: any
+    data: T & {
+      _mainMessage?: number
+      _messageToBeQuoted?: number
     }
     key: string
     manager: SessionManager
@@ -19,7 +20,7 @@ export interface SessionContext<T> extends BotContext {
     deleteMainMessage: () => Promise<true | void>
     setAttribute: (key: string, value: any) => void
     nextStepData: (data: string) => string
-    getCurrentStepData: <T>(parsingFn: ((string) => T | undefined)) => T | undefined
+    getCurrentStepData: <T>(parsingFn: ((string) => T | undefined) | undefined) => T | undefined
   }
 
   callbackQuery: {
