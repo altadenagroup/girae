@@ -47,7 +47,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   const keyboard = categories.map((category) => {
     return {
       text: category.emoji + ' ' + category.name,
-      callback_data: `DRAW_SCENE.${category.id}`
+      callback_data: ctx.session.nextStepData(category.id.toString())
     } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
@@ -85,8 +85,9 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
     return ctx.reply('🚪 Comando cancelado.')
   }
 
-  const categoryId = ctx.callbackQuery?.data.split('.')[1]
-  const cat = await getCategoryByID(parseInt(categoryId))
+  const categoryId = ctx.session.getCurrentStepData<number>(parseInt)
+  if (!categoryId) return
+  const cat = await getCategoryByID(categoryId)
   if (!cat) {
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
@@ -96,7 +97,10 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.data.chosenCategory = cat
   const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 6 : 4)
   const keyboard = subcategories.map((sub) => {
-    return {text: sub.name, callback_data: `DRAW_SUB.${sub.id}`} as InlineKeyboardButton
+    return {
+      text: sub.name,
+      callback_data: ctx.session.nextStepData(sub.id.toString())
+    } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
 
@@ -111,13 +115,19 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
     reply_markup: {
       inline_keyboard: chunked
     }
-  }).catch((e) => warn('scenes.draw', 'could not edit message: ' + e.message))
+  }).catch(async (e) => {
+    warn('scenes.draw', 'could not edit message: ' + e.message)
+    await addDraw(ctx.userData.id)
+    await ctx.session.deleteMainMessage()
+    ctx.session.steps.leave()
+    return ctx.reply('🚪 Comando cancelado.')
+  })
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
-  if (!ctx.callbackQuery?.data?.startsWith?.('DRAW_SUB')) return
-  const subcategoryId = ctx.callbackQuery?.data.split('.')[1]
-  const sub = await getSubcategoryByID(parseInt(subcategoryId))
+  const subcategoryId = ctx.session.getCurrentStepData<number>(parseInt)
+  if (!subcategoryId) return
+  const sub = await getSubcategoryByID(subcategoryId)
   if (!sub) {
     await addDraw(ctx.userData.id)
     await ctx.session.deleteMainMessage()

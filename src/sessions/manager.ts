@@ -58,6 +58,17 @@ export class SessionManager {
 
     const session = await this.bot.cache.get('es2_sessions', sessionKey)
     if (!session || !session.es2Enabled) return next()
+    // @ts-ignore
+    if (ctx.callbackQuery?.data?.startsWith?.('ES2S.')) {
+      // @ts-ignore
+      const [scene, step, data] = ctx.callbackQuery.data.split('.').slice(1)
+      if (session.scene !== scene) {
+        warn('es²', `tried to run scene ${scene}, but es2 is currently running scene ${session.scene}`)
+        // in this case, let's run the ES2S callback anyway, as it might be a valid callback for another scene
+        session.scene = scene
+      }
+      session.currentStep = parseInt(step)
+    }
     const checks = await this.checkAttributes(ctx as SessionContext<any>, session.data)
     if (!checks) return next()
 
@@ -93,18 +104,18 @@ export class SessionManager {
     return true
   }
 
-  async handleSession (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>, sessionKey: string, args: {
+  async handleSession (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>, userKey: string, args: {
     [key: string]: any
   } | undefined = undefined) {
     const sceneController = new SceneController()
 
     ctx.session = {
       data: session.data || {},
-      key: sessionKey,
+      key: userKey,
       manager: this,
       steps: sceneController,
       arguments: args,
-      attachUserToSession: (user: User) => this.attachUser(sessionKey, ctx, user),
+      attachUserToSession: (user: User) => this.attachUser(userKey, ctx, user),
       setMainMessage: (messageId: number) => {
         ctx.session.data._mainMessage = messageId
       },
@@ -113,11 +124,22 @@ export class SessionManager {
       },
       deleteMainMessage: () => {
         return this.bot.telegram.deleteMessage(ctx.chat!.id, ctx.session.data._mainMessage).catch((e) => {
-          warn('es²', `(${sessionKey}) failed to delete main message: ${e.message}`)
+          warn('es²', `(${userKey}) failed to delete main message: ${e.message}`)
         })
       },
       setAttribute: (key, value) => {
         ctx.session.data[`_${key}`] = value
+      },
+      nextStepData: (data) => {
+        return `ES2S.${session.scene}.${(session.currentStep || 0) + 1}.${data}`
+      },
+      getCurrentStepData: (parseFn) => {
+        // @ts-ignore
+        const data = ctx.callbackQuery?.data
+        if (!data) return
+        // @ts-ignore
+        const d = data.split('.').slice(3).join('.')
+        return parseFn(d)
       }
     }
 
@@ -126,14 +148,14 @@ export class SessionManager {
     const status = await this.runScene(ctx, session, scene)
     if (!status) return
 
-    if (status.nextStep !== undefined) {
+    if (status?.nextStep !== undefined) {
       session.currentStep = status.nextStep
-      await this.bot.cache.set('es2_sessions', sessionKey, {
+      await this.bot.cache.set('es2_sessions', userKey, {
         ...session,
         data: ctx.session.data
       })
     } else {
-      await this.deleteSession(sessionKey)
+      await this.deleteSession(userKey)
     }
   }
 
@@ -145,6 +167,7 @@ export class SessionManager {
       name: `running scene ${scene.id} (step ${session.currentStep})`
     }, async (span) => {
       Sentry.setContext('es2', { scene: scene.id, step: session.currentStep, user: ctx.from, chat: ctx.chat })
+      // @ts-ignore
       return scene.run(ctx, session.currentStep).catch((e: TelegramError) => {
         if (e.message.includes('Too Many Requests') && ctx.session.data._replayOnRateLimit) {
           debug('es²', `got a 429, retrying in speficied time / 2`)
@@ -152,13 +175,14 @@ export class SessionManager {
           span?.setAttribute('retry_after', e.response.retry_after)
           return new Promise<CurrentSceneStatus | undefined>((resolve) => {
             setTimeout(() => {
-              resolve(this.runScene(ctx, ogSession, scene))
+              resolve(this.runScene(ctx, ogSession, scene) as any)
               // @ts-ignore
             }, e.response.retry_after * 500)
           })
         }
         error('es²', `error while running scene: ${e.stack}`)
         Sentry.captureException(e)
+        return { endSession: true }
       })
     })
   }
