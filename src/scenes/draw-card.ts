@@ -6,7 +6,7 @@ import {getAllCategories, getCategoryByID} from '../utilities/engine/category.js
 import {getRandomSubcategories, getSubcategoryByID} from '../utilities/engine/subcategories.js'
 import {error, warn} from 'melchior'
 import {drawCard} from '../utilities/engine/cards.js'
-import {MEDAL_MAP} from '../constants.js'
+import {MEDAL_MAP, NUMBER_EMOJIS} from '../constants.js'
 import {parseImageString} from '../utilities/lucky-engine.js'
 import {addDraw, deduceDraw, getHowManyCardsUserHas} from '../utilities/engine/users.js'
 import {determineMethodToSendMedia, launchStartURL} from '../utilities/telegram.js'
@@ -16,6 +16,8 @@ const CANCEL = 'cancel'
 const CANCEL_BUTTON = [
   [{text: '❌ Cancelar', callback_data: CANCEL}]
 ]
+
+const sixOptionsCategories = ['K-POP', 'Variedades']
 
 interface DrawData {
   chosenCategory: Category
@@ -95,14 +97,18 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   ctx.session.data.chosenCategory = cat
-  const subcategories = await getRandomSubcategories(cat.id, cat.name === 'K-POP' ? 6 : 4)
-  const keyboard = subcategories.map((sub) => {
+  const subcategories = await getRandomSubcategories(cat.id, sixOptionsCategories.includes(cat.name) ? 6 : 4)
+  const keyboard = subcategories.map((sub, i) => {
     return {
-      text: sub.name,
+      text: `${NUMBER_EMOJIS[i + 1]}`,
       callback_data: ctx.session.nextStepData(sub.id.toString())
     } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
+
+  const text = subcategories.map((sub, i) => {
+    return `${NUMBER_EMOJIS[i + 1]} — <b>${sub.name}</b>`
+  }).join('\n')
 
   await deduceDraw(ctx.userData.id)
 
@@ -110,11 +116,12 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   await ctx.editMessageMedia({
     type: 'animation',
     media: 'https://altadena.space/assets/girar-two.mp4',
-    caption: `🎲 Escolha uma subcategoria para girar:`
+    caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
+    parse_mode: 'HTML'
   }, {
     reply_markup: {
       inline_keyboard: chunked
-    }
+    },
   }).catch(async (e) => {
     warn('scenes.draw', 'could not edit message: ' + e.message)
     await addDraw(ctx.userData.id)
