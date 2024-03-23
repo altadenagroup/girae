@@ -8,6 +8,7 @@ export interface PaginatedSceneData {
   totalPages: number
   currentModifiers: string[]
   hasImage: boolean
+  userID: number
 }
 
 const controlButtons = [
@@ -28,20 +29,20 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   constructor (public id: string, public handlers: SceneHandler<T>[],
     public allowedEvents: UpdateType[] = ['callback_query']) {}
 
-  generateCallbackText (renderPage: number, totalPages: number, modifiers: string[]) {
-    return `ES2S.${this.id}.${renderPage}/${totalPages}.${modifiers.join(',')}`
+  generateCallbackText (renderPage: number, userID: number, totalPages: number, modifiers: string[]) {
+    return `ES2S.${this.id}.${userID}.${renderPage}/${totalPages}.${modifiers.join(',')}`
   }
 
   dataAppendingModifier (data: T, modifier: string) {
-    return this.generateCallbackText(data.currentPage, data.totalPages, [...data.currentModifiers, modifier])
+    return this.generateCallbackText(data.currentPage, data.userID, data.totalPages, [...data.currentModifiers, modifier])
   }
 
   dataRemovingModifier (data: T, modifier: string) {
-    return this.generateCallbackText(data.currentPage, data.totalPages, data.currentModifiers.filter((m) => m !== modifier))
+    return this.generateCallbackText(data.currentPage, data.userID, data.totalPages, data.currentModifiers.filter((m) => m !== modifier))
   }
 
   dataGoingToPage (data: T, page: number) {
-    return this.generateCallbackText(page, data.totalPages, data.currentModifiers)
+    return this.generateCallbackText(page, data.userID, data.totalPages, data.currentModifiers)
   }
 
   determinePage (data: string, dataD: T) {
@@ -49,7 +50,7 @@ export class PaginatedScene<T extends PaginatedSceneData> {
     if (data === 'LAST_PAGE') return this.dataGoingToPage(dataD, dataD.totalPages - 1)
     if (data === 'NEXT_PAGE' && dataD.currentPage < (dataD.totalPages - 1)) return this.dataGoingToPage(dataD, dataD.currentPage + 1)
     if (data === 'PREVIOUS_PAGE' && dataD.currentPage > 0) return this.dataGoingToPage(dataD, dataD.currentPage - 1)
-    return this.generateCallbackText(dataD.currentPage, dataD.totalPages, dataD.currentModifiers)
+    return this.generateCallbackText(dataD.currentPage, dataD.userID, dataD.totalPages, dataD.currentModifiers)
   }
 
   shouldAddButton (data: T, button: string) {
@@ -61,9 +62,13 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   }
 
   parseData (data: string): [number, number, string[]] {
-    const [_es2, _id, page, modifiers] = data.split('.')
+    const [_es2, _id, _user, page, modifiers] = data.split('.')
     const [currentPage, totalPages] = page.split('/').map((n) => parseInt(n))
     return [currentPage, totalPages, modifiers.split(',').filter((m) => m.length > 0)]
+  }
+
+  userMatches (data: string, userID: number) {
+    return data.split('.')[2] === `${userID}`
   }
 
   generateButtons (dataD: T): InlineKeyboardButton[][] {
@@ -150,6 +155,13 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   }
 
   async run(ctx: SessionContext<T>): Promise<CurrentSceneStatus> {
+    if (ctx.callbackQuery) {
+      if (!this.userMatches(ctx.callbackQuery.data, ctx.userData.id)) {
+        await ctx.answerCbQuery('Esse comando não é para você.')
+        return { nextStep: 0 } as CurrentSceneStatus
+      }
+    }
+
     if (ctx.session.data._mainMessage) {
       await this.handleCallback(ctx)
     } else {

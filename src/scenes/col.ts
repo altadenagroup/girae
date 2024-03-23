@@ -111,6 +111,11 @@ class CollectionPages extends PaginatedScene<CollectionData> {
     return text + `</b> (<code>${data.resultsCount!}</code> resultados)\n`
   }
 
+  generatePageInfo (data: CollectionData) {
+    if (data.totalPages === 1) return ''
+    return `📃 Página <code>${data.currentPage + 1}</code> de <b>${data.totalPages}</b>\n`
+  }
+
   async generateText (data: CollectionData): Promise<string> {
     const cards = await this.getCards(data, data.id)
     const texts = cards.map((c) => this.formatCard(c, data))
@@ -120,7 +125,7 @@ class CollectionPages extends PaginatedScene<CollectionData> {
 ${this.generateFilterAdvise(data)}
 ${texts.join('\n') || '<i>Nenhum card para mostrar.</i>'}
 
-Para ver um desses cards, use <code>/card id</code>.`
+${this.generatePageInfo(data)}👀 Para ver um desses cards, use <code>/card id</code>.`
   }
 }
 
