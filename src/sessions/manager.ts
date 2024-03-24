@@ -71,7 +71,11 @@ export class SessionManager {
         session.scene = scene
       }
       session.currentStep = parseInt(step)
+    // @ts-ignore
+    } else if (!ctx.callbackQuery?.data?.startsWith?.('ES2S.') && session.data.totalPages) {
+      return next()
     }
+
     const checks = await this.checkAttributes(ctx as SessionContext<any>, session.data)
     if (!checks) return next()
 
