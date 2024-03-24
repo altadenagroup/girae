@@ -21,9 +21,8 @@ export const bootstrap = async () => {
   if (process.env.MAIN_CONTAINER) {
     await bootstrapGQLServer()
   } else {
-    const webhook = await _brklyn.createWebhook({
-      domain: process.env.WEBHOOK_URL ?? 'girae-ingress.altadena.space',
-      max_connections: 100
+    const webhook = _brklyn.webhookCallback(`/telegraf/${_brklyn.secretPathComponent()}`, {
+      secretToken: undefined
     })
 
     // @ts-ignore
