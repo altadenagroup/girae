@@ -197,9 +197,3 @@ model GroupDrawLock {
   allowedCategories Int[] @default([])
   createdAt DateTime @default(now())
 }
-
-model AlternativeVersion {
-  id        Int      @id @default(autoincrement())
-  telegramToken String @unique
-  createdAt DateTime @default(now())
-}
