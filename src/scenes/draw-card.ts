@@ -29,10 +29,6 @@ const peopleOnGroup: number[] = []
 
 const firstStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
-  if (peopleUsingCommand.has(ctx.from?.id)) {
-    ctx.session.steps.leave()
-    return ctx.reply('Você já está girando uma carta. Por favor, termine de girá-la antes de começar outra.')
-  }
 
   if (coolDownBucket.has(ctx.from?.id)) {
     ctx.session.steps.leave()
