@@ -159,7 +159,8 @@ export class SessionManager {
       session.currentStep = status.nextStep
       await this.bot.cache.set('es2_sessions', userKey, {
         ...session,
-        data: ctx.session.data
+        data: ctx.session.data,
+        currentStep: status.nextStep
       })
     } else {
       await this.deleteSession(userKey)

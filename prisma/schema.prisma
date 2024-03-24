@@ -169,6 +169,8 @@ model ShopItem {
   type      ItemType
   price     Int
   itemId    Int
+  name      String
+  description String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -186,5 +188,12 @@ model ConsumedTrade {
   user2Id   Int
   cardsUser1 Int[]
   cardsUser2 Int[]
+  createdAt DateTime @default(now())
+}
+
+model GroupDrawLock {
+  id        Int      @id @default(autoincrement())
+  groupId   BigInt   @unique
+  allowedCategories Int[] @default([])
   createdAt DateTime @default(now())
 }

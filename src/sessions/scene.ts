@@ -1,5 +1,6 @@
 import {UpdateType} from 'telegraf/typings/telegram-types'
 import {SessionContext} from './context.js'
+import { debug } from 'melchior'
 
 export type SceneHandler<DataType> = (ctx: SessionContext<DataType>) => Promise<void>
 
@@ -49,23 +50,28 @@ export class AdvancedScene<T> {
     await handler(ctx)
     let currentStatus = {}
 
-    if (controller.nextCalled) {
+    if (controller.jumpToStep !== null) {
+      debug('es2.scenes', `scene ${this.id} step ${step} jump to step ${controller.jumpToStep}`)
+      currentStatus = {
+        nextStep: controller.jumpToStep
+      }
+    } else if (controller.nextCalled) {
+      debug('es2.scenes', `scene ${this.id} step ${step} next called`)
       currentStatus = {
         nextStep: step + 1
       }
     } else if (controller.backCalled) {
+      debug('es2.scenes', `scene ${this.id} step ${step} back called`)
       currentStatus = {
         nextStep: step - 1
       }
-    } else if (controller.jumpToStep !== null) {
-      currentStatus = {
-        nextStep: controller.jumpToStep
-      }
     } else if (controller.leaveCalled) {
+      debug('es2.scenes', `scene ${this.id} step ${step} leave called`)
       currentStatus = {
         nextStep: undefined
       }
     } else {
+      debug('es2.scenes', `scene ${this.id} step ${step} no action`)
       currentStatus = {
         nextStep: step
       }

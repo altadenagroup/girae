@@ -2,6 +2,7 @@ import { Card, Category, Rarity, Subcategory, User } from '@prisma/client'
 import { getSubcategoryByID } from './subcategories.js'
 import { getRarityForUserDraw } from './users.js'
 import { getRarityById } from '../lucky-engine.js'
+import { getCategoryByID } from './category.js'
 
 export interface CreateCardOptions {
   name: string
@@ -141,28 +142,30 @@ export const addCard = async (user: User, card: Card & {
 }
 
 // selects a random card given a rarity, a category and a subcategory.
-export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory, recursing: boolean = false) => {
-  let opts: { rarityId?: number } = {}
-  if (!recursing) opts.rarityId = rarity.id
-
-  const cards = await _brklyn.db.card.findMany({
-    where: {
-      ...opts,
-      categoryId: category.id,
-      subcategoryId: subcategory.id
-    },
-    include: {
-      rarity: true,
-      category: true,
-      subcategory: true
-    }
-  })
+export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory) => {
+  // cards as a raw query for better performance
+  const cards = await _brklyn.db.$queryRawUnsafe<Card & {
+    rarity: Rarity,
+    category: Category,
+    subcategory: Subcategory
+    rarityModifier: number
+    rarityId: number
+    categoryId: number
+    subcategoryId: number
+  }[]>(
+    `
+    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id} ORDER BY RANDOM() LIMIT 1;
+    `
+  )
 
   if (cards.length === 0) {
     // just return the first card in the subcategory
     return _brklyn.db.card.findFirst({
       where: {
         subcategoryId: subcategory.id
+      },
+      orderBy: {
+        rarityId: 'asc'
       },
       include: {
         rarity: true,
@@ -173,7 +176,11 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
   }
 
 
-  const card = cards[Math.floor(Math.random() * cards.length)]
+  const card = cards[0]
+  card.rarity = await getRarityById(card.rarityId) as Rarity
+  card.category = await getCategoryByID(card.categoryId) as Category
+  card.subcategory = await getSubcategoryByID(card.subcategoryId!) as Subcategory
+
   if (card.rarityModifier !== 0) {
     const roll = Math.random()
     const totalRarity = card.rarityModifier + card!.rarity.chance

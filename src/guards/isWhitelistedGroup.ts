@@ -11,6 +11,15 @@ export default async (ctx) => {
     // return false
   }
 
+  if (await _brklyn.db.groupDrawLock.findFirst({ where: { groupId: ctx.chat!.id } })) {
+    return true
+  }
+
+  // if this is the beta bot and it's a dm, return true
+  if (process.env.RUN_BETA && ctx.chat?.type === 'private') {
+    return true
+  }
+
   await ctx.reply(`Atualmente, este comando só pode ser executado nos grupos de testes!\n\nPara usá-los, considere doar para a Giraê, ou aguarde o lançamento oficial.`)
   return false
 }

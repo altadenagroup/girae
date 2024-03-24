@@ -1,20 +1,20 @@
-import {InlineKeyboardButton} from 'telegraf/types.js'
-import {SessionContext} from '../sessions/context.js'
-import {AdvancedScene} from '../sessions/scene.js'
-import {Category} from '@prisma/client'
-import {getAllCategories, getCategoryByID} from '../utilities/engine/category.js'
-import {getRandomSubcategories, getSubcategoryByID} from '../utilities/engine/subcategories.js'
-import {error, warn} from 'melchior'
-import {drawCard} from '../utilities/engine/cards.js'
-import {MEDAL_MAP, NUMBER_EMOJIS} from '../constants.js'
-import {parseImageString} from '../utilities/lucky-engine.js'
-import {addDraw, deduceDraw, getHowManyCardsUserHas} from '../utilities/engine/users.js'
-import {determineMethodToSendMedia, launchStartURL} from '../utilities/telegram.js'
+import { InlineKeyboardButton } from 'telegraf/types.js'
+import { SessionContext } from '../sessions/context.js'
+import { AdvancedScene } from '../sessions/scene.js'
+import { Category } from '@prisma/client'
+import { getAllCategories, getCategoryByID } from '../utilities/engine/category.js'
+import { getRandomSubcategories, getSubcategoryByID } from '../utilities/engine/subcategories.js'
+import { error, warn } from 'melchior'
+import { drawCard } from '../utilities/engine/cards.js'
+import { MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
+import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
 
 const CANCEL = 'cancel'
 
 const CANCEL_BUTTON = [
-  [{text: '❌ Cancelar', callback_data: CANCEL}]
+  [{ text: '❌ Cancelar', callback_data: CANCEL }]
 ]
 
 const sixOptionsCategories = ['K-POP', 'Variedades']
@@ -44,7 +44,18 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
     return ctx.reply('Há muitas pessoas girando neste grupo ao mesmo tempo. Por favor, espere um pouco antes de girar novamente.')
   }
 
-  const categories: Category[] = await getAllCategories()
+  // try to get lock for current group
+  const lock = await _brklyn.db.groupDrawLock.findFirst({
+    where: {
+      groupId: ctx.chat!.id
+    }
+  })
+
+  let categories: Category[] = await getAllCategories()
+  if (lock) {
+    categories = categories.filter((cat) => lock.allowedCategories.includes(cat.id))
+  }
+
   // inline keyboard with categories
   const keyboard = categories.map((category) => {
     return {
@@ -61,7 +72,6 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
 🕹 Escolha uma categoria:`
 
-  ctx.session.steps.next()
   ctx.session.setAttribute('replayOnRateLimit', true)
 
   peopleUsingCommand.add(ctx.from?.id)
@@ -79,7 +89,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   }).then((msg) => ctx.session.setMainMessage(msg.message_id))
 }
 
-const secondStep = async (ctx: SessionContext<DrawData>) => {
+const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => {
   if (ctx.callbackQuery?.data === CANCEL) {
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
@@ -88,8 +98,8 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   const categoryId = ctx.session.getCurrentStepData<number>(parseInt)
-  if (!categoryId) return
-  const cat = await getCategoryByID(categoryId)
+  if (!categoryId && !category) return
+  const cat = category || await getCategoryByID(categoryId!)
   if (!cat) {
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
@@ -112,23 +122,41 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 
   await deduceDraw(ctx.userData.id)
 
-  ctx.session.steps.next()
-  await ctx.editMessageMedia({
-    type: 'animation',
-    media: 'https://altadena.space/assets/girar-two.mp4',
-    caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
-    parse_mode: 'HTML'
-  }, {
-    reply_markup: {
-      inline_keyboard: chunked
-    },
-  }).catch(async (e) => {
-    warn('scenes.draw', 'could not edit message: ' + e.message)
-    await addDraw(ctx.userData.id)
-    await ctx.session.deleteMainMessage()
-    ctx.session.steps.leave()
-    return ctx.reply('🚪 Comando cancelado.')
-  })
+  if (category) {
+    ctx.session.steps.jumpTo(2)
+
+    await ctx.replyWithAnimation('https://altadena.space/assets/girar-two.mp4', {
+      caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: chunked
+      }
+    }).then((msg) => ctx.session.setMainMessage(msg.message_id)).catch(async (e) => {
+      warn('scenes.draw', 'could not send message: ' + e.message)
+      await addDraw(ctx.userData.id)
+      ctx.session.steps.leave()
+      return ctx.reply('🚪 Comando cancelado.')
+    })
+  } else {
+    ctx.session.steps.next()
+
+    await ctx.editMessageMedia({
+      type: 'animation',
+      media: 'https://altadena.space/assets/girar-two.mp4',
+      caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
+      parse_mode: 'HTML'
+    }, {
+      reply_markup: {
+        inline_keyboard: chunked
+      },
+    }).catch(async (e) => {
+      warn('scenes.draw', 'could not edit message: ' + e.message)
+      await addDraw(ctx.userData.id)
+      await ctx.session.deleteMainMessage()
+      ctx.session.steps.leave()
+      return ctx.reply('🚪 Comando cancelado.')
+    })
+  }
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
@@ -178,7 +206,7 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
     reply_to_message_id: ctx.session.data._messageToBeQuoted,
     reply_markup: {
       inline_keyboard: [
-        [{text: '❌ Deletar card', url: launchStartURL('delete', card.id.toString())}],
+        [{ text: '❌ Deletar card', url: launchStartURL('delete', card.id.toString()) }],
       ]
     }
   }).catch(async (e) => {
