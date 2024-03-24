@@ -15,6 +15,7 @@ import userCooldown from './middleware/user-cooldown.js'
 import * as Sentry from '@sentry/node'
 import { nodeProfilingIntegration } from '@sentry/profiling-node'
 import { bootstrap } from './networking/index.js'
+import { Message } from 'telegraf/types.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -74,6 +75,82 @@ export default class Brooklyn extends Client {
     this.setUpExitHandler()
     this.setUpSentry()
     this.setUpMainContainerTasks()
+  }
+
+  setUpRateLimitHandling () {
+    const ogSendMessage = this.telegram.sendMessage
+    const ogSendPhoto = this.telegram.sendPhoto
+    const ogEditMessageText = this.telegram.editMessageText
+    const ogEditMessageCaption = this.telegram.editMessageCaption
+    const ogEditMessageMedia = this.telegram.editMessageMedia
+
+    this.telegram.sendMessage = async (...args) => {
+      return ogSendMessage(...args).catch(e => {
+        if (e.description.includes('Too Many Requests')) {
+          const retryAfter = e.parameters.retry_after
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              ogSendMessage(...args).then(resolve).catch(reject)
+            }, retryAfter * 1000)
+          })
+        }
+      }) as Promise<Message.TextMessage>
+    }
+
+    this.telegram.sendPhoto = async (...args) => {
+      return ogSendPhoto(...args).catch(e => {
+        if (e.description.includes('Too Many Requests')) {
+          const retryAfter = e.parameters.retry_after
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              ogSendPhoto(...args).then(resolve).catch(reject)
+            }, retryAfter * 1000)
+          })
+        }
+      }) as Promise<Message.PhotoMessage>
+    }
+
+    this.telegram.editMessageText = async (...args) => {
+      return ogEditMessageText(...args).catch(e => {
+        if (e.description.includes('Too Many Requests')) {
+          const retryAfter = e.parameters.retry_after
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              // @ts-ignore
+              ogEditMessageText(...args).then(resolve).catch(reject)
+            }, retryAfter * 1000)
+          })
+        }
+      }) as Promise<true>
+    }
+
+    this.telegram.editMessageCaption = async (...args) => {
+      return ogEditMessageCaption(...args).catch(e => {
+        if (e.description.includes('Too Many Requests')) {
+          const retryAfter = e.parameters.retry_after
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              // @ts-ignore
+              ogEditMessageCaption(...args).then(resolve).catch(reject)
+            }, retryAfter * 1000)
+          })
+        }
+      }) as Promise<true>
+    }
+
+    this.telegram.editMessageMedia = async (...args) => {
+      return ogEditMessageMedia(...args).catch(e => {
+        if (e.description.includes('Too Many Requests')) {
+          const retryAfter = e.parameters.retry_after
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              // @ts-ignore
+              ogEditMessageMedia(...args).then(resolve).catch(reject)
+            }, retryAfter * 1000)
+          })
+        }
+      }) as Promise<true>
+    }
   }
 
   async generateImage (templateKey: string, data: Record<string, any>) {

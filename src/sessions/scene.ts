@@ -51,27 +51,22 @@ export class AdvancedScene<T> {
     let currentStatus = {}
 
     if (controller.jumpToStep !== null) {
-      debug('es2.scenes', `scene ${this.id} step ${step} jump to step ${controller.jumpToStep}`)
       currentStatus = {
         nextStep: controller.jumpToStep
       }
     } else if (controller.nextCalled) {
-      debug('es2.scenes', `scene ${this.id} step ${step} next called`)
       currentStatus = {
         nextStep: step + 1
       }
     } else if (controller.backCalled) {
-      debug('es2.scenes', `scene ${this.id} step ${step} back called`)
       currentStatus = {
         nextStep: step - 1
       }
     } else if (controller.leaveCalled) {
-      debug('es2.scenes', `scene ${this.id} step ${step} leave called`)
       currentStatus = {
         nextStep: undefined
       }
     } else {
-      debug('es2.scenes', `scene ${this.id} step ${step} no action`)
       currentStatus = {
         nextStep: step
       }

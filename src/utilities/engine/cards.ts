@@ -143,6 +143,9 @@ export const addCard = async (user: User, card: Card & {
 
 // selects a random card given a rarity, a category and a subcategory.
 export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory) => {
+  // rarity fallback
+  if (!rarity) rarity = await getRarityById(1) as Rarity
+
   // cards as a raw query for better performance
   const cards = await _brklyn.db.$queryRawUnsafe<Card & {
     rarity: Rarity,
