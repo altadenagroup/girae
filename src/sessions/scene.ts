@@ -1,6 +1,5 @@
 import {UpdateType} from 'telegraf/typings/telegram-types'
 import {SessionContext} from './context.js'
-import { debug } from 'melchior'
 
 export type SceneHandler<DataType> = (ctx: SessionContext<DataType>) => Promise<void>
 

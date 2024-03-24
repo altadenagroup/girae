@@ -141,6 +141,26 @@ export const addCard = async (user: User, card: Card & {
   })
 }
 
+// determines the actual chance of drawing a certain rarity for a subcategory.
+// for an example: if a subcatgeory has 100 cards (10 common, 30 rare, 60 legendary), the function has to adequate the rarity values given the amount of cards.
+// so, since the chance of drawing a legendary card is 0.15, the function has to return a value that is lower than 0.15, so legendary cards can be less common than they are.
+export const getRarityChanceForSubcategory = async (subcategory: Subcategory, rarity: Rarity) => {
+  const cards = await _brklyn.db.card.count({
+    where: {
+      subcategoryId: subcategory.id
+    }
+  })
+
+  const rarityCount = await _brklyn.db.card.count({
+    where: {
+      subcategoryId: subcategory.id,
+      rarityId: rarity.id
+    }
+  })
+
+  return rarityCount / cards
+}
+
 // selects a random card given a rarity, a category and a subcategory.
 export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory) => {
   // rarity fallback

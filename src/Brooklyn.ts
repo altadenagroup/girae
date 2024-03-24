@@ -75,6 +75,7 @@ export default class Brooklyn extends Client {
     this.setUpExitHandler()
     this.setUpSentry()
     this.setUpMainContainerTasks()
+    this.setUpAlternativeVersions()
   }
 
   setUpRateLimitHandling () {
@@ -150,6 +151,14 @@ export default class Brooklyn extends Client {
           })
         }
       }) as Promise<true>
+    }
+  }
+
+  async setUpAlternativeVersions () {
+    const alts = await this.db.alternativeVersion.findMany()
+
+    for (const alt of alts) {
+      await this.cache.set('girae_clones', alt.telegramToken, true)
     }
   }
 

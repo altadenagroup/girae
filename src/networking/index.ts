@@ -29,6 +29,16 @@ export const bootstrap = async () => {
     // @ts-ignore
     app!.post(`/telegraf/${_brklyn.secretPathComponent()}`, webhook)
 
+    app!.post('/bot/:token', async (req, res) => {
+      const { token } = req.params as { token: string }
+
+      const allowed = await _brklyn.cache.get('girae_clones', token)
+      if (!allowed) return res.status(401).send()
+
+      // @ts-ignore
+      return webhook(req, res)
+    })
+
     app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
 
