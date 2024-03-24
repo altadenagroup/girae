@@ -13,6 +13,9 @@ export const getSubcategoryByID = async (id: number): Promise<Subcategory | null
   return _brklyn.db.subcategory.findUnique({
     where: {
       id
+    },
+    include: {
+      category: true
     }
   })
 }
@@ -31,7 +34,7 @@ export const getSubcategoryByName = async (name: string) => {
   })
 
   if (subcategory) {
-    await _brklyn.cache.setexp('subcategories_name', name, subcategory, 5 * 60)
+    await _brklyn.cache.setexp('subcategories_name', name, subcategory, 10)
   }
 
   return subcategory

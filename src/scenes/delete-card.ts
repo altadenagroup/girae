@@ -26,11 +26,11 @@ const firstStep = async (ctx: SessionContext<DeleteData>) => {
       userId: ctx.userData.id
     }
   })
-  ctx.session.data.usercardId = first?.id
   if (!first) {
     ctx.session.steps.leave()
     return ctx.reply('❌ Você não possui esse card. Você clicou no botão errado, provavelmente.')
   }
+  ctx.session.data.usercardId = first?.id
   ctx.session.steps.next()
 
   const img = parseImageString(ctx.session.data.card.image, 'ar_3:4,c_crop')
