@@ -203,13 +203,13 @@ export const getCategoryById = async (id: number) => {
   return _brklyn.db.category.findFirst({ where: { id } })
 }
 
-export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined): string => {
+export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined, aa): string => {
   if (!imageString) return MISSING_CARD_IMG
   // if it starts with http, return it as is
   if (imageString.includes('placehold.co')) return MISSING_CARD_IMG
   // if starts with url: then it's a url
   if (imageString.startsWith('url:')) {
-    if (imageString.endsWith('.mp4')) return imageString.split('url:')[1]
+    if (imageString.endsWith('.mp4') || aa) return imageString.split('url:')[1]
     const url = imageString.split('url:')[1].replace('https://', '').replace('http://', '').replace('.gifv', '.gif')
     const cloudimgURL = `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
     return cloudimgURL
