@@ -1,6 +1,9 @@
 import { BotContext } from '../types/context.js'
 
 export default async (ctx: BotContext) => {
+  if (ctx.chat!.type !== 'private') {
+    return ctx.replyWithMarkdownV2('[Veja todas suas cartas e coleções clicando aqui!](https://t.me/giraebot/giraecards)')
+  }
   return ctx.reply('Para ver sua coleção...', {
     reply_markup: {
       inline_keyboard: [
