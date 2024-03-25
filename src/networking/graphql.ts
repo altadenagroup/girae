@@ -12,6 +12,8 @@ export const schema = await buildSchema({
   // also add the custom types
   orphanedTypes: [
     userCards.SubcategoryProgress,
-    userCards.SubcategoryProgressWithCards
+    userCards.SubcategoryProgressWithCards,
+    userCards.UserCardCountInfo,
+    userCards.CardImage
   ]
 })

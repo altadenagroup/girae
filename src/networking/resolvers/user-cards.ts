@@ -1,7 +1,8 @@
 import { Arg, Ctx, Field, Info, Int, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import { UserCard } from '@generated/type-graphql'
 import { parseImageString } from "../../utilities/lucky-engine.js";
-import { BigIntTypeDefinition } from "graphql-scalars";
+import { BigIntResolver, BigIntTypeDefinition } from "graphql-scalars";
+import { MISSING_CARD_IMG } from "../../constants.js";
 
 @ObjectType({
   description: 'Subcategory information'
@@ -26,6 +27,24 @@ export class SubcategoryProgress {
   subcategoryImage!: string
 }
 
+// type that represents how many cards a user have
+@ObjectType({ description: 'User card count' })
+export class UserCardCountInfo {
+  @Field(_type => Int, { nullable: false, description: 'The amount of cards the user has' })
+  count!: number
+  @Field(_type => Int, { nullable: false, description: 'The card id' })
+  cardId!: number
+}
+
+// type that represents an image for a card
+@ObjectType({ description: 'Card image' })
+export class CardImage {
+  @Field(_type => String, { nullable: false, description: 'The card image' })
+  image!: string
+  @Field(_type => Int, { nullable: false, description: 'The card id' })
+  cardId!: number
+}
+
 // an object that contains subcategory info and a list of user cards
 @ObjectType({
   description: 'Subcategory information with user cards'
@@ -36,6 +55,12 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
   // subcategory info
   @Field(_type => [SubcategoryProgress], { nullable: false, description: 'The subcategory info' })
   subcategoryInfo!: SubcategoryProgress[]
+
+  @Field(_type => [UserCardCountInfo], { nullable: false, description: 'The user card count' })
+  userCardCount!: UserCardCountInfo[]
+
+  @Field(_type => [CardImage], { nullable: false, description: 'The card images' })
+  cardImages!: CardImage[]
 }
 
 @Resolver()
@@ -44,12 +69,13 @@ export class UserCardsResolver {
   async fullUserCards(
     @Ctx() _: any,
     @Info() _a: any,
-    @Arg('userId', _type => Int) userId: number
+    // user ids are bigint
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string
   ) {
-    const cards = await _brklyn.db.userCard.findMany({
+    let cards = await _brklyn.db.userCard.findMany({
       where: {
         user: {
-          tgId: userId
+          tgId: parseInt(userId)
         }
       },
       include: {
@@ -61,6 +87,18 @@ export class UserCardsResolver {
           }
         }
       }
+    })
+
+    let userCardCount: any[] = []
+    let userCardImages: any[] = []
+    // sort cards by rarity and add image. also add
+    cards = cards.sort((a, b) => {
+      return a.card.rarity.chance - b.card.rarity.chance
+    })
+
+    // remove duplicates, use card.id as the unique identifier
+    cards = Array.from(new Set(cards.map(card => card.card.id)).values()).map(cardId => {
+      return cards.find(card => card.card.id === cardId)!
     })
 
     // get all unique subcategories
@@ -81,7 +119,7 @@ export class UserCardsResolver {
         totalCards,
         cardsOwned,
         subcategoryName: subcategory?.name || '',
-        subcategoryImage: subcategory?.image ? await parseImageString(subcategory.image) : ''
+        subcategoryImage: subcategory?.image ? await parseImageString(subcategory.image, false) : MISSING_CARD_IMG
       }
     }))
 
@@ -90,9 +128,30 @@ export class UserCardsResolver {
       return (b.cardsOwned / b.totalCards) - (a.cardsOwned / a.totalCards)
     })
 
+    cards = cards.map(card => {
+      if (userCardCount.find(c => c.cardId === card.card.id)) {
+        userCardCount.find(c => c.cardId === card.card.id)!.count += 1
+      } else {
+        userCardCount.push({
+          count: 1,
+          cardId: card.card.id
+        })
+      }
+
+      if (!userCardImages.find(c => c.cardId === card.card.id)) {
+        userCardImages.push({
+          cardId: card.card.id,
+          image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop') : MISSING_CARD_IMG
+        })
+      }
+      return card
+    })
+
     return {
       subcategoryInfo,
-      userCards: cards
+      userCards: cards,
+      userCardCount,
+      cardImages: userCardImages
     }
   }
 }
