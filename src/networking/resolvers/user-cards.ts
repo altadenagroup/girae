@@ -141,7 +141,7 @@ export class UserCardsResolver {
       if (!userCardImages.find(c => c.cardId === card.card.id)) {
         userCardImages.push({
           cardId: card.card.id,
-          image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop') : MISSING_CARD_IMG
+          image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop', true) : MISSING_CARD_IMG
         })
       }
       return card
