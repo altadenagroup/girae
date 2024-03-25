@@ -18,7 +18,7 @@ export const bootstrapGQLServer = async () => {
 }
 
 export const bootstrap = async () => {
-  if (process.env.MAIN_CONTAINER) {
+  if (process.env.MAIN_CONTAINER || process.env.LAUNCH_GQL) {
     await bootstrapGQLServer()
   } else {
     const webhook = _brklyn.webhookCallback(`/telegraf/${_brklyn.secretPathComponent()}`, {
