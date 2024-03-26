@@ -193,12 +193,14 @@ Para cancelar, use /cancelar.
   }
 
   // edit main msg
-  await _brklyn.telegram.editMessageCaption(trade.chatId, trade.msgToEdit, undefined, text.replace('Quando estiverem prontos, cliquem no botão abaixo.\nPara cancelar, use /cancelar.', ''), {
-    parse_mode: 'HTML' as ParseMode
-  }).catch(() => undefined)
+
   await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
     type: 'photo',
     media: imgURL.url
+  }).catch(() => undefined)
+
+  await _brklyn.telegram.editMessageCaption(trade.chatId, trade.msgToEdit, undefined, text.replace('Quando estiverem prontos, cliquem no botão abaixo.\nPara cancelar, use /cancelar.', ''), {
+    parse_mode: 'HTML' as ParseMode
   }).catch(() => undefined)
 }
 

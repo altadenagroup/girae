@@ -30,6 +30,9 @@ export const getSubcategoryByName = async (name: string) => {
         equals: name,
         mode: 'insensitive'
       }
+    },
+    include: {
+      category: true
     }
   })
 
