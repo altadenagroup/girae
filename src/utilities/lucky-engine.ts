@@ -208,11 +208,16 @@ export const parseImageString = (imageString: string, modifications: string | bo
   // if it starts with http, return it as is
   if (imageString.includes('placehold.co')) return MISSING_CARD_IMG
   // if starts with url: then it's a url
+  if (imageString.startsWith('id:')) {
+    imageString = `url:https://s3.girae.altadena.space/${imageString.replace('id:', '')}.jpg`
+  }
+
   if (imageString.startsWith('url:')) {
     if (imageString.endsWith('.mp4') || aa) return imageString.split('url:')[1]
     const url = imageString.split('url:')[1].replace('https://', '').replace('http://', '').replace('.gifv', '.gif')
-    const cloudimgURL = `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
-    return cloudimgURL
+    if (typeof modifications === 'boolean' && !modifications) return imageString.split('url:').pop()!
+
+    return `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
   }
 
   if (typeof modifications === 'boolean' && !modifications) return `https://res.cloudinary.com/dpi2t98hl/image/upload/${imageString.replace('id:', '')}.jpg`

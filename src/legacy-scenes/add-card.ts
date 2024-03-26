@@ -1,5 +1,4 @@
 import { error, Telegraf, warn } from 'melchior'
-import cloudinary from 'cloudinary'
 import { generatePhotoLink } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
@@ -11,6 +10,7 @@ import { getCategoryByName, getOrCreateCategory } from '../utilities/engine/cate
 import { getOrCreateSubcategory, getSubcategoryByName } from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
 import { Card, Category, Rarity, Subcategory } from '@prisma/client'
+import { generateID } from '../utilities/misc.js'
 
 const raritiesEnToPt = {
   '': '',
@@ -210,11 +210,12 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   if (photo) {
     const link = await generatePhotoLink(photo)
     if (link) {
-      const r = await cloudinary.v2.uploader.upload(link).catch((e) => {
-        console.error(e)
+      const id = generateID(32)
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
+        await ctx.reply('Erro ao fazer upload da imagem.')
         return null
       })
-      if (r) imgString = `id:${r.public_id}`
+      if (aa) imgString = `id:${id}`
     } else {
       await ctx.reply('Não foi possível obter o link da foto.')
     }

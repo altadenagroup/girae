@@ -12,7 +12,8 @@
     "build:client": "prisma generate",
     "build:source": "swc src -d dist --source-maps",
     "start:node": "PREBUILT_VERSION=true node index.mjs",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org altadena --project girae ./dist && sentry-cli sourcemaps upload --org altadena --project girae ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org altadena --project girae ./dist && sentry-cli sourcemaps upload --org altadena --project girae ./dist",
+    "postinstall": "prisma generate"
   },
   "repository": {
     "type": "git",
@@ -27,28 +28,29 @@
   "devDependencies": {
     "@swc/cli": "^0.3.10",
     "@swc/core": "^1.4.8",
-    "@types/node": "^20.11.28",
+    "@types/node": "^20.11.30",
     "nodemon": "^3.1.0",
     "prisma": "^5.11.0",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.3"
   },
   "dependencies": {
-    "@apollo/server": "^4.10.1",
+    "@apollo/server": "^4.10.2",
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/s3-request-presigner": "^3.540.0",
     "@prisma/client": "^5.11.0",
     "@sentry/cli": "^2.30.2",
-    "@sentry/node": "^7.107.0",
-    "@sentry/profiling-node": "^7.107.0",
+    "@sentry/node": "^7.108.0",
+    "@sentry/profiling-node": "^7.108.0",
     "@telegraf/session": "^2.0.0-beta.7",
     "@types/graphql-fields": "^1.3.9",
-    "cloudinary": "^2.0.3",
     "cron": "^3.1.6",
     "dotenv": "^16.4.5",
     "fastify": "^4.26.2",
     "graphql": "^16.8.1",
     "graphql-fields": "^2.0.3",
-    "graphql-scalars": "^1.22.5",
+    "graphql-scalars": "^1.23.0",
     "melchior": "^0.5.2",
-    "openai": "^4.29.1",
+    "openai": "^4.29.2",
     "redis": "^4.6.13",
     "reflect-metadata": "^0.2.1",
     "telegraf": "^4.16.3",

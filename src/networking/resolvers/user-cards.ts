@@ -43,6 +43,9 @@ export class CardImage {
   image!: string
   @Field(_type => Int, { nullable: false, description: 'The card id' })
   cardId!: number
+  // card count
+  @Field(_type => Int, { nullable: false, description: 'The card count' })
+  count!: number
 }
 
 // an object that contains subcategory info and a list of user cards
@@ -95,6 +98,9 @@ export class UserCardsResolver {
     cards = cards.sort((a, b) => {
       return a.card.rarity.chance - b.card.rarity.chance
     })
+
+    // add count
+    
 
     // remove duplicates, use card.id as the unique identifier
     cards = Array.from(new Set(cards.map(card => card.card.id)).values()).map(cardId => {

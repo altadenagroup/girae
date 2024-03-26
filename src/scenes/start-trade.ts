@@ -146,6 +146,7 @@ Para cancelar, use /cancelar.
     user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
     user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
   })
+  if (!imgURL?.url) imgURL.url = 'https://altadena.space/assets/banner-beta-low.jpg'
 
   const msgData = {
     reply_markup: {
@@ -155,26 +156,41 @@ Para cancelar, use /cancelar.
     }
   }
 
-  await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
-    type: 'photo',
-    media: imgURL.url
-  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-  await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
-    type: 'photo',
-    media: imgURL.url
-  }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-  await _brklyn.telegram.editMessageMedia(trade.chatId, trade.msgToEdit, undefined, {
-    type: 'photo',
-    media: imgURL.url
-  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-  await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, text, {
-    parse_mode: 'HTML' as ParseMode,
-    ...msgData
-  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-  await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, text, {
-    parse_mode: 'HTML' as ParseMode,
-    ...msgData
-  }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  if (!displayMessageID1) {
+    await _brklyn.telegram.sendPhoto(trade.users[0], imgURL.url, {
+      caption: text,
+      parse_mode: 'HTML' as ParseMode,
+      ...msgData
+    // @ts-ignore
+    }).then((t) => setUserDisplayMessageID({ from: { id: trade.users[0] } as BotContext, chat: { id: trade.users[0] } as any }, t.message_id))
+  } else {
+    await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
+      type: 'photo',
+      media: imgURL.url
+    }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+    await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, text, {
+      parse_mode: 'HTML' as ParseMode,
+      ...msgData
+    }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  }
+
+  if (!displayMessageID2) {
+    await _brklyn.telegram.sendPhoto(trade.users[1], imgURL.url, {
+      caption: text,
+      parse_mode: 'HTML' as ParseMode,
+      ...msgData
+    // @ts-ignore
+    }).then((t) => setUserDisplayMessageID({ from: { id: trade.users[1] } as BotContext, chat: { id: trade.users[1] } as any }, t.message_id))
+  } else {
+    await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
+      type: 'photo',
+      media: imgURL.url
+    }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+    await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, text, {
+      parse_mode: 'HTML' as ParseMode,
+      ...msgData
+    }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
+  }
 }
 
 export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boolean> => {

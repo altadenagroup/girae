@@ -5,7 +5,6 @@ import userData from './middleware/user-data.js'
 import { DittoMetadata } from './types/ditto.js'
 import argumentParser from './middleware/argument-parser.js'
 import { OpenAI } from 'openai'
-import cloudinary from 'cloudinary'
 import { AdvancedRedisStore } from './utilities/session-store.js'
 import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
@@ -16,6 +15,7 @@ import * as Sentry from '@sentry/node'
 import { nodeProfilingIntegration } from '@sentry/profiling-node'
 import { bootstrap } from './networking/index.js'
 import { Message } from 'telegraf/types.js'
+import { S3Storage } from './storage/index.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -40,6 +40,7 @@ export default class Brooklyn extends Client {
   })
   sidecar = new Sidecar()
   es2: SessionManager
+  images = new S3Storage('girae-images')
   #internalCache: RedisClientType = {} as RedisClientType
 
   constructor (cache: RedisClientType) {
@@ -71,7 +72,6 @@ export default class Brooklyn extends Client {
       store: AdvancedRedisStore()
     }))
 
-    this.setUpCDN()
     this.setUpExitHandler()
     this.setUpSentry()
     this.setUpMainContainerTasks()
@@ -228,16 +228,6 @@ export default class Brooklyn extends Client {
 
   setUpNetworkingFeatures () {
     bootstrap()
-  }
-
-  private setUpCDN () {
-    if (!process.env.CLOUDINARY_CLOUD_NAME) return
-
-    cloudinary.v2.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
-    })
   }
 
   private onExit (code: number) {

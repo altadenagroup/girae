@@ -1,8 +1,8 @@
 import { BotContext } from '../types/context.js'
 import { generatePhotoLink } from '../utilities/telegram.js'
-import cloudinary from 'cloudinary'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
+import { generateID } from '../utilities/misc.js'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) {
@@ -22,11 +22,12 @@ export default async (ctx: BotContext) => {
   if (photo) {
     const link = await generatePhotoLink(photo)
     if (link) {
-      const r = await cloudinary.v2.uploader.upload(link).catch((e) => {
-        console.error(e)
+      const id = generateID(32)
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
+        await ctx.reply('Erro ao fazer upload da imagem.')
         return null
       })
-      if (r) imgString = `id:${r.public_id}`
+      if (aa) imgString = `id:${id}`
     } else {
       return ctx.reply('Não foi possível obter o link da foto.')
     }
