@@ -4,6 +4,7 @@ import { getUserCardsCount } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { escapeForHTML } from '../utilities/responses.js'
 import { cachedGetUserPhotoAndFile } from '../utilities/telegram.js'
+import { MISSING_CARD_IMG } from '../constants.js'
 
 const rarityIdToName = {
   1: 'Common',
@@ -42,8 +43,8 @@ export default async (ctx: BotContext) => {
     favoriteColor: ctx.profileData.favoriteColor,
     reputation: ctx.profileData.reputation,
     coins: ctx.userData.coins,
-    backgroundURL: parseImageString(completeUserData!.background?.image!),
-    favoriteCardImageURL: favoriteCard && parseImageString(favoriteCard!.image, 'ar_3:4,c_crop'),
+    backgroundURL: parseImageString(completeUserData!.background?.image!, undefined, true),
+    favoriteCardImageURL: favoriteCard && (parseImageString(favoriteCard!.image, undefined, true) ?? MISSING_CARD_IMG),
     favoriteCardName: favoriteCard && favoriteCard!.name,
     favoriteCardRarity: favoriteCard && rarityIdToName[favoriteCard!.rarityId],
     position: 1,
