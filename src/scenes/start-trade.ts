@@ -32,7 +32,7 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   ctx.session.data.threadId = ctx.chat!.is_forum ? ctx.message?.message_thread_id : undefined
   ctx.session.steps.next()
 
-  return ctx.sendPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
+  return ctx.replyWithPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
     caption: `<b>${mentionUser(user)}</b>, você quer trocar cartas com <b>${ctx.from!.first_name}</b>?\n\n<b>${ctx.from!.first_name}</b>, você ainda pode cancelar clicando em recusar!`,
     reply_markup: {
       inline_keyboard: [
