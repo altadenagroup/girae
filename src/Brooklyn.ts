@@ -283,4 +283,12 @@ export class BrooklynCacheLayer {
   async flushall () {
     return this.#cache.flushAll()
   }
+
+  async incr (namespace: string, key: string) {
+    return this.#cache.incr(`${namespace}:${key}`)
+  }
+
+  async decr (namespace: string, key: string) {
+    return this.#cache.decr(`${namespace}:${key}`)
+  }
 }

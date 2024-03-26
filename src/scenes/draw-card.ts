@@ -11,33 +11,21 @@ import { parseImageString } from '../utilities/lucky-engine.js'
 import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
 import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
 
-const CANCEL = 'cancel'
-
-const CANCEL_BUTTON = [
-  [{ text: '❌ Cancelar', callback_data: CANCEL }]
-]
-
 const sixOptionsCategories = ['K-POP', 'Variedades']
 
 interface DrawData {
   chosenCategory: Category
 }
 
-const peopleUsingCommand = new Set()
-const coolDownBucket = new Set()
-const peopleOnGroup: number[] = []
-
 const firstStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
 
-  if (coolDownBucket.has(ctx.from?.id)) {
-    ctx.session.steps.leave()
-    return ctx.reply('Você está girando cartas muito rápido. Por favor, espere um pouco antes de girar novamente.')
-  }
+  const cooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.from?.id.toString()) || 0
+  const groupCooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.chat!.id.toString()) || 0
 
-  if (peopleOnGroup.filter((id) => id === ctx.chat?.id).length > 3) {
+  if (cooldownDraws > 3 || groupCooldownDraws > 5) {
     ctx.session.steps.leave()
-    return ctx.reply('Há muitas pessoas girando neste grupo ao mesmo tempo. Por favor, espere um pouco antes de girar novamente.')
+    return ctx.reply('🕹 Aaah, que bagunça, estão girando muito rápido! Por favor, espere um pouco antes de girar novamente.')
   }
 
   // try to get lock for current group
@@ -68,31 +56,27 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
 🕹 Escolha uma categoria:`
 
-  ctx.session.setAttribute('replayOnRateLimit', true)
-
-  peopleUsingCommand.add(ctx.from?.id)
-  coolDownBucket.add(ctx.from?.id)
-  peopleOnGroup.push(ctx.chat!.id)
-  setTimeout(() => coolDownBucket.delete(ctx.from?.id), 5000)
-  setTimeout(() => peopleUsingCommand.delete(ctx.from?.id), 5000)
-  setTimeout(() => peopleOnGroup.splice(peopleOnGroup.indexOf(ctx.chat!.id), 1), 5000)
   await ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {
-      inline_keyboard: [...chunked, ...CANCEL_BUTTON as InlineKeyboardButton[][]]
+      inline_keyboard: [...chunked, _brklyn.es2.cancelButtonArray]
     }
-  }).then((msg) => ctx.session.setMainMessage(msg.message_id))
+  }).then(async (msg) => {
+    ctx.session.setMainMessage(msg.message_id)
+    await _brklyn.cache.incr('draw_cooldowns', ctx.from?.id.toString())
+    await _brklyn.cache.incr('draw_cooldowns', ctx.chat!.id.toString())
+
+    setTimeout(() => {
+      _brklyn.cache.decr('draw_cooldowns', ctx.from?.id.toString())
+      _brklyn.cache.decr('draw_cooldowns', ctx.chat!.id.toString())
+    }, 3000)
+  })
 }
 
-const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => {
-  if (ctx.callbackQuery?.data === CANCEL) {
-    await ctx.session.deleteMainMessage()
-    ctx.session.steps.leave()
-    peopleUsingCommand.delete(ctx.from?.id)
-    return ctx.reply('🚪 Comando cancelado.')
-  }
 
+
+const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => {
   const categoryId = ctx.session.getCurrentStepData<number>(parseInt)
   if (!categoryId && !category) return
   const cat = category || await getCategoryByID(categoryId!)
@@ -169,6 +153,16 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   await ctx.session.deleteMainMessage()
   ctx.session.steps.leave()
 
+  if (!ctx.session.data.chosenCategory) {
+    // get category from sub
+    const cat = await getCategoryByID(sub.categoryId)
+    if (!cat) {
+      await addDraw(ctx.userData.id)
+      return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NO_CATEGORY_FOUND(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
+    }
+    ctx.session.data.chosenCategory = cat
+  }
+
   const card = await drawCard(ctx.userData, ctx.session.data.chosenCategory, sub)
   if (!card) {
     await addDraw(ctx.userData.id)
@@ -194,7 +188,6 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 
   const img = forceImg || parseImageString(card.image, 'ar_3:4,c_crop') || 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
 
-  peopleUsingCommand.delete(ctx.from?.id)
   const method = determineMethodToSendMedia(img)
   return ctx[method!](img, {
     caption: text,

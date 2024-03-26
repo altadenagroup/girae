@@ -1,6 +1,6 @@
 import { BotContext } from '../types/context.js'
 import type Brooklyn from '../Brooklyn.js'
-import { User } from 'telegraf/types'
+import { InlineKeyboardButton, User } from 'telegraf/types'
 import { AdvancedScene, CurrentSceneStatus, SceneController } from './scene.js'
 import startTrade from '../scenes/start-trade.js'
 import { generateID } from '../utilities/misc.js'
@@ -33,6 +33,10 @@ export class SessionManager {
     this.scenes.push(deleteCard)
     // @ts-ignore
     this.scenes.push(showCollection)
+  }
+
+  get cancelButtonArray (): InlineKeyboardButton[] {
+    return [{ text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('es2-end-session', 'CANCEL') }]
   }
 
   async middleware (ctx: BotContext, next: () => void) {
@@ -195,6 +199,36 @@ export class SessionManager {
     })
   }
 
+  // deletes the session and the main messsage associated with it. also sends a reply saing the command was cancelled.
+  async cancelSession (ctx: BotContext) {
+    if (!ctx.from || !ctx.chat) {
+      return
+    }
+
+    const key = this.generateUserKey(ctx)
+    const sessionKey = await this.bot.cache.get('es2_user_keys', key)
+    if (!sessionKey) {
+      return
+    }
+
+    const session = await this.bot.cache.get('es2_sessions', sessionKey)
+    if (!session) {
+      return
+    }
+
+    if (session.data._mainMessage) {
+      await this.bot.telegram.deleteMessage(ctx.chat!.id, session.data._mainMessage).catch((e) => {
+        warn('es²', `(${key}) failed to delete main message: ${e.message}`)
+      })
+    }
+
+    // @ts-ignore
+    if (ctx.callbackQuery?.data) await ctx.answerCbQuery('🚪 Comando cancelado.')
+    else await ctx.reply('🚪 Comando cancelado.')
+
+    await this.deleteSession(sessionKey)
+  }
+
   applyCtxMutations (ctx: SessionContext<any>) {
     ctx.reply = async (text: string, extra: any) => {
       if (ctx.session.data._messageToBeQuoted) {
@@ -309,3 +343,7 @@ export class SessionManager {
     return this.bot.cache.del('es2_ephemeral_contexts', `${userID}.${key}`)
   }
 }
+
+tcqc.add<{}>('es2-end-session', async (ctx) => {
+  await _brklyn.es2.cancelSession(ctx)
+})

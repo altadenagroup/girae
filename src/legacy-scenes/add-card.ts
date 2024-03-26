@@ -212,7 +212,7 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
     if (link) {
       const id = generateID(32)
       const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
-        await ctx.reply('Erro ao fazer upload da imagem.')
+        await ctx.reply('Erro ao fazer upload da imagem.\n\n'+ e.message)
         return null
       })
       if (aa) imgString = `id:${id}`
