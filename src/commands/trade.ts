@@ -14,6 +14,7 @@ import {
   setUserDone,
   setUserReady
 } from '../scenes/start-trade.js'
+import { MISSING_CARD_IMG } from '../constants.js'
 
 export interface TradeContext extends BotContext {
   tradingWith: User
@@ -55,7 +56,7 @@ tcqc.add<AddCardData>('add-card', async (ctx) => {
     id: card.id,
     rarity: card.rarity.name,
     subcategory: card.subcategory?.name || '?',
-    imageURL: parseImageString(card.image)
+    imageURL: parseImageString(card.image, undefined, true) || MISSING_CARD_IMG
   }
   const r = await appendCards(ctx, cardData)
   if (r === false) return ctx.answerCbQuery('Você só pode trocar 3 cards de uma vez! 😅')
