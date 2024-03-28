@@ -116,8 +116,6 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
     })
   } else {
-    ctx.session.steps.next()
-
     await ctx.editMessageMedia({
       type: 'animation',
       media: 'https://altadena.space/assets/girar-two.mp4',
@@ -127,10 +125,9 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       reply_markup: {
         inline_keyboard: chunked
       },
-    }).catch(async (e) => {
+    }).then(() => ctx.session.steps.next()).catch(async (e) => {
       warn('scenes.draw', 'could not edit message: ' + e.message)
-      ctx.session.steps.leave()
-      return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
+      return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
     })
   }
 }
