@@ -178,7 +178,7 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
     subcategoryId: number
   }[]>(
     `
-    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id} ORDER BY RANDOM() LIMIT 10;
+    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id};
     `
   )
 
