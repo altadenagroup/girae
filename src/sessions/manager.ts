@@ -216,11 +216,15 @@ export class SessionManager {
       return
     }
 
-    if (session.data._mainMessage) {
+    if (ctx.callbackQuery) {
+      await ctx.deleteMessage()
+    } else if (session.data._mainMessage) {
       await this.bot.telegram.deleteMessage(ctx.chat!.id, session.data._mainMessage).catch((e) => {
         warn('es²', `(${key}) failed to delete main message: ${e.message}`)
       })
     }
+
+    await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
 
     // @ts-ignore
     if (ctx.callbackQuery?.data) await ctx.answerCbQuery('🚪 Comando cancelado.')

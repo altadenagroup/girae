@@ -3,6 +3,7 @@ import { getSubcategoryByID } from './subcategories.js'
 import { getRarityForUserDraw } from './users.js'
 import { getRarityById } from '../lucky-engine.js'
 import { getCategoryByID } from './category.js'
+import { getRandomNumber } from '../misc.js'
 
 export interface CreateCardOptions {
   name: string
@@ -177,7 +178,7 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
     subcategoryId: number
   }[]>(
     `
-    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id} ORDER BY RANDOM() LIMIT 1;
+    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id} ORDER BY RANDOM() LIMIT 10;
     `
   )
 
@@ -198,17 +199,21 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
     })
   }
 
+  // lendario -> 0.15
+  // 0.547868932767
+  // 0.46797977
 
-  const card = cards[0]
+  // take one of the cards
+  const card = cards[Math.floor(getRandomNumber() * cards.length)]
   card.rarity = await getRarityById(card.rarityId) as Rarity
   card.category = await getCategoryByID(card.categoryId) as Category
   card.subcategory = await getSubcategoryByID(card.subcategoryId!) as Subcategory
 
   if (card.rarityModifier !== 0) {
-    const roll = Math.random()
+    const roll = getRandomNumber()
     const totalRarity = card.rarityModifier + card!.rarity.chance
 
-    if (roll > totalRarity) {
+    if (roll < totalRarity) {
       let rarityToUse = 1
       if (roll > 0.65) rarityToUse = 3
       if (roll > 0.85) rarityToUse = 4
@@ -222,10 +227,10 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
 }
 
 export const drawCard = async (user: User, category: Category, subcategory: Subcategory) => {
+  if (user.usedDraws > user.maximumDraws) return 'NO_DRAWS'
   const rarity = await getRarityForUserDraw(user)
   const card = await selectRandomCard(rarity, category, subcategory)
   if (!card) return null
-  if (user.usedDraws > user.maximumDraws) return 'NO_DRAWS'
   await addCard(user, card)
   return card
 }

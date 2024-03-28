@@ -1,3 +1,5 @@
+import crypto from 'node:crypto'
+
 export const generateID = (length: number) => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let result = ''
@@ -42,3 +44,9 @@ export const msToDate = (ms: number) => {
 }
 
 export const escapeNamePG = (name: string) => name.replace(/([!|&(){}[\]^"~*?:\\])/g, '\\$1')
+
+// uses a DBRG (crypto API) to generate a random number between 0 and 1
+export const getRandomNumber = () => {
+  const buf = crypto.randomBytes(4)
+  return buf.readUInt32BE(0) / 0x100000000
+}

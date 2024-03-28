@@ -1,4 +1,5 @@
 import {Subcategory} from "@prisma/client"
+import { getRandomNumber } from "../misc.js"
 
 export const createSubcategory = async (name: string, categoryID: number) => {
   return _brklyn.db.subcategory.create({
@@ -80,5 +81,5 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
     }
   })
 
-  return subcategories.sort(() => Math.random() - Math.random()).slice(0, limit)
+  return subcategories.sort(() => Math.random() - getRandomNumber()).slice(0, limit)
 }

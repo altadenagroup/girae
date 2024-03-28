@@ -1,6 +1,7 @@
 import { Rarity, User, UserCard } from '@prisma/client'
 import { debug, warn } from 'melchior'
 import { getAllRarities } from './rarity.js'
+import { getRandomNumber } from '../misc.js'
 
 // get how many cards a user has
 export const getUserCardsCount = async (userId: number) => {
@@ -115,7 +116,7 @@ export const checkIfUserHasCards = async (user: number, cards: number[]): Promis
 export const getRarityForUserDraw = async (user: User): Promise<Rarity> => {
   const rarities = await getAllRarities()
 
-  const userChance = Math.random() - user.luckModifier
+  const userChance = getRandomNumber() - user.luckModifier
   let sum = 0
   let rarity = rarities[0]
   for (const r of rarities) {

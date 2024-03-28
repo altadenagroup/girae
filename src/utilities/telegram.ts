@@ -51,6 +51,20 @@ export const determineMethodToSendMedia = (link: string) => {
   return 'replyWithPhoto'
 }
 
+export const determineMediaType = (link: string) => {
+  // remove query parameters
+  link = link.split('?')[0]
+  // if it is an animation (.gif, .gifv), use replyWithAnimation
+  if (link.endsWith('.gif') || link.endsWith('.gifv')) return 'animation'
+  // if it is an image, use replyWithPhoto
+  if (link.endsWith('.png') || link.endsWith('.jpg') || link.endsWith('.jpeg')) return 'photo'
+  // if it is a video, use replyWithVideo
+  if (link.endsWith('.mp4')) return 'video'
+
+  return 'photo'
+}
+
+
 export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string): Promise<ChatMember | null> => {
   const cached = await _brklyn.cache.get('user-mention', mentionOrId)
   if (cached) return cached
@@ -86,5 +100,6 @@ export const getAvatarURL = (file) => file ? `https://api.telegram.org/file/bot$
 export const generateMessageLink = (chatID: number | string, messageID: number, threadId: number | undefined) => {
   // if the chatId is a string, it's a public group, so we have to drop the /c/ part
   if (typeof chatID === 'string') return `https://t.me/${chatID.replace('@', '')}/${threadId ? `${threadId}/` : ''}${messageID}`
+  else if (chatID < 0) return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
   else return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
 }

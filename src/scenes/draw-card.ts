@@ -9,7 +9,8 @@ import { drawCard } from '../utilities/engine/cards.js'
 import { MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
-import { determineMethodToSendMedia, launchStartURL } from '../utilities/telegram.js'
+import { determineMediaType, determineMethodToSendMedia, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
+import { BotContext } from '../types/context.js'
 
 const sixOptionsCategories = ['K-POP', 'Variedades']
 
@@ -19,14 +20,6 @@ interface DrawData {
 
 const firstStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
-
-  const cooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.from?.id.toString()) || 0
-  const groupCooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.chat!.id.toString()) || 0
-
-  if (cooldownDraws > 3 || groupCooldownDraws > 5) {
-    ctx.session.steps.leave()
-    return ctx.reply('🕹 Aaah, que bagunça, estão girando muito rápido! Por favor, espere um pouco antes de girar novamente.')
-  }
 
   // try to get lock for current group
   const lock = await _brklyn.db.groupDrawLock.findFirst({
@@ -56,6 +49,8 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
 🕹 Escolha uma categoria:`
 
+  await _brklyn.cache.set('is_drawing', ctx.from?.id.toString(), true)
+
   await ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
@@ -66,11 +61,13 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
     ctx.session.setMainMessage(msg.message_id)
     await _brklyn.cache.incr('draw_cooldowns', ctx.from?.id.toString())
     await _brklyn.cache.incr('draw_cooldowns', ctx.chat!.id.toString())
-
+    await _brklyn.cache.set('is_drawing', ctx.from?.id.toString(), generateMessageLink(ctx.chat!.id, msg.message_id, msg.message_thread_id))
     setTimeout(() => {
       _brklyn.cache.decr('draw_cooldowns', ctx.from?.id.toString())
       _brklyn.cache.decr('draw_cooldowns', ctx.chat!.id.toString())
     }, 3000)
+  }).catch(async () => {
+    await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
   })
 }
 
@@ -83,6 +80,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
   if (!cat) {
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
+    await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
     return ctx.reply('🚪 Comando cancelado.')
   }
 
@@ -111,11 +109,11 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       reply_markup: {
         inline_keyboard: chunked
       }
-    }).then((msg) => ctx.session.setMainMessage(msg.message_id)).catch(async (e) => {
+    }).then(async (msg) => {
+      ctx.session.setMainMessage(msg.message_id)
+    }).catch(async (e) => {
       warn('scenes.draw', 'could not send message: ' + e.message)
-      await addDraw(ctx.userData.id)
-      ctx.session.steps.leave()
-      return ctx.reply('🚪 Comando cancelado.')
+      return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
     })
   } else {
     ctx.session.steps.next()
@@ -131,10 +129,8 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       },
     }).catch(async (e) => {
       warn('scenes.draw', 'could not edit message: ' + e.message)
-      await addDraw(ctx.userData.id)
-      await ctx.session.deleteMainMessage()
       ctx.session.steps.leave()
-      return ctx.reply('🚪 Comando cancelado.')
+      return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
     })
   }
 }
@@ -142,41 +138,37 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
   const subcategoryId = ctx.session.getCurrentStepData<number>(parseInt)
   if (!subcategoryId) return
+
+  ctx.session.steps.leave()
   const sub = await getSubcategoryByID(subcategoryId)
   if (!sub) {
-    await addDraw(ctx.userData.id)
-    await ctx.session.deleteMainMessage()
-    ctx.session.steps.leave()
-    return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NOT_FOUND_DB(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
+    return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
   }
 
-  await ctx.session.deleteMainMessage()
-  ctx.session.steps.leave()
-
   if (!ctx.session.data.chosenCategory) {
-    // get category from sub
-    const cat = await getCategoryByID(sub.categoryId)
-    if (!cat) {
-      await addDraw(ctx.userData.id)
-      return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NO_CATEGORY_FOUND(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
-    }
-    ctx.session.data.chosenCategory = cat
+    return exitCommand(ctx, false, 'Esse comando exipirou. Gire novamente.')
+  }
+
+  if (!await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {
+    return ctx.answerCbQuery('Você não está mais girando. Por favor, use o comando de novo.', { show_alert: true })
   }
 
   const card = await drawCard(ctx.userData, ctx.session.data.chosenCategory, sub)
   if (!card) {
-    await addDraw(ctx.userData.id)
-    return ctx.replyWithHTML(`🚪 Comando cancelado.\nCaso você não tenha cancelado, por favor, encaminhe esta mensagem ao SAC.\n\n<code>NO_CARDS_FOUND(${ctx.callbackQuery.data}, ${subcategoryId})</code>`)
+    return exitCommand(ctx, true, 'Houve um erro ao tentar girar. Por favor, tire uma print desta mensagem e envie no grupo de suporte do bot. (NO_CARDS_FOUND)')
   }
 
   if (card === 'NO_DRAWS') {
-    return ctx.replyWithHTML('Seus giros já acabaram. Você acha que é <i>tão</i> fácil assim roubar giros?')
+    await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
+    return ctx.answerCbQuery('Seus giros já acabaram pelo o que estou vendo. Volte mais tarde?', { show_alert: true })
   }
+
+  await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
 
   await sendCard(ctx, card)
 }
 
-const sendCard = async (ctx, card, forceImg: string | undefined = undefined, final: boolean = false) => {
+const sendCard = async (ctx: BotContext, card, forceImg: string | undefined = undefined, final: boolean = false) => {
   const repeated = await getHowManyCardsUserHas(ctx.userData.id, card.id)
   const tagExtra = card.tags?.[0] ? `\n🔖 ${card.tags[0]}` : ''
   const text = `🎰 Parabéns, você ganhou e vai levar:
@@ -188,14 +180,15 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 
   const img = forceImg || parseImageString(card.image, 'ar_3:4,c_crop') || 'https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.'
 
-  const method = determineMethodToSendMedia(img)
-  return ctx[method!](img, {
+  return ctx.editMessageMedia({
+    type: determineMediaType(img),
+    media: img,
     caption: text,
-    parse_mode: 'HTML',
-    reply_to_message_id: ctx.session.data._messageToBeQuoted,
+    parse_mode: 'HTML'
+  }, {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '❌ Deletar card', url: launchStartURL('delete', card.id.toString()) }],
+        [{ text: '🎲', url: launchStartURL('delete', card.id.toString()) }],
       ]
     }
   }).catch(async (e) => {
@@ -207,6 +200,19 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
     await new Promise((r) => setTimeout(r, 5000))
     await sendCard(ctx, card)
   })
+}
+
+const exitCommand = async (ctx: SessionContext<DrawData>, giveDrawBack: boolean = false, message: string = '🚪 Comando cancelado.') => {
+  // if this was a callback query, delete the message from which it originated from.
+  if (ctx.callbackQuery) await ctx.deleteMessage()
+  else await ctx.session.deleteMainMessage()
+
+  ctx.session.steps.leave()
+  await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
+  if (giveDrawBack) {
+    await addDraw(ctx.userData.id)
+  }
+  return ctx.answerCbQuery(message, { show_alert: true })
 }
 
 // @ts-ignore

@@ -47,7 +47,9 @@ export class AdvancedScene<T> {
     }
 
     await handler(ctx)
-    let currentStatus = {}
+    let currentStatus: CurrentSceneStatus = {
+      nextStep: step
+    }
 
     if (controller.jumpToStep !== null) {
       currentStatus = {
@@ -61,13 +63,11 @@ export class AdvancedScene<T> {
       currentStatus = {
         nextStep: step - 1
       }
-    } else if (controller.leaveCalled) {
+    }
+
+    if (controller.leaveCalled) {
       currentStatus = {
         nextStep: undefined
-      }
-    } else {
-      currentStatus = {
-        nextStep: step
       }
     }
 
