@@ -170,3 +170,15 @@ export const addDraw = async (userId: number, amount: number = 1): Promise<boole
     data: { usedDraws: { decrement: amount } }
   }).then(() => true).catch(() => false)
 }
+
+// gets how many cards from a certain category a user has
+export const getHowManyCardsUserHasFromCategory = async (userId: number, categoryId: number): Promise<number> => {
+  return _brklyn.db.userCard.count({
+    where: {
+      userId,
+      card: {
+        categoryId
+      }
+    }
+  })
+}

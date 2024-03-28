@@ -1,5 +1,6 @@
 import {Subcategory} from "@prisma/client"
 import { getRandomNumber } from "../misc.js"
+import { debug } from "melchior"
 
 export const createSubcategory = async (name: string, categoryID: number) => {
   return _brklyn.db.subcategory.create({
@@ -96,7 +97,8 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
   const chanceSubcategories = subcategories.filter(sub => sub.rarityModifier)
   chanceSubcategories.forEach(sub => {
     const random = getRandomNumber()
-    if (sub.rarityModifier < random) result.push(sub)
+    debug('randomness', `sub mod is ${sub.rarityModifier}, random is ${random}. will it be selected? ${!(sub.rarityModifier < random)}`)
+    if (random < sub.rarityModifier) result.push(sub)
   })
 
   while (result.length < limit) {

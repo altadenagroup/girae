@@ -5,14 +5,8 @@ import { determineMethodToSendMedia } from '../utilities/telegram.js'
 import { getCardByID, getHowManyCardsAreThere, searchCards } from '../utilities/engine/cards.js'
 import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from '../utilities/engine/users.js'
 import { readableNumber } from '../utilities/misc.js'
-import { MISSING_CARD_IMG } from '../constants.js'
+import { MEDAL_MAP, MISSING_CARD_IMG } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
-
-const medalMap = {
-  'Comum': '🥉',
-  'Raro': '🥈',
-  'Lendário': '🎖️'
-}
 
 interface FullCard extends Card {
   subcategory: Subcategory | undefined
@@ -48,7 +42,7 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
   const inCirc = await getHowManyCardsAreThere(char.id)
 
   const tagExtra = char.tags?.[0] ? `\n🔖 ${char.tags[0]}` : ''
-  const text = `${medalMap[char.rarity?.name || 'Comum']} <code>${char.id}</code>. <b>${char.name}</b>
+  const text = `${MEDAL_MAP[char.rarity?.name || 'Comum']} <code>${char.id}</code>. <b>${char.name}</b>
 ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra}
 
 👨‍👨‍👧‍👧 ${readableNumber(userWithCard)} pessoa${userWithCard === 1 ? '' : 's'} com este card
@@ -81,7 +75,7 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
   })
 }
 
-const cardOnList = (card) => `${medalMap[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${card.category?.emoji || '?'} <i>${card.subcategory?.name || '?'}</i>`
+const cardOnList = (card) => `${MEDAL_MAP[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${card.category?.emoji || '?'} <i>${card.subcategory?.name || '?'}</i>`
 
 export const info = {
   guards: ['hasJoinedGroup'],

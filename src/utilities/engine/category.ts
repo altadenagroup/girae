@@ -58,3 +58,41 @@ export const getCategoryByID = async (id: number) => {
 
   return category
 }
+
+export const searchCategory = async (query: string) => {
+  const cached = await _brklyn.cache.get('categories_search', query)
+  if (cached) return cached
+
+  const categories = await _brklyn.db.category.findMany({
+    where: {
+      name: {
+        search: query
+      }
+    }
+  })
+
+  if (categories) {
+    await _brklyn.cache.setexp('categories_search', query, categories, 5 * 60)
+  }
+
+  return categories
+}
+
+// gets how many cards are in a category
+export const getCountOfCardsOnCategory = async (id: number) => {
+  const cached = await _brklyn.cache.get('categories_card_count', id.toString())
+  if (cached) return cached
+
+  const count = await _brklyn.db.card.count({
+    where: {
+      categoryId: id
+    }
+  })
+
+  if (!count) return 0
+  await _brklyn.cache.setexp('categories_card_count', id.toString(), count, 60 * 60 * 24)
+
+  return count
+}
+
+
