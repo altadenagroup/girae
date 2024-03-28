@@ -96,11 +96,12 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
   const chanceSubcategories = subcategories.filter(sub => sub.rarityModifier)
   chanceSubcategories.forEach(sub => {
     const random = getRandomNumber()
-    if (random <= sub.rarityModifier) result.push(sub)
+    if (sub.rarityModifier > random) result.push(sub)
   })
 
   while (result.length < limit) {
-    result.push(subcategories[Math.floor(getRandomNumber() * subcategories.length)])
+    const t = subcategories[Math.floor(getRandomNumber() * subcategories.length)]
+    if (!result.some(sub => sub.id === t.id)) result.push(t)
   }
 
   return result
