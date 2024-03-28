@@ -64,7 +64,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Seulgi is a member of Red Velvet, a popular K-Pop group from South Korea. Hence, K-POP > Red Velvet.}}{\n    "name": "Seulgi",\n    "subcategory": "Red Velvet",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "K-POP",\n    "tags": []\n}'
+      'content': '{{Seulgi is a member of Red Velvet, a popular K-Pop group from South Korea. Hence, GIRÁSIA > Red Velvet.}}{\n    "name": "Seulgi",\n    "subcategory": "Red Velvet",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "GIRÁSIA",\n    "tags": []\n}'
     },
     {
       'role': 'user',
@@ -72,7 +72,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Hyein is a popular member of the group NewJeans from South Korea, so K-POP > NewJeans }}{\n    "name": "Hyein",\n    "subcategory": "NewJeans",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "K-POP",\n    "tags": []\n}'
+      'content': '{{Hyein is a popular member of the group NewJeans from South Korea, so GIRÁSIA > NewJeans }}{\n    "name": "Hyein",\n    "subcategory": "NewJeans",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "GIRÁSIA",\n    "tags": []\n}'
     },
     {
       'role': 'user',
@@ -80,7 +80,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{Jimin is a popular member of the group BTS from South Korea, so K-POP > BTS}}{\n    "name": "Jimin",\n    "subcategory": "BTS",\n    "rarity": "Rare",\n    "image": null,\n    "category": "K-POP",\n    "tags": []\n}'
+      'content': '{{Jimin is a popular member of the group BTS from South Korea, so GIRÁSIA > BTS}}{\n    "name": "Jimin",\n    "subcategory": "BTS",\n    "rarity": "Rare",\n    "image": null,\n    "category": "GIRÁSIA",\n    "tags": []\n}'
     },
     {
       'role': 'user',
@@ -88,7 +88,7 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     },
     {
       'role': 'assistant',
-      'content': '{{BoA is a legendary solo artist from South Korea, so BoA should be in the category of Solistas under K-POP.}}{\n    "name": "BoA",\n    "subcategory": "Solistas",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "K-POP",\n    "tags": []\n}'
+      'content': '{{BoA is a legendary solo artist from South Korea, so BoA should be in the category of Solistas de K-Pop under GIRÁSIA.}}{\n    "name": "BoA",\n    "subcategory": "Solistas de K-Pop",\n    "rarity": "Legendary",\n    "image": null,\n    "category": "GIRÁSIA",\n    "tags": []\n}'
     },
     {
       'role': 'user',
