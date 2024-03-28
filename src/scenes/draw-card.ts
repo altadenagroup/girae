@@ -9,7 +9,7 @@ import { drawCard } from '../utilities/engine/cards.js'
 import { MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
-import { determineMediaType, determineMethodToSendMedia, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
+import { determineMediaType, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
 import { BotContext } from '../types/context.js'
 
 const sixOptionsCategories = ['K-POP', 'Variedades']

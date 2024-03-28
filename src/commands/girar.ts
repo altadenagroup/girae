@@ -2,18 +2,18 @@ import { DRAW_CRON } from '../sidecar/index.js'
 import { BotContext } from '../types/context.js'
 
 export default async (ctx: BotContext) => {
-  if (ctx.userData.usedDraws >= ctx.userData.maximumDraws) {
-    return ctx.reply('Ah... sinto muito, mas você já girou os cards que podia por agora. 😣\nVocê receberá mais um giros em ' + _brklyn.sidecar.willRunIn(DRAW_CRON) + '.')
-  }
-
   if (await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {
     const url = await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())
     if (url.startsWith) {
-      return ctx.reply('🕹 Você já está girando, por favor, espere até que o giro atual termine.', {
+      return ctx.reply('🕹 Você já está girando, por favor, espere até que o giro atual termine.\n\nCaso a mensagem tenha sido deletada, use /cancelar para poder girar de novo.', {
         reply_markup: {
           inline_keyboard: [[{ text: '🔄 Ir à mensagem do giro', url: url }]]
         }
       })
+    }
+
+    if (ctx.userData.usedDraws >= ctx.userData.maximumDraws) {
+      return ctx.reply('Ah... sinto muito, mas você já girou os cards que podia por agora. 😣\nVocê receberá mais um giros em ' + _brklyn.sidecar.willRunIn(DRAW_CRON) + '.')
     }
 
     return ctx.reply('🕹 Você já está girando, por favor, espere até que o giro atual termine.')
