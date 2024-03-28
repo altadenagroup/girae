@@ -291,4 +291,10 @@ export class BrooklynCacheLayer {
   async decr (namespace: string, key: string) {
     return this.#cache.decr(`${namespace}:${key}`)
   }
+
+  // deletes all keys in a namespace
+  async clearNamespace (namespace: string) {
+    const keys = await this.keys(namespace, '*')
+    return Promise.all(keys.map(k => this.del(namespace, k)))
+  }
 }

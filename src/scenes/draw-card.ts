@@ -12,7 +12,7 @@ import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine
 import { determineMediaType, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
 import { BotContext } from '../types/context.js'
 
-const sixOptionsCategories = ['K-POP', 'Variedades']
+const sixOptionsCategories = ['GIRÁSIA', 'Variedades']
 
 interface DrawData {
   chosenCategory: Category

@@ -72,14 +72,38 @@ export const getOrCreateSubcategory = async (name: string, categoryID: number) =
   return createSubcategory(name, categoryID)
 }
 
-// selects random subcategories under a certain category id (as long as they have cards in them)
+export const getSubcategoriesByCategoryID = async (categoryID: number) => {
+  return _brklyn.db.subcategory.findMany({
+    where: {
+      categoryId: categoryID
+    }
+  })
+}
+
+// filters subcategory by their chance. if a subcategory has a chance value, it will be taken into consideration. if the chance is 1, it is guaranteed to be selected. if it is 0.7, it has a 70% chance of being selected.
+// subcategories with a chance of 0 will be randomly selected. has a limit of how many subcategories to return.
 export const getRandomSubcategories = async (categoryID: number, limit: number) => {
   const subcategories = await _brklyn.db.subcategory.findMany({
     where: {
       categoryId: categoryID,
-      cards: {some: {}}
+      cards: { some: {} }
     }
   })
 
-  return subcategories.sort(() => Math.random() - getRandomNumber()).slice(0, limit)
+  if (subcategories.length <= limit) return subcategories
+
+  const result: Subcategory[] = []
+  const chanceSubcategories = subcategories.filter(sub => sub.rarityModifier)
+  chanceSubcategories.forEach(sub => {
+    const random = getRandomNumber()
+    if (random <= sub.rarityModifier) result.push(sub)
+  })
+
+  while (result.length < limit) {
+    result.push(subcategories[Math.floor(getRandomNumber() * subcategories.length)])
+  }
+
+  return result
 }
+
+
