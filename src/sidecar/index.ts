@@ -28,8 +28,8 @@ export class Sidecar {
 
   async increaseUserDraws() {
     debug('sidecar', 'called increaseUserDraws')
-    // decrement one till it reaches 0
-    await _brklyn.db.user.updateMany({ where: { usedDraws: { gt: 0 } }, data: { usedDraws: { decrement: 1 } } })
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 1 WHERE "usedDraws" > 0`
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 1 WHERE "usedDraws" >= "maximumDraws"`
   }
 
   async resetReps() {

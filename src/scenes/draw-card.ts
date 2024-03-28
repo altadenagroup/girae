@@ -113,7 +113,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       ctx.session.setMainMessage(msg.message_id)
     }).catch(async (e) => {
       warn('scenes.draw', 'could not send message: ' + e.message)
-      return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
+      return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
     })
   } else {
     ctx.session.steps.next()
@@ -130,7 +130,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
     }).catch(async (e) => {
       warn('scenes.draw', 'could not edit message: ' + e.message)
       ctx.session.steps.leave()
-      return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
+      return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
     })
   }
 }
@@ -142,11 +142,11 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.steps.leave()
   const sub = await getSubcategoryByID(subcategoryId)
   if (!sub) {
-    return exitCommand(ctx, true, 'Esse comando exipirou. Gire novamente.')
+    return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
   }
 
   if (!ctx.session.data.chosenCategory) {
-    return exitCommand(ctx, false, 'Esse comando exipirou. Gire novamente.')
+    return exitCommand(ctx, false, 'Esse comando expirou. Gire novamente.')
   }
 
   if (!await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {

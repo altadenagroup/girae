@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
 }
 
@@ -34,12 +34,13 @@ model Category {
 
 // Subcategory: defines a subcategory of cards. it has a name and a set of tags
 model Subcategory {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId Int
-  image      String?
-  cards      Card[]
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  category       Category @relation(fields: [categoryId], references: [id])
+  categoryId     Int
+  image          String?
+  cards          Card[]
+  rarityModifier Float    @default(0)
 }
 
 // Card: defines a collectible card. it has a name, a description, a rarity, a set of tags, an image, and a rarity modifier
@@ -95,21 +96,21 @@ model UserCard {
 }
 
 model ProfileBackground {
-  id              Int            @id @default(autoincrement())
-  name            String         @unique
-  image           String
-  users           UserProfile[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @default(now()) @updatedAt
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  image     String
+  users     UserProfile[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now()) @updatedAt
 }
 
 model ProfileSticker {
-  id              Int            @id @default(autoincrement())
-  name            String         @unique
-  image           String
-  users           UserProfile[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @default(now()) @updatedAt
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  image     String
+  users     UserProfile[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now()) @updatedAt
 }
 
 // model to store the user's custom profile data (so, favorite color, favorite card, reputation, background, badge, stickers, background, etc)
@@ -154,25 +155,26 @@ model Marriage {
 
 // defines the user inventory - that is, their backgrounds, stickers, and badges
 model UserInventory {
-  id         Int                 @id @default(autoincrement())
-  userId     Int
+  id            Int      @id @default(autoincrement())
+  userId        Int
   backgroundIDs Int[]
-  stickerIDs Int[]
-  ringIDs    Int[]
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @default(now()) @updatedAt
+  stickerIDs    Int[]
+  ringIDs       Int[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
 }
 
 // model with an enum to represent items that can be bought with coins
 model ShopItem {
-  id        Int      @id @default(autoincrement())
-  type      ItemType
-  price     Int
-  itemId    Int
-  name      String
+  id          Int      @id @default(autoincrement())
+  type        ItemType
+  price       Int
+  itemId      Int
+  name        String
+  category    String
   description String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 enum ItemType {
@@ -183,17 +185,17 @@ enum ItemType {
 }
 
 model ConsumedTrade {
-  id        Int      @id @default(autoincrement())
-  user1Id   Int
-  user2Id   Int
+  id         Int      @id @default(autoincrement())
+  user1Id    Int
+  user2Id    Int
   cardsUser1 Int[]
   cardsUser2 Int[]
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 }
 
 model GroupDrawLock {
-  id        Int      @id @default(autoincrement())
-  groupId   BigInt   @unique
-  allowedCategories Int[] @default([])
-  createdAt DateTime @default(now())
+  id                Int      @id @default(autoincrement())
+  groupId           BigInt   @unique
+  allowedCategories Int[]    @default([])
+  createdAt         DateTime @default(now())
 }
