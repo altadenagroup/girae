@@ -1,7 +1,6 @@
-import { Arg, Ctx, Field, Info, Int, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import { Arg, Ctx, Field, Info, Int, ObjectType, Query, Resolver } from "type-graphql";
 import { UserCard } from '@generated/type-graphql'
 import { parseImageString } from "../../utilities/lucky-engine.js";
-import { BigIntResolver, BigIntTypeDefinition } from "graphql-scalars";
 import { MISSING_CARD_IMG } from "../../constants.js";
 
 @ObjectType({
@@ -100,7 +99,23 @@ export class UserCardsResolver {
     })
 
     // add count
-    
+    cards.forEach(card => {
+      if (userCardCount.find(c => c.cardId === card.card.id)) {
+        userCardCount.find(c => c.cardId === card.card.id)!.count += 1
+      } else {
+        userCardCount.push({
+          count: 1,
+          cardId: card.card.id
+        })
+      }
+
+      if (!userCardImages.find(c => c.cardId === card.card.id)) {
+        userCardImages.push({
+          cardId: card.card.id,
+          image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop', true) : MISSING_CARD_IMG
+        })
+      }
+    })
 
     // remove duplicates, use card.id as the unique identifier
     cards = Array.from(new Set(cards.map(card => card.card.id)).values()).map(cardId => {
@@ -132,25 +147,6 @@ export class UserCardsResolver {
     // sort subcategories by closest to completion
     subcategoryInfo = subcategoryInfo.sort((a, b) => {
       return (b.cardsOwned / b.totalCards) - (a.cardsOwned / a.totalCards)
-    })
-
-    cards = cards.map(card => {
-      if (userCardCount.find(c => c.cardId === card.card.id)) {
-        userCardCount.find(c => c.cardId === card.card.id)!.count += 1
-      } else {
-        userCardCount.push({
-          count: 1,
-          cardId: card.card.id
-        })
-      }
-
-      if (!userCardImages.find(c => c.cardId === card.card.id)) {
-        userCardImages.push({
-          cardId: card.card.id,
-          image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop', true) : MISSING_CARD_IMG
-        })
-      }
-      return card
     })
 
     return {

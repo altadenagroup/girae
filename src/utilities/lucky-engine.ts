@@ -203,7 +203,7 @@ export const getCategoryById = async (id: number) => {
   return _brklyn.db.category.findFirst({ where: { id } })
 }
 
-export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined, aa = undefined): string => {
+export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined, aa: any = undefined): string => {
   if (!imageString) return MISSING_CARD_IMG
   // if it starts with http, return it as is
   if (imageString.includes('placehold.co')) return MISSING_CARD_IMG
