@@ -1,5 +1,5 @@
-import { error, Telegraf, warn } from 'melchior'
-import { generatePhotoLink } from '../utilities/telegram.js'
+import { debug, error, Telegraf, warn } from 'melchior'
+import { generatePhotoLink, uploadAttachedPhoto } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
@@ -204,24 +204,9 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
 
   // get any photos from the message
   // @ts-ignore
-  const photos = (ctx.message as CommonMessageBundle).reply_to_message?.photo
-  const photo = photos?.[0] ? photos[photos.length - 1].file_id : null
-  let imgString
-  if (photo) {
-    const link = await generatePhotoLink(photo)
-    if (link) {
-      const id = generateID(32)
-      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
-        await ctx.reply('Erro ao fazer upload da imagem.\n\n'+ e.message)
-        return null
-      })
-      if (aa) imgString = `id:${id}`
-    } else {
-      await ctx.reply('Não foi possível obter o link da foto.')
-    }
-  }
+  let imgString = await uploadAttachedPhoto(ctx, false)
 
-  if (editing && photo) {
+  if (editing && imgString) {
     // @ts-ignore
     ctx.wizard.state.cardData.image = imgString
   }
@@ -242,7 +227,8 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   const exists = editing ? false : await getCardByNameAndSubcategory(cardData.name, cardData.subcategory)
   if (cardData.image) imgString = cardData.image
 
-  const img = imgString ? parseImageString(imgString) : MISSING_CARD_IMG
+  const img = imgString ? parseImageString(imgString as string) : MISSING_CARD_IMG
+  debug('scenes.addCard', `imgString: ${imgString}, img: ${img}`)
   const text = await generateCardView(cardData)
 
   // @ts-ignore

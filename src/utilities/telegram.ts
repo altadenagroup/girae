@@ -1,5 +1,7 @@
 import {ChatMember, User} from "telegraf/types"
 import {BotContext} from "../types/context.js"
+import { generateID } from "./misc.js"
+import { info } from "melchior"
 
 export const isUserOnNewsChannel = async (id: number) => {
   const cache = await _brklyn.cache.get('news', id.toString())
@@ -102,4 +104,68 @@ export const generateMessageLink = (chatID: number | string, messageID: number, 
   if (typeof chatID === 'string') return `https://t.me/${chatID.replace('@', '')}/${threadId ? `${threadId}/` : ''}${messageID}`
   else if (chatID < 0) return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
   else return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
+}
+
+const mimeToExtension = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp'
+}
+
+export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = true) => {
+  // @ts-ignore
+  const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
+  let photo = photos?.[0] ? photos[photos.length - 1].file_id : null
+  // @ts-ignore
+  const doc = ctx.message.document || ctx.message.reply_to_message?.document
+  if (!photo && doc && doc.mime_type?.startsWith('image')) {
+    // @ts-ignore
+    // if the mime type isn't jpeg or gif, we have to convert
+    if (!doc.mime_type.includes('jpeg')) {
+      const link = await generatePhotoLink(doc.file_id)
+      if (!link) {
+        respond && await ctx.reply('Não foi possível obter o link da foto.')
+        return false
+      }
+      const id = generateID(32)
+      // upload with the correct extension
+      const exts = mimeToExtension[doc.mime_type]
+      if (!exts) {
+        respond && await ctx.reply('Formato de imagem inválido.')
+        return false
+      }
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async (e) => {
+        respond && await ctx.reply('Erro ao fazer upload da imagem.')
+        return false
+      })
+      if (aa) return `url:https://s3.girae.altadena.space/${id}.${exts}`
+      else return false
+    }
+
+    photo = doc.file_id
+  }
+
+  let imgString: string | null = null
+  if (photo) {
+    const link = await generatePhotoLink(photo)
+    if (link) {
+      const id = generateID(32)
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
+        respond && await ctx.reply('Erro ao fazer upload da imagem.')
+        return false
+      })
+      if (aa) imgString = `id:${id}`
+    } else {
+      respond && await ctx.reply('Não foi possível obter o link da foto.')
+      return false
+    }
+  }
+  if (!imgString) {
+    respond && await ctx.reply('Você precisa enviar uma foto ou passar um link para a imagem.')
+    return false
+  }
+
+  info('storage', `uploaded image ${imgString}`)
+  return imgString
 }
