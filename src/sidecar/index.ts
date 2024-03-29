@@ -17,6 +17,12 @@ export class Sidecar {
     this.reps = new cron.CronJob(REP_CRON, () => this.resetReps(), null, true, 'America/Sao_Paulo')
     this.draws = new cron.CronJob(DRAW_CRON, () => this.increaseUserDraws(), null, true, 'America/Sao_Paulo')
     this.dailies = new cron.CronJob(DAILY_CRON, () => this.resetDailies(), null, true, 'America/Sao_Paulo')
+
+    this.deleteDrawCooldowns()
+  }
+
+  deleteDrawCooldowns () {
+    return _brklyn.cache.clearNamespace('draw_cooldowns')
   }
 
   async resetUserStuff() {
