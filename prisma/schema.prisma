@@ -30,6 +30,7 @@ model Category {
   emoji         String        @default("🃏")
   subcategories Subcategory[]
   cards         Card[]
+  ShopItem      ShopItem[]
 }
 
 // Subcategory: defines a subcategory of cards. it has a name and a set of tags
@@ -176,6 +177,8 @@ model ShopItem {
   image       String
   name        String
   description String
+  categoryId  Int      @default(0)
+  category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
@@ -211,7 +214,7 @@ model UserCardPreferences {
   card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   customImage String?
   customEmoji String?
-  tradeable    Boolean  @default(true)
+  tradeable   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }

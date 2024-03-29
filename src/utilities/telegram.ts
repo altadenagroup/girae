@@ -113,12 +113,17 @@ const mimeToExtension = {
   'image/webp': 'webp'
 }
 
-export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = true) => {
+export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = true, onlyDocuments: boolean = false) => {
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
   let photo = photos?.[0] ? photos[photos.length - 1].file_id : null
   // @ts-ignore
   const doc = ctx.message.document || ctx.message.reply_to_message?.document
+  if (onlyDocuments && (!doc || !doc.mime_type?.startsWith('image'))) {
+    respond && await ctx.reply('Você precisa enviar uma foto como documento.')
+    return false
+  }
+  if (onlyDocuments) photo = null
   if (!photo && doc && doc.mime_type?.startsWith('image')) {
     // @ts-ignore
     // if the mime type isn't jpeg or gif, we have to convert
