@@ -1,7 +1,8 @@
-import { Arg, Ctx, Field, Info, Int, ObjectType, Query, Resolver } from "type-graphql";
-import { UserCard } from '@generated/type-graphql'
+import { Arg, Ctx, Field, Info, Int, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import { UserCard, ShopItem } from '@generated/type-graphql'
 import { parseImageString } from "../../utilities/lucky-engine.js";
 import { MISSING_CARD_IMG } from "../../constants.js";
+import { buyStoreItem } from "../../utilities/engine/store.js";
 
 @ObjectType({
   description: 'Subcategory information'
@@ -47,6 +48,7 @@ export class CardImage {
   count!: number
 }
 
+
 // an object that contains subcategory info and a list of user cards
 @ObjectType({
   description: 'Subcategory information with user cards'
@@ -63,6 +65,10 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
 
   @Field(_type => [CardImage], { nullable: false, description: 'The card images' })
   cardImages!: CardImage[]
+
+  // array of untradable cards
+  @Field(_type => [Int], { nullable: false, description: 'The untradeable cards' })
+  untradeableCards!: number[]
 }
 
 @Resolver()
@@ -153,7 +159,95 @@ export class UserCardsResolver {
       subcategoryInfo,
       userCards: cards,
       userCardCount,
-      cardImages: userCardImages
+      cardImages: userCardImages,
+      untradeableCards: await _brklyn.db.userCardPreferences.findMany({
+        where: {
+          user: {
+            tgId: parseInt(userId)
+          },
+          tradeable: false
+        }
+      }).then((t) => {
+        return t.map((i) => {
+          return i.cardId
+        })
+      })
     }
+  }
+
+  @Mutation(_returns => Boolean)
+  async markCardUntradeable(
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
+    @Arg('cardId', _type => Int, { nullable: false, description: 'The card id' }) cardId: number
+  ) {
+    const c = await _brklyn.db.userCardPreferences.findFirst({ where: { user: { tgId: parseInt(userId) }, card: { id: cardId } } })
+    if (c) {
+      await _brklyn.db.userCardPreferences.updateMany({
+        where: {
+          user: { tgId: parseInt(userId) },
+          card: { id: cardId }
+        },
+        data: {
+          tradeable: !c.tradeable
+        }
+      })
+      return true
+    }
+
+    await _brklyn.db.userCardPreferences.create({
+      data: {
+        tradeable: false,
+        user: { connect: { tgId: parseInt(userId) } },
+        card: { connect: { id: cardId } }
+      }
+    })
+
+    return true
+  }
+
+  @Query(_returns => [ShopItem])
+  async storeItems(
+    @Ctx() _: any,
+    @Info() _a: any
+  ) {
+    return await _brklyn.db.shopItem.findMany().then((t) => {
+      return t.map((i) => {
+        i.image = parseImageString(i.image, false, undefined)
+        return i
+      })
+    })
+  }
+
+  @Mutation(_returns => Boolean)
+  async buyItem(
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
+    @Arg('shopEntryId', _type => Int, { nullable: false, description: 'The shop entry id' }) shopEntryId: number,
+    @Arg('quantity', _type => Int, { nullable: false, description: 'The quantity of items to buy' }) quantity: number
+  ) {
+    // get the shop entry
+    const shopEntry = await _brklyn.db.shopItem.findUnique({
+      where: {
+        id: shopEntryId
+      }
+    })
+
+    // if the shop entry is not found, return error
+    if (!shopEntry) {
+      return false
+    }
+
+    // get the user
+    const user = await _brklyn.db.user.findUnique({
+      where: {
+        tgId: parseInt(userId)
+      }
+    })
+
+    // if the user is not found, return error
+    if (!user) {
+      return false
+    }
+
+    return await buyStoreItem(user, shopEntry, quantity)
   }
 }
