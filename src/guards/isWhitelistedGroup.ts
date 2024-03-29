@@ -8,7 +8,7 @@ export default async (ctx) => {
   }
 
   if (ctx.chat?.type === 'private') {
-    // return false
+    return true
   }
 
   if (await _brklyn.db.groupDrawLock.findFirst({ where: { groupId: ctx.chat!.id } })) {
