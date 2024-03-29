@@ -22,7 +22,7 @@ export default async (ctx: BotContext) => {
   const cooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.from?.id.toString()) || 0
   const groupCooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.chat!.id.toString()) || 0
 
-  if (cooldownDraws > 3 || groupCooldownDraws > 3) {
+  if (cooldownDraws > 3 || groupCooldownDraws > 2) {
     return ctx.reply('🕹 Aaah, que bagunça, estão girando muito rápido! Por favor, espere um pouco antes de girar novamente.')
   }
 
