@@ -11,6 +11,7 @@ export class Sidecar {
   draws: cron.CronJob | undefined
   reps: cron.CronJob | undefined
   dailies: cron.CronJob | undefined
+  drawCooldowns: cron.CronJob | undefined
 
   scheduleAll() {
     // reset reps is every 6h
@@ -18,11 +19,11 @@ export class Sidecar {
     this.draws = new cron.CronJob(DRAW_CRON, () => this.increaseUserDraws(), null, true, 'America/Sao_Paulo')
     this.dailies = new cron.CronJob(DAILY_CRON, () => this.resetDailies(), null, true, 'America/Sao_Paulo')
 
-    this.deleteDrawCooldowns()
+    setTimeout(() => this.deleteDrawCooldowns(), 10_000)
   }
 
-  deleteDrawCooldowns () {
-    return _brklyn.cache.clearNamespace('draw_cooldowns')
+  async deleteDrawCooldowns () {
+    await _brklyn.cache.clearNamespace('draw_cooldowns')
   }
 
   async resetUserStuff() {
