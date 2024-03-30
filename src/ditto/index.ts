@@ -41,7 +41,7 @@ export class Ditto {
       position: 1,
       badgeEmojis: badges,
       totalCards: await getUserCardsCount(userD.id),
-      stickerURL: completeUserData?.stickerId && parseImageString(completeUserData?.stickers?.image!, undefined, true)
+      stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, undefined, true)
     }
 
     return _brklyn.generateImage('user_profile', data)
