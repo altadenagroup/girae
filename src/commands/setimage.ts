@@ -1,8 +1,7 @@
 import { BotContext } from '../types/context.js'
 import { getCardByID } from '../utilities/engine/cards.js'
-import { generatePhotoLink, uploadAttachedPhoto } from '../utilities/telegram.js'
+import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { generateID } from '../utilities/misc.js'
 
 export default async (ctx: BotContext) => {
   const card = ctx.args[0]
@@ -15,7 +14,7 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Card não encontrado.')
   }
 
-  const imgString = await uploadAttachedPhoto(ctx)
+  const imgString = await uploadAttachedPhoto(ctx, true, false)
   if (!imgString) return
 
   await _brklyn.db.card.update({

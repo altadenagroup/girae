@@ -16,6 +16,7 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node'
 import { bootstrap } from './networking/index.js'
 import { Message } from 'telegraf/types.js'
 import { S3Storage } from './storage/index.js'
+import { Ditto } from './ditto/index.js'
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -41,6 +42,7 @@ export default class Brooklyn extends Client {
   sidecar = new Sidecar()
   es2: SessionManager
   images = new S3Storage('girae-images')
+  ditto = new Ditto()
   #internalCache: RedisClientType = {} as RedisClientType
 
   constructor (cache: RedisClientType) {

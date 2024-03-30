@@ -9,6 +9,7 @@ import { SessionContext } from './context.js'
 import drawCard from '../scenes/draw-card.js'
 import showCollection from '../scenes/col.js'
 import deleteCard from '../scenes/delete-card.js'
+import addItem from '../scenes/add-item.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
 import * as Sentry from '@sentry/node'
@@ -31,6 +32,7 @@ export class SessionManager {
     this.scenes.push(startTrade)
     this.scenes.push(drawCard)
     this.scenes.push(deleteCard)
+    this.scenes.push(addItem)
     // @ts-ignore
     this.scenes.push(showCollection)
   }

@@ -3,6 +3,11 @@ import ResponseSystem from '../utilities/responses.js'
 
 export default async (ctx, next) => {
   if (ctx.from) {
+    // register user name and username to namekeeping cache
+    _brklyn.cache.set('namekeeper', ctx.from.id.toString(), {
+      ...ctx.from
+    }).then(() => 0).catch(() => 0)
+    if (ctx.from.username) _brklyn.cache.set('namekeeper_usernames', ctx.from.username, ctx.from.id.toString()).then(() => 0).catch(() => 0)
 
     ctx.userData = await _brklyn.db.user.findFirst({ where: { tgId: ctx.from.id } }).catch((err) => {
       error('middleware.userData', `could not find user: ${err}`)
@@ -21,7 +26,8 @@ export default async (ctx, next) => {
     }
 
     ctx.profileData = await _brklyn.db.userProfile.findFirst({
-      where: { userId: ctx.userData.id }
+      where: { userId: ctx.userData.id },
+      include: { stickers: true }
     }).catch((err) => {
       error('middleware.userData', `could not find user profile: ${err}`)
       return {}

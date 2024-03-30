@@ -129,6 +129,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       warn('scenes.draw', 'could not edit message: ' + e.message)
       return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
     })
+    
   }
 }
 

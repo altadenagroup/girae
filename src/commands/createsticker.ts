@@ -1,6 +1,5 @@
 import { BotContext } from '../types/context.js'
-import { uploadAttachedPhoto } from '../utilities/telegram.js'
-import { parseImageString } from '../utilities/lucky-engine.js'
+import { getAttachedPhotoURL } from '../utilities/telegram.js'
 
 export default async (ctx: BotContext) => {
   const data = ctx.args.join(' ')
@@ -16,32 +15,23 @@ export default async (ctx: BotContext) => {
   if (name.length > 100) return ctx.reply('O nome do sticker não pode ter mais de 40 caracteres.')
   const description = descriptionParts.join(' ')
 
-  const imgString = await uploadAttachedPhoto(ctx, true, true)
-  if (!imgString) return
-
-  // first, create the bg
-  const bg = await _brklyn.db.profileSticker.create({
-    data: {
-      name,
-      image: imgString
+  // check if there's a bg with name
+  const exists = await _brklyn.db.profileSticker.findFirst({
+    where: {
+      name
     }
   })
+  if (exists) return ctx.reply('Já existe um papel de parede com esse nome.')
 
-  // now, create the store listing
-  await _brklyn.db.shopItem.create({
-    data: {
-      price,
-      type: 'STICKER',
-      image: imgString,
-      description,
-      name,
-      itemId: bg.id
-    }
-  })
+  const url = await getAttachedPhotoURL(ctx)
+  if (!url) return ctx.reply('Você precisa enviar uma foto como para criar o papel de parede.')
 
-  return ctx.replyWithPhoto(parseImageString(imgString, false, undefined), {
-    caption: `🎟 <code>${bg.id}</code>. <b>${name}</b>\n<i>${description}</i>\n\n💰 ${price} moedas`,
-    parse_mode: 'HTML'
+  return ctx.es2.enter('ADD_ITEM', {
+    name,
+    price,
+    type: 'STICKER',
+    description,
+    file: url
   })
 }
 

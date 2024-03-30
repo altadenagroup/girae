@@ -3,6 +3,14 @@ import {BotContext} from "../types/context.js"
 import { generateID } from "./misc.js"
 import { info } from "melchior"
 
+let totalUsers
+
+export const getTotalUsers = async () => {
+  if (totalUsers) return totalUsers
+  totalUsers = await _brklyn.db.user.count()
+  return totalUsers
+}
+
 export const isUserOnNewsChannel = async (id: number) => {
   const cache = await _brklyn.cache.get('news', id.toString())
   if (cache === true) return true
@@ -113,6 +121,18 @@ const mimeToExtension = {
   'image/webp': 'webp'
 }
 
+// returns the telegram url for an attached photo
+export const getAttachedPhotoURL = async (ctx: BotContext) => {
+  // @ts-ignore
+  const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
+  let photo = photos?.[0] ? photos[photos.length - 1].file_id : null
+  // @ts-ignore
+  const doc = ctx.message.document || ctx.message.reply_to_message?.document
+  if (doc && doc.mime_type?.startsWith('image')) photo = doc.file_id
+  if (!photo) return null
+  return await generatePhotoLink(photo)
+}
+
 export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = true, onlyDocuments: boolean = false) => {
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
@@ -140,7 +160,7 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
         respond && await ctx.reply('Formato de imagem inválido.')
         return false
       }
-      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async (e) => {
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async () => {
         respond && await ctx.reply('Erro ao fazer upload da imagem.')
         return false
       })
@@ -156,7 +176,7 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     const link = await generatePhotoLink(photo)
     if (link) {
       const id = generateID(32)
-      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async (e) => {
+      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async () => {
         respond && await ctx.reply('Erro ao fazer upload da imagem.')
         return false
       })
@@ -175,22 +195,49 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
   return imgString
 }
 
-export const getMentionedUser = async (ctx: BotContext) => {
+export const getTgUserFromText = async (text: string) => {
+  if (text.startsWith('@')) {
+    const userID = await _brklyn.cache.get('namkeeper_usernames', text.replace('@', ''))
+    if (!userID) return null
+    return _brklyn.cache.get('namekeeper', userID)
+  } else if (!isNaN(Number(text))) {
+    const n = Number(text)
+    const total = await getTotalUsers()
+    if (n <= total) {
+      const u = await _brklyn.db.user.findUnique({ where: { id: n } })
+      if (u) return u
+    }
+    return _brklyn.cache.get('namekeeper', text)
+  }
+
+  return null
+}
+
+export const getMentionedUser = async (ctx: BotContext, arg: string | undefined = undefined) => {
+  if (arg) {
+    const user = await getTgUserFromText(arg)
+    if (user) return _brklyn.db.user.findUnique({ where: { tgId: user.id } })
+  }
+
   // check if the message is a reply. if it is, get the user from the reply
   // @ts-ignore
   const reply = ctx.message.reply_to_message
-  if (reply && reply.from) {
+  if (reply && reply.from && reply.from.id !== 777000) {
     const user = await _brklyn.db.user.findUnique({ where: { tgId: reply.from.id } })
     return user
   }
   return ctx.userData
 }
 
-export const getMentionedTgUser = (ctx: BotContext) => {
+export const getMentionedTgUser = async (ctx: BotContext, arg: string | undefined = undefined) => {
+  if (arg) {
+    const user = await getTgUserFromText(arg)
+    if (user) return user
+  }
   // check if the message is a reply. if it is, get the user from the reply
   // @ts-ignore
   const reply = ctx.message.reply_to_message
-  if (reply && reply.from) {
+  if (reply && reply.from && reply.from.id !== 777000) {
     return reply.from
   }
   return ctx.from
