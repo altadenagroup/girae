@@ -112,7 +112,7 @@ const mimeToExtension = {
   'image/png': 'png',
   'image/gif': 'gif',
   'image/webp': 'webp',
-  'video/mp4': 'mp4:
+  'video/mp4': 'mp4'
 }
 
 // returns the telegram url for an attached photo
