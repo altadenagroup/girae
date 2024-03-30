@@ -13,7 +13,7 @@ export default async (ctx: BotContext) => {
   if (isNaN(price)) return ctx.reply('O preço precisa ser um número inteiro. Usa-se /createbg <preço> Nome do papel de parede - Descrição do papel de parede.')
   const rest = args.slice(1).join(' ')
   const [name, ...descriptionParts] = rest.split(' - ')
-  if (name.length > 40) return ctx.reply('O nome do papel de parede não pode ter mais de 40 caracteres.')
+  if (name.length > 100) return ctx.reply('O nome do papel de parede não pode ter mais de 40 caracteres.')
   const description = descriptionParts.join(' ')
 
   const imgString = await uploadAttachedPhoto(ctx)

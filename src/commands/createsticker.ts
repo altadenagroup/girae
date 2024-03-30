@@ -13,7 +13,7 @@ export default async (ctx: BotContext) => {
   if (isNaN(price)) return ctx.reply('O preço precisa ser um número inteiro. Usa-se /createsticker <preço> Nome - Descrição.')
   const rest = args.slice(1).join(' ')
   const [name, ...descriptionParts] = rest.split(' - ')
-  if (name.length > 40) return ctx.reply('O nome do sticker não pode ter mais de 40 caracteres.')
+  if (name.length > 100) return ctx.reply('O nome do sticker não pode ter mais de 40 caracteres.')
   const description = descriptionParts.join(' ')
 
   const imgString = await uploadAttachedPhoto(ctx, true, true)
