@@ -129,7 +129,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       warn('scenes.draw', 'could not edit message: ' + e.message)
       return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
     })
-    
+
   }
 }
 
@@ -140,11 +140,11 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.steps.leave()
   const sub = await getSubcategoryByID(subcategoryId)
   if (!sub) {
-    return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
+    return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente. (NO_SUB)')
   }
 
   if (!ctx.session.data.chosenCategory) {
-    return exitCommand(ctx, false, 'Esse comando expirou. Gire novamente.')
+    ctx.session.data.chosenCategory = await getCategoryByID(sub.categoryId)
   }
 
   if (!await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {
@@ -202,8 +202,8 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 
 const exitCommand = async (ctx: SessionContext<DrawData>, giveDrawBack: boolean = false, message: string = '🚪 Comando cancelado.') => {
   // if this was a callback query, delete the message from which it originated from.
-  if (ctx.callbackQuery) await ctx.deleteMessage()
-  else await ctx.session.deleteMainMessage()
+  if (ctx.callbackQuery) await ctx.deleteMessage().catch(() => {})
+  else await ctx.session.deleteMainMessage().catch(() => {})
 
   ctx.session.steps.leave()
   await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())

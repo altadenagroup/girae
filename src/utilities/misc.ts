@@ -50,3 +50,13 @@ export const getRandomNumber = () => {
   const buf = crypto.randomBytes(4)
   return buf.readUInt32BE(0) / 0x100000000
 }
+
+export const pluralize = (count: number, word: string, suffix = 's', amountOfLettersToDrop = 0) => {
+  const w = count === 1
+  ? word
+  : (amountOfLettersToDrop >= 1 ?
+    word.slice(0, -amountOfLettersToDrop) + suffix
+    : word + suffix)
+
+  return `${readableNumber(count)} ${w}`
+}

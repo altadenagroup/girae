@@ -3,13 +3,6 @@ import {BotContext} from "../types/context.js"
 import { generateID } from "./misc.js"
 import { info } from "melchior"
 
-let totalUsers
-
-export const getTotalUsers = async () => {
-  if (totalUsers) return totalUsers
-  totalUsers = await _brklyn.db.user.count()
-  return totalUsers
-}
 
 export const isUserOnNewsChannel = async (id: number) => {
   const cache = await _brklyn.cache.get('news', id.toString())
@@ -197,17 +190,19 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
 
 export const getTgUserFromText = async (text: string) => {
   if (text.startsWith('@')) {
-    const userID = await _brklyn.cache.get('namkeeper_usernames', text.replace('@', ''))
+    const userID = await _brklyn.cache.get('namekeeper_usernames', text.replace('@', ''))
     if (!userID) return null
     return _brklyn.cache.get('namekeeper', userID)
   } else if (!isNaN(Number(text))) {
-    const n = Number(text)
-    const total = await getTotalUsers()
-    if (n <= total) {
+    const data = await _brklyn.cache.get('namekeeper', text)
+
+    if (!data) {
+      const n = parseInt(text)
       const u = await _brklyn.db.user.findUnique({ where: { id: n } })
-      if (u) return u
+      if (u) return _brklyn.cache.get('namekeeper', u.tgId.toString())
     }
-    return _brklyn.cache.get('namekeeper', text)
+
+    return data
   }
 
   return null
