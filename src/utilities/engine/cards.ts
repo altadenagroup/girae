@@ -162,6 +162,14 @@ export const getRarityChanceForSubcategory = async (subcategory: Subcategory, ra
   return rarityCount / cards
 }
 
+export const registerDrawnCard = async (cardID: number) => {
+  return _brklyn.cache.incr('cards_draws', cardID.toString())
+}
+
+export const getDrawnCardCount = async (cardID: number) => {
+  return _brklyn.cache.get('cards_draws', cardID.toString())
+}
+
 // selects a random card given a rarity, a category and a subcategory.
 export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory) => {
   // rarity fallback
@@ -176,6 +184,7 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
     rarityId: number
     categoryId: number
     subcategoryId: number
+    id: number
   }[]>(
     `
     SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id};
@@ -204,7 +213,34 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
   // 0.46797977
 
   // take one of the cards
-  const card = cards[Math.floor(getRandomNumber() * cards.length)]
+  let card = cards[Math.floor(getRandomNumber() * cards.length)]
+  // get how many times the card has been drawn. if it is a mutiple of 3, we'll draw another card.
+  const drawn = await getDrawnCardCount(card.id)
+  if (drawn && drawn % 3 === 0) {
+    if (cards.length === 1) {
+      // we'll get the first card in the subcategory, orded by random
+      const cards = await _brklyn.db.$queryRawUnsafe<Card & {
+        rarity: Rarity,
+        category: Category,
+        subcategory: Subcategory
+        rarityModifier: number
+        rarityId: number
+        categoryId: number
+        subcategoryId: number
+        id: number
+      }[]>(
+        `
+        SELECT * FROM "Card" WHERE "subcategoryId" = ${subcategory.id} ORDER BY RANDOM() LIMIT 10;
+        `
+      )
+      card = cards[Math.floor(getRandomNumber() * cards.length)]
+    } else {
+      // select a card that is'nt the one we already have
+      const filtered = cards.filter((c) => c.id !== card.id)
+      card = filtered[Math.floor(getRandomNumber() * filtered.length)]
+    }
+  }
+
   card.rarity = await getRarityById(card.rarityId) as Rarity
   card.category = await getCategoryByID(card.categoryId) as Category
   card.subcategory = await getSubcategoryByID(card.subcategoryId!) as Subcategory

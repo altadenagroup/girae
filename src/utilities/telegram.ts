@@ -174,3 +174,24 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
   info('storage', `uploaded image ${imgString}`)
   return imgString
 }
+
+export const getMentionedUser = async (ctx: BotContext) => {
+  // check if the message is a reply. if it is, get the user from the reply
+  // @ts-ignore
+  const reply = ctx.message.reply_to_message
+  if (reply && reply.from) {
+    const user = await _brklyn.db.user.findUnique({ where: { tgId: reply.from.id } })
+    return user
+  }
+  return ctx.userData
+}
+
+export const getMentionedTgUser = (ctx: BotContext) => {
+  // check if the message is a reply. if it is, get the user from the reply
+  // @ts-ignore
+  const reply = ctx.message.reply_to_message
+  if (reply && reply.from) {
+    return reply.from
+  }
+  return ctx.from
+}

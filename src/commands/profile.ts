@@ -3,7 +3,7 @@ import { getCardByID } from '../utilities/engine/cards.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { escapeForHTML } from '../utilities/responses.js'
-import { cachedGetUserPhotoAndFile } from '../utilities/telegram.js'
+import { cachedGetUserPhotoAndFile, getMentionedTgUser, getMentionedUser } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 
 const rarityIdToName = {
@@ -19,12 +19,19 @@ export default async (ctx: BotContext) => {
 /color - define sua cor favorita (exemplo: <code>/color #ff0000</code>)`
     return ctx.replyWithHTML(text)
   }
-  const file = await cachedGetUserPhotoAndFile(ctx.from!.id)
+  const tgUser = getMentionedTgUser(ctx)
+  const userD = await getMentionedUser(ctx)
+  if (!tgUser || !userD) {
+    return ctx.reply('O usuário não foi encontrado. 😔\nEle já usou a bot?')
+  }
+
+  const file = await cachedGetUserPhotoAndFile(tgUser!.id)
   const avatarURL = file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+
 
   const completeUserData = await _brklyn.db.userProfile.findFirst({
     where: {
-      userId: ctx.userData.id
+      userId: userD.id
     },
     include: {
       background: true,
@@ -32,25 +39,35 @@ export default async (ctx: BotContext) => {
       stickers: true
     }
   })
+  if (!completeUserData) {
+    return ctx.reply('Desculpe, não consegui encontrar o perfil desse usuário. 😔')
+  }
+
+  let badges = completeUserData?.badgeEmojis || []
+  if (userD.isAdmin) badges = [...badges, '👮‍♂️']
+  if (userD.isBanned) badges = [...badges, '🚫']
+  if (userD.isPremium) badges = [...badges, '💎']
+  // remove duplicates
+  badges = [...new Set(badges)]
 
   // get favorite card
   const favoriteCard = await getCardByID(completeUserData!.favoriteCard?.cardId)
 
   const data = {
     avatarURL,
-    username: ctx.from!.raw_first_name,
-    bio: ctx.profileData.biography,
-    favoriteColor: ctx.profileData.favoriteColor,
-    reputation: ctx.profileData.reputation,
-    coins: ctx.userData.coins,
+    username: tgUser.first_name,
+    bio: completeUserData.biography,
+    favoriteColor: completeUserData.favoriteColor,
+    reputation: completeUserData.reputation,
+    coins: userD.coins,
     backgroundURL: parseImageString(completeUserData!.background?.image!, undefined, true),
     favoriteCardImageURL: favoriteCard && (parseImageString(favoriteCard!.image, undefined, true) ?? MISSING_CARD_IMG),
     favoriteCardName: favoriteCard && favoriteCard!.name,
     favoriteCardRarity: favoriteCard && rarityIdToName[favoriteCard!.rarityId],
     position: 1,
-    badgeEmojis: completeUserData?.badgeEmojis[0] ? completeUserData?.badgeEmojis : undefined,
-    totalCards: await getUserCardsCount(ctx.userData.id),
-    stickerURL: completeUserData?.stickers && parseImageString(completeUserData?.stickers?.image)
+    badgeEmojis: badges,
+    totalCards: await getUserCardsCount(userD.id),
+    stickerURL: completeUserData?.stickerId && parseImageString(completeUserData?.stickers?.image!, undefined, true)
   }
 
   const dittoData = await _brklyn.generateImage('user_profile', data)
@@ -59,7 +76,7 @@ export default async (ctx: BotContext) => {
   }
 
   await ctx.replyWithPhoto(dittoData.url, {
-    caption: `🖼 Perfil de <b>${escapeForHTML(ctx.from!.first_name)}</b>\n\n<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
+    caption: `🖼 <code>${userD.id}</code>. <b>${escapeForHTML(tgUser.first_name)}</b>\n\n<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
     parse_mode: 'HTML'
   })
 
