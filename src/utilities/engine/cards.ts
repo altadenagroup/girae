@@ -171,7 +171,7 @@ export const getDrawnCardCount = async (cardID: number) => {
 }
 
 // selects a random card given a rarity, a category and a subcategory.
-export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory) => {
+export const selectRandomCard = async (rarity: Rarity, category: Category, subcategory: Subcategory, noRarity: boolean = false) => {
   // rarity fallback
   if (!rarity) rarity = await getRarityById(1) as Rarity
 
@@ -187,12 +187,14 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
     id: number
   }[]>(
     `
-    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id} AND "rarityId" = ${rarity.id};
+    SELECT * FROM "Card" WHERE "categoryId" = ${category.id} AND "subcategoryId" = ${subcategory.id}${!noRarity ? (' AND "rarityId" = '+ rarity.id.toString()) : ''};
     `
   )
 
   if (cards.length === 0) {
     // just return the first card in the subcategory
+    if (!noRarity) return selectRandomCard(rarity, category, subcategory, true)
+    
     return _brklyn.db.card.findFirst({
       where: {
         subcategoryId: subcategory.id
