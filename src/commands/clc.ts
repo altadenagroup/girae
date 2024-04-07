@@ -17,13 +17,22 @@ export default async (ctx: BotContext) => {
   }
   if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
   if (subs.length > 1) {
-    const text = subs.map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
+    // @ts-ignore
+    if (ctx.message.text.startsWith('/tag')) {
+      const text = subs
+        .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
+      return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas tags, use <code>/tag id</code>`)
+    }
+
+    const text = subs
+      .filter(sub => !sub.isSecondary)
+      .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
     return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas subcategorias, use <code>/clc id</code>`)
   }
 
   const sub = subs[0]
   const cardCount = await getCountOfCardsBySubcategory(sub)
-  if (cardCount === 0) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria')
+  if (cardCount === 0) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria/tag')
   // sort cards by rarest and get top 20
   const uc = await getCardsOnSubcategoryOwnedByUser(sub, ctx.userData).then((g) => g.map((r) => r.card.id))
 
