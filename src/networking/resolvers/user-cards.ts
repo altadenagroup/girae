@@ -236,12 +236,22 @@ export class UserCardsResolver {
     @Ctx() _: any,
     @Info() _a: any
   ) {
-    return await _brklyn.db.shopItem.findMany().then((t) => {
-      return t.map((i) => {
+    const dRaw = await _brklyn.db.$queryRawUnsafe('SELECT * FROM "ShopItem" WHERE type = \'BACKGROUND\' ORDER BY RANDOM() LIMIT 40').then((d) => {
+      return (d as ShopItem[]).map((i) => {
         i.image = parseImageString(i.image, false, undefined)
         return i
       })
     })
+
+    const stRaw = await _brklyn.db.$queryRawUnsafe('SELECT * FROM "ShopItem" WHERE type = \'STICKER\' ORDER BY RANDOM() LIMIT 40').then((d) => {
+      return (d as ShopItem[]).map((i) => {
+        i.image = parseImageString(i.image, false, undefined)
+        return i
+      })
+    })
+
+    const draws = await _brklyn.db.shopItem.findMany({ where: { type: 'DRAWS' } })
+    return [...dRaw, ...stRaw, ...draws]
   }
 
   @Mutation(_returns => Boolean)
