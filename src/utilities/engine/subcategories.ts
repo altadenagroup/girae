@@ -132,7 +132,7 @@ export const migrateCardsToSubcategory = async (tagName: string) => {
 
   const sub = await _brklyn.db.subcategory.create({
     data: {
-      name: cards[0].tags[0],
+      name: cards[0].tags.filter(tag => tag.toLowerCase() === tagName.toLowerCase())[0],
       isSecondary: true,
       categoryId: cards[0].categoryId
     }
