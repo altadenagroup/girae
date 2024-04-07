@@ -10,7 +10,9 @@ import {
   cancelTrade,
   finishDMStage,
   finishTrade,
+  getCards,
   getUserNumber,
+  removeCard,
   setUserDone,
   setUserReady
 } from '../scenes/start-trade.js'
@@ -49,8 +51,13 @@ tcqc.add<AddCardData>('add-card', async (ctx) => {
   if (!ecData) return ctx.answerCbQuery('Você não está em uma troca de cartas! 😅')
   const userCardCount = await getHowManyCardsUserHas(ctx.userData.id, cid)
   if (userCardCount === 0) return ctx.answerCbQuery('Você não tem essa carta! 😅')
+  const userCards = await getCards(ctx)
   const card = await getCardFullByID(cid)
   if (!card) return ctx.reply('Essa carta não existe! 😅')
+  // check if the user already has this card in the trade and, if so, if they have enough to trade
+  const cardInTrade = userCards.find((card) => card.id === cid)
+  if (cardInTrade?.count === userCardCount) return ctx.answerCbQuery(`Você não pode adicionar mais ${card.name}s à troca - você já colocou todos os que tem! 😅`)
+
   const cardData = {
     name: card.name,
     id: card.id,
@@ -61,6 +68,15 @@ tcqc.add<AddCardData>('add-card', async (ctx) => {
   const r = await appendCards(ctx, cardData)
   if (r === false) return ctx.answerCbQuery('Você só pode trocar 3 cards de uma vez! 😅')
   return ctx.answerCbQuery('Carta adicionada! 😄')
+})
+
+tcqc.add<AddCardData>('remove-card', async (ctx) => {
+  const { cid } = ctx.data
+  const ecData = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
+  if (!ecData) return ctx.answerCbQuery('Você não está em uma troca de cartas! 😅')
+  const r = await removeCard(ctx, cid)
+  if (r === false) return ctx.answerCbQuery('Essa carta não está na troca! 😅')
+  return ctx.answerCbQuery('Carta removida! 😄')
 })
 
 tcqc.add<{}>('ready-trade', async (ctx) => {

@@ -262,7 +262,7 @@ export class BrooklynCacheLayer {
   }
 
   async setexp (namespace: string, key: string, value: any, seconds: number) {
-    if (process.env.NO_CACHING) return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), { EX: 5 })
+    if (process.env.NO_CACHING && !namespace.startsWith('es2')) return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), { EX: 5 })
 
     return this.#cache.set(`${namespace}:${key}`, JSON.stringify(value), {
       EX: seconds

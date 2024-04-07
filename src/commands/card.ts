@@ -59,6 +59,10 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
           [{
             text: '➕ Trocar este card',
             callback_data: tcqc.generateCallbackQuery('add-card', { cid: char.id })
+          }],
+          [{
+            text: '➖ Retirar este card da troca',
+            callback_data: tcqc.generateCallbackQuery('remove-card', { cid: char.id })
           }]
         ]
       }

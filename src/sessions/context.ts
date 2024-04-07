@@ -21,6 +21,8 @@ export interface SessionContext<T> extends BotContext {
     setAttribute: (key: string, value: any) => void
     nextStepData: (data: string) => string
     getCurrentStepData: <T>(parsingFn: ((string) => T | undefined) | undefined) => T | undefined
+    generateSessionQuery (data: string): string
+    getDataFromSessionQuery: <T>(parsingFn: ((string) => T | undefined) | undefined) => T | undefined
   }
 
   callbackQuery: {

@@ -14,7 +14,6 @@ if (process.env.RUN_BETA) {
 
 import Brooklyn from './Brooklyn.js'
 
-
 const client = createClient({url: process.env.REDIS_URL})
 client.on('error', (err) => {
   console.error('An error occurred:', err)
@@ -29,7 +28,7 @@ global._brklyn = new Brooklyn(client as RedisClientType)
 if (!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) _brklyn.launchPlugins()
 
 if (process.env.LAUNCH_POLLING) {
-  await _brklyn.launch()
+  await _brklyn.launch(undefined, () => info('giraê', `logged in as @${_brklyn.botInfo!.username}`))
 } else {
   _brklyn.setUpNetworkingFeatures()
 }

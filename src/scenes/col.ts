@@ -22,7 +22,7 @@ const modifierDescriptions = {
 
 class CollectionPages extends PaginatedScene<CollectionData> {
   constructor () {
-    super('SHOW_COLLECTION', [])
+    super('SHOW_CLC', [])
 
     this.addModifier('1', '☀')
     this.addModifier('2', '🌙')

@@ -29,28 +29,28 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   constructor (public id: string, public handlers: SceneHandler<T>[],
     public allowedEvents: UpdateType[] = ['callback_query']) {}
 
-  generateCallbackText (renderPage: number, userID: number, totalPages: number, modifiers: string[]) {
-    return `ES2S.${this.id}.${userID}.${renderPage}/${totalPages}.${modifiers.join(',')}`
+  generateCallbackText (ctx, renderPage: number, userID: number, totalPages: number, modifiers: string[]) {
+    return ctx.session.generateSessionQuery(`${this.id}.${userID}.${renderPage}/${totalPages}.${modifiers.join(',')}`)
   }
 
-  dataAppendingModifier (data: T, modifier: string) {
-    return this.generateCallbackText(data.currentPage, data.userID, data.totalPages, [...data.currentModifiers, modifier])
+  dataAppendingModifier (ctx, data: T, modifier: string) {
+    return this.generateCallbackText(ctx, data.currentPage, data.userID, data.totalPages, [...data.currentModifiers, modifier])
   }
 
-  dataRemovingModifier (data: T, modifier: string) {
-    return this.generateCallbackText(data.currentPage, data.userID, data.totalPages, data.currentModifiers.filter((m) => m !== modifier))
+  dataRemovingModifier (ctx, data: T, modifier: string) {
+    return this.generateCallbackText(ctx, data.currentPage, data.userID, data.totalPages, data.currentModifiers.filter((m) => m !== modifier))
   }
 
-  dataGoingToPage (data: T, page: number) {
-    return this.generateCallbackText(page, data.userID, data.totalPages, data.currentModifiers)
+  dataGoingToPage (ctx, data: T, page: number) {
+    return this.generateCallbackText(ctx, page, data.userID, data.totalPages, data.currentModifiers)
   }
 
-  determinePage (data: string, dataD: T) {
-    if (data === 'FIRST_PAGE') return this.dataGoingToPage(dataD, 0)
-    if (data === 'LAST_PAGE') return this.dataGoingToPage(dataD, dataD.totalPages - 1)
-    if (data === 'NEXT_PAGE' && dataD.currentPage < (dataD.totalPages - 1)) return this.dataGoingToPage(dataD, dataD.currentPage + 1)
-    if (data === 'PREVIOUS_PAGE' && dataD.currentPage > 0) return this.dataGoingToPage(dataD, dataD.currentPage - 1)
-    return this.generateCallbackText(dataD.currentPage, dataD.userID, dataD.totalPages, dataD.currentModifiers)
+  determinePage (ctx, data: string, dataD: T) {
+    if (data === 'FIRST_PAGE') return this.dataGoingToPage(ctx, dataD, 0)
+    if (data === 'LAST_PAGE') return this.dataGoingToPage(ctx, dataD, dataD.totalPages - 1)
+    if (data === 'NEXT_PAGE' && dataD.currentPage < (dataD.totalPages - 1)) return this.dataGoingToPage(ctx, dataD, dataD.currentPage + 1)
+    if (data === 'PREVIOUS_PAGE' && dataD.currentPage > 0) return this.dataGoingToPage(ctx, dataD, dataD.currentPage - 1)
+    return this.generateCallbackText(ctx, dataD.currentPage, dataD.userID, dataD.totalPages, dataD.currentModifiers)
   }
 
   shouldAddButton (data: T, button: string) {
@@ -62,7 +62,7 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   }
 
   parseData (data: string): [number, number, string[]] {
-    const [_es2, _id, _user, page, modifiers] = data.split('.')
+    const [_es2, _sk, _id, _user, page, modifiers] = data.split('.')
     const [currentPage, totalPages] = page.split('/').map((n) => parseInt(n))
     return [currentPage, totalPages, modifiers.split(',').filter((m) => m.length > 0)]
   }
@@ -71,11 +71,11 @@ export class PaginatedScene<T extends PaginatedSceneData> {
     return data.split('.')[2] === `${userID}`
   }
 
-  generateButtons (dataD: T): InlineKeyboardButton[][] {
+  generateButtons (ctx, dataD: T): InlineKeyboardButton[][] {
     const customButtons = this.buttons.map(([text, data]) => {
       return {
         text: dataD.currentModifiers.includes(data) ? `✅` : `${text}`,
-        callback_data: dataD.currentModifiers.includes(data) ? this.dataRemovingModifier(dataD, data) : this.dataAppendingModifier(dataD, data)
+        callback_data: dataD.currentModifiers.includes(data) ? this.dataRemovingModifier(ctx, dataD, data) : this.dataAppendingModifier(ctx, dataD, data)
       }
     }) as InlineKeyboardButton[]
 
@@ -86,7 +86,7 @@ export class PaginatedScene<T extends PaginatedSceneData> {
         .map((button) => {
           return {
             text: button.text,
-            callback_data: this.determinePage(button.data, dataD)
+            callback_data: this.determinePage(ctx, button.data, dataD)
           }
         })] : [])
     ]
@@ -106,14 +106,14 @@ export class PaginatedScene<T extends PaginatedSceneData> {
       return ctx.editMessageCaption(text, {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: this.generateButtons(ctx.session.data)
+          inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
       })
     } else {
       return ctx.editMessageText(text, {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: this.generateButtons(ctx.session.data)
+          inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
       })
     }
@@ -127,13 +127,13 @@ export class PaginatedScene<T extends PaginatedSceneData> {
         caption: text,
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: this.generateButtons(ctx.session.data)
+          inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
       }).then((msg) => ctx.session.setMainMessage(msg.message_id))
     } else {
       return ctx.replyWithHTML(text, {
         reply_markup: {
-          inline_keyboard: this.generateButtons(ctx.session.data)
+          inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
       }).then((msg) => ctx.session.setMainMessage(msg.message_id))
     }
@@ -155,14 +155,7 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   }
 
   async run(ctx: SessionContext<T>): Promise<CurrentSceneStatus> {
-    if (ctx.callbackQuery) {
-      if (!this.userMatches(ctx.callbackQuery.data, ctx.userData.id)) {
-        await ctx.answerCbQuery('Esse comando não é para você.')
-        return { nextStep: 0 } as CurrentSceneStatus
-      }
-    }
-
-    if (ctx.session.data._mainMessage) {
+    if (ctx.updateType === 'callback_query') {
       await this.handleCallback(ctx)
     } else {
       this.setInitialData(ctx)

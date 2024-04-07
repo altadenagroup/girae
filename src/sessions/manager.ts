@@ -22,6 +22,7 @@ interface SessionData {
   scene: string
   currentStep: number
   es2Enabled: true
+  sessionKey: string
   data?: { [key: string]: any }
 }
 
@@ -42,7 +43,6 @@ export class SessionManager {
   }
 
   async middleware (ctx: BotContext, next: () => void) {
-    if (ctx.update.update_id === 887199123) return
     if (!ctx.from || ctx.chatBoost) {
       return next()
     }
@@ -50,10 +50,15 @@ export class SessionManager {
     // @ts-ignore
     if (ctx.callbackQuery?.data?.startsWith?.('ES2.')) {
       // @ts-ignore
+      if (ctx.callbackQuery.data!.startsWith('ES2.es2-end-session')) {
+        return this.cancelSession(ctx)
+      }
+      // @ts-ignore
       debug('es²', `received callback query: ${ctx.callbackQuery.data}`)
       if (await tcqc.handle(ctx as ExtendedBotContext<any>)) {
         return
       }
+
       // @ts-ignore
     } else if (ctx.callbackQuery?.data?.endsWith?.('ADD_CARD')) {
       return next()
@@ -61,26 +66,47 @@ export class SessionManager {
 
     this.addES2Methods(ctx)
 
+    // if this update contains a callback query starting with ES2D, it means the session key is included in the payload, so we can just resume the session
+    // @ts-ignore
+    if (ctx.callbackQuery?.data?.startsWith?.('ES2D.')) {
+      // @ts-ignore
+      const sessionKey = ctx.callbackQuery.data.split('.').slice(1)[0]
+      const session = await this.bot.cache.get('es2_sessions', sessionKey)
+      if (!session) {
+        await ctx.answerCbQuery('1 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        return next()
+      }
+      // get attached users. if the sender isn't one of them, return
+      if (session.sessionID !== this.generateUserKey(ctx)) {
+        await ctx.answerCbQuery('2 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        return next()
+      }
+
+      const scene = this.scenes.find(s => s.id === session.scene)
+      if (!scene) {
+        warn('es²', `tried to resume scene ${session.scene} but it was not found`)
+        await ctx.answerCbQuery('3 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        return next()
+      }
+      const allowedUpdates = scene.allowedEvents
+      if (allowedUpdates && allowedUpdates.length > 0 && !allowedUpdates.includes(ctx.updateType)) {
+        return next()
+      }
+
+      const userKey = this.generateUserKey(ctx)
+      await this.handleSession(ctx as SessionContext<any>, session, scene, userKey).catch((e) => {
+        error('es²', `error while resuming session: ${e.stack}`)
+      })
+      return
+    }
+
     const key = this.generateUserKey(ctx)
     const sessionKey = await this.bot.cache.get('es2_user_keys', key)
     if (!sessionKey) return next()
 
     const session = await this.bot.cache.get('es2_sessions', sessionKey)
     if (!session || !session.es2Enabled) return next()
-    // @ts-ignore
-    if (ctx.callbackQuery?.data?.startsWith?.('ES2S.')) {
-      // @ts-ignore
-      const [scene, step, data] = ctx.callbackQuery.data.split('.').slice(1)
-      if (session.scene !== scene) {
-        warn('es²', `tried to run scene ${scene}, but es2 is currently running scene ${session.scene}`)
-        // in this case, let's run the ES2S callback anyway, as it might be a valid callback for another scene
-        session.scene = scene
-      }
-      session.currentStep = parseInt(step)
-    // @ts-ignore
-    } else if (!ctx.callbackQuery?.data?.startsWith?.('ES2S.') && session.data.totalPages) {
-      return next()
-    }
+
 
     const checks = await this.checkAttributes(ctx as SessionContext<any>, session.data)
     if (!checks) return next()
@@ -146,6 +172,17 @@ export class SessionManager {
       nextStepData: (data) => {
         return `ES2S.${session.scene}.${(session.currentStep || 0) + 1}.${data}`
       },
+      generateSessionQuery: (data) => {
+        return `ES2D.${session.sessionKey}.${data}`
+      },
+      getDataFromSessionQuery: (parseFn = undefined) => {
+        // @ts-ignore
+        const data = ctx.callbackQuery?.data
+        if (!data) return
+        // @ts-ignore
+        const d = data.split('.').slice(2).join('.')
+        return parseFn ? parseFn(d) : d as any
+      },
       getCurrentStepData: (parseFn = undefined) => {
         // @ts-ignore
         const data = ctx.callbackQuery?.data
@@ -163,13 +200,13 @@ export class SessionManager {
 
     if (status?.nextStep !== undefined) {
       session.currentStep = status.nextStep
-      await this.bot.cache.set('es2_sessions', userKey, {
+      await this.bot.cache.setexp('es2_sessions', session.sessionKey, {
         ...session,
         data: ctx.session.data,
         currentStep: status.nextStep
-      })
+      }, 60 * 60 * 24)
     } else {
-      await this.deleteSession(userKey)
+      await this.deleteSession(session.sessionKey)
     }
   }
 
@@ -207,32 +244,15 @@ export class SessionManager {
       return
     }
 
-    const key = this.generateUserKey(ctx)
-    const sessionKey = await this.bot.cache.get('es2_user_keys', key)
-    if (!sessionKey) {
-      return
-    }
-
-    const session = await this.bot.cache.get('es2_sessions', sessionKey)
-    if (!session) {
-      return
-    }
-
     if (ctx.callbackQuery) {
-      await ctx.deleteMessage()
-    } else if (session.data._mainMessage) {
-      await this.bot.telegram.deleteMessage(ctx.chat!.id, session.data._mainMessage).catch((e) => {
-        warn('es²', `(${key}) failed to delete main message: ${e.message}`)
-      })
+      await ctx.deleteMessage().catch(() => {})
     }
-
     await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
 
     // @ts-ignore
     if (ctx.callbackQuery?.data) await ctx.answerCbQuery('🚪 Comando cancelado.')
     else await ctx.reply('🚪 Comando cancelado.')
 
-    await this.deleteSession(sessionKey)
   }
 
   applyCtxMutations (ctx: SessionContext<any>) {
@@ -263,13 +283,18 @@ export class SessionManager {
   async createSession (ctx: BotContext, initialData: SessionData) {
     const key = this.generateUserKey(ctx)
     const sessionKey = generateID(12)
-    await this.bot.cache.set('es2_user_keys', key, sessionKey)
-    await this.bot.cache.set('es2_sessions', sessionKey, initialData)
-    await this.bot.cache.set('es2_attached_users', sessionKey, [key])
+    await this.bot.cache.setexp('es2_user_keys', key, sessionKey, 60 * 60 * 24)
+    await this.bot.cache.setexp('es2_sessions', sessionKey, {
+      ...initialData,
+      sessionKey,
+      sessionID: key
+    }, 60 * 60 * 24)
+    await this.bot.cache.setexp('es2_attached_users', sessionKey, [key], 60 * 60 * 24)
 
     return {
-      userKey: key,
-      sessionID: sessionKey
+      ...initialData,
+      sessionID: key,
+      sessionKey
     }
   }
 
@@ -301,7 +326,6 @@ export class SessionManager {
       }
     }
     await this.bot.cache.del('es2_sessions', sessionID)
-    await this.bot.cache.del('es2_attached_users', sessionID)
     debug('es²', `deleted session ${sessionID}`)
   }
 
@@ -320,18 +344,14 @@ export class SessionManager {
       throw new Error(`Scene with ID ${sceneID} not found`)
     }
 
-    const { sessionID } = await this.createSession(ctx, {
+    const data = await this.createSession(ctx, {
       scene: sceneID,
       currentStep: 0,
-      es2Enabled: true
+      es2Enabled: true,
+      sessionKey: ''
     })
 
-    const session = await this.bot.cache.get('es2_sessions', sessionID)
-    if (!session) {
-      throw new Error(`Session with ID ${sessionID} not found`)
-    }
-
-    await this.handleSession(ctx as SessionContext<any>, session, scene, sessionID, args)
+    await this.handleSession(ctx as SessionContext<any>, data, scene, data.sessionID, args)
   }
 
   // ephemeral contexts are a type of context that does not intercept user messages, but simply saves it so commands can ceck for it and use a defined behavior.

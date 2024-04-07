@@ -6,7 +6,7 @@ import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
-import { debug, warn } from 'melchior'
+import { warn } from 'melchior'
 import * as Sentry from '@sentry/node'
 
 const ACCEPT_TRADE = 'accept_trade'
@@ -166,12 +166,9 @@ Para cancelar, use /cancelar.
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
       type: 'photo',
-      media: imgURL.url
+      media: imgURL.url,
+      caption: text
     }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-    await _brklyn.telegram.editMessageCaption(trade.users[0], displayMessageID1, undefined, text, {
-      parse_mode: 'HTML' as ParseMode,
-      ...msgData
-    }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   }
 
   if (!displayMessageID2) {
@@ -184,12 +181,9 @@ Para cancelar, use /cancelar.
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
       type: 'photo',
-      media: imgURL.url
+      media: imgURL.url,
+      caption: text
     }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
-    await _brklyn.telegram.editMessageCaption(trade.users[1], displayMessageID2, undefined, text, {
-      parse_mode: 'HTML' as ParseMode,
-      ...msgData
-    }).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   }
 
   // edit main msg
@@ -216,12 +210,35 @@ export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boo
 
 const sessionsBeingUpdated = new Set<string>()
 
+export const getCards = async (ctx: BotContext) => {
+  const tradeID = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
+  const userNumber = await getUserNumber(ctx)
+  return await _brklyn.cache.get(`ongoing_trades_cards${userNumber}`, tradeID)
+}
+
 export const appendCards = async (ctx: BotContext, card: any) => {
   const tradeID = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
   const userNumber = await getUserNumber(ctx)
   const cards = await _brklyn.cache.get(`ongoing_trades_cards${userNumber}`, tradeID)
   if (cards.length >= 3) return false
   cards.push(card)
+  await _brklyn.cache.set(`ongoing_trades_cards${userNumber}`, tradeID, cards)
+  // if this session is already being updated, wait 1s and try again
+  if (sessionsBeingUpdated.has(tradeID)) {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+  sessionsBeingUpdated.add(tradeID)
+  await updateDisplayMessages(tradeID)
+  sessionsBeingUpdated.delete(tradeID)
+}
+
+export const removeCard = async (ctx: BotContext, card: any) => {
+  const tradeID = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
+  const userNumber = await getUserNumber(ctx)
+  const cards = await _brklyn.cache.get(`ongoing_trades_cards${userNumber}`, tradeID)
+  const index = cards.findIndex((c) => c.id === card.id)
+  if (index === -1) return false
+  cards.splice(index, 1)
   await _brklyn.cache.set(`ongoing_trades_cards${userNumber}`, tradeID, cards)
   // if this session is already being updated, wait 1s and try again
   if (sessionsBeingUpdated.has(tradeID)) {
@@ -241,7 +258,7 @@ export const finishDMStage = async (tradeID: string) => {
     reply_markup: {
       inline_keyboard: [
         [{
-          text: '🔙 Voltar à mensagem',
+          text: '🔙 Voltar à mensagem para confirmar a troca',
           url: generateMessageLink(trade.chatId, trade.msgToEdit, trade.threadId)
         }]
       ]
@@ -322,7 +339,6 @@ export const finishTrade = async (tradeID: string) => {
 
   const adds = {}
   if (trade.threadId) {
-    debug('finishTrade', 'threadId is ' + trade.threadId)
     adds['message_thread_id'] = trade.threadId
   }
 
@@ -368,7 +384,7 @@ export const finishTrade = async (tradeID: string) => {
 
     // check if the count matches. if it doesn't, cancel
     if (cards.length !== cardGroups1[id]) {
-      await _brklyn.telegram.sendMessage(trade.chatId, `Não foi possível completar a troca porquê ${mention(trade.names[0], trade.users[0])} não tem todos os cards que ofereceu. Que tenso!`, {
+      await _brklyn.telegram.sendMessage(trade.chatId, `Não foi possível completar a troca, já que ${mention(trade.names[0], trade.users[0])} não tem todos os cards que ofereceu. Que tenso!`, {
         parse_mode: 'HTML' as ParseMode,
         ...adds
       })
@@ -390,7 +406,7 @@ export const finishTrade = async (tradeID: string) => {
     })
 
     if (cards.length !== cardGroups2[id]) {
-      await _brklyn.telegram.sendMessage(trade.chatId, `Não foi possível completar a troca porquê ${mention(trade.names[1], trade.users[1])} não tem todos os cards que ofereceu. Que tenso!`, {
+      await _brklyn.telegram.sendMessage(trade.chatId, `Não foi possível completar a troca, já que ${mention(trade.names[1], trade.users[1])} não tem todos os cards que ofereceu. Que tenso!`, {
         parse_mode: 'HTML' as ParseMode,
         ...adds
       })
@@ -470,6 +486,7 @@ export const cancelTrade = async (tradeID: string) => {
   if (trade.threadId) {
     adds['message_thread_id'] = trade.threadId
   }
+
   await _brklyn.telegram.sendMessage(trade.chatId, text, {
     parse_mode: 'HTML' as ParseMode,
     ...adds

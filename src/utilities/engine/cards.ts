@@ -389,3 +389,18 @@ export const deleteUserCard = async (id: number) => {
     }
   })
 }
+
+// transfers cards between two users. the cards are not deleted, they are just transferred by editing the userId.
+export const transferCards = async (from: User, to: User, cardIds: number[]) => {
+  return await _brklyn.db.userCard.updateMany({
+    where: {
+      userId: from.id,
+      cardId: {
+        in: cardIds
+      }
+    },
+    data: {
+      userId: to.id
+    }
+  })
+}

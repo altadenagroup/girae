@@ -37,10 +37,12 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   const keyboard = categories.map((category) => {
     return {
       text: category.emoji + ' ' + category.name,
-      callback_data: ctx.session.nextStepData(category.id.toString())
+      callback_data: ctx.session.generateSessionQuery(category.id.toString())
     } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
+
+  ctx.session.steps.jumpTo(1)
 
   const text = `<b>ATENÇÃO: ESTE COMANDO ESTÁ EM DESENVOLVIMENTO. AS ATUAIS CARTAS E POSSÍVEIS ERROS NÃO REPRESENTAM A QUALIDADE FINAL DO BOT.</b>
 
@@ -73,10 +75,10 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
 
 
-const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => {
-  const categoryId = ctx.session.getCurrentStepData<number>(parseInt)
-  if (!categoryId && !category) return
-  const cat = category || await getCategoryByID(categoryId!)
+const secondStep = async (ctx: SessionContext<DrawData>) => {
+  const categoryId = ctx.session.getDataFromSessionQuery<number>(parseInt)
+  if (!categoryId) return
+  const cat = await getCategoryByID(categoryId!)
   if (!cat) {
     await ctx.session.deleteMainMessage()
     ctx.session.steps.leave()
@@ -89,7 +91,7 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
   const keyboard = subcategories.map((sub, i) => {
     return {
       text: `${NUMBER_EMOJIS[i + 1]}`,
-      callback_data: ctx.session.nextStepData(sub.id.toString())
+      callback_data: ctx.session.generateSessionQuery(sub.id.toString())
     } as InlineKeyboardButton
   })
   const chunked = keyboard.chunk(2)
@@ -100,23 +102,9 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
 
   await deduceDraw(ctx.userData.id)
 
-  if (category) {
-    ctx.session.steps.jumpTo(2)
+  ctx.session.steps.next()
 
-    await ctx.replyWithAnimation('https://altadena.space/assets/girar-two.mp4', {
-      caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: chunked
-      }
-    }).then(async (msg) => {
-      ctx.session.setMainMessage(msg.message_id)
-    }).catch(async (e) => {
-      warn('scenes.draw', 'could not send message: ' + e.message)
-      return exitCommand(ctx, true, 'Esse comando expirou. Gire novamente.')
-    })
-  } else {
-    await ctx.editMessageMedia({
+  await ctx.editMessageMedia({
       type: 'animation',
       media: 'https://altadena.space/assets/girar-two.mp4',
       caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
@@ -125,16 +113,15 @@ const secondStep = async (ctx: SessionContext<DrawData>, category: Category) => 
       reply_markup: {
         inline_keyboard: chunked
       },
-    }).then(() => ctx.session.steps.next()).catch(async (e) => {
+    }).catch(async (e) => {
       warn('scenes.draw', 'could not edit message: ' + e.message)
+      await addDraw(ctx.userData.id)
       return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
     })
-
-  }
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
-  const subcategoryId = ctx.session.getCurrentStepData<number>(parseInt)
+  const subcategoryId = ctx.session.getDataFromSessionQuery<number>(parseInt)
   if (!subcategoryId) return
 
   ctx.session.steps.leave()

@@ -30,7 +30,7 @@ export default async (ctx: BotContext) => {
     userID: ctx.userData.id
   }
 
-  return ctx.es2.enter('SHOW_COLLECTION', args)
+  return ctx.es2.enter('SHOW_CLC', args)
 }
 
 export const info = {
