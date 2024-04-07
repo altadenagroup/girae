@@ -154,7 +154,7 @@ export class SessionManager {
       manager: this,
       steps: sceneController,
       arguments: args,
-      attachUserToSession: (user: User) => this.attachUser(userKey, ctx, user),
+      attachUserToSession: (user: User) => this.attachUser(session.sessionKey, ctx, user),
       setMainMessage: (messageId: number) => {
         ctx.session.data._mainMessage = messageId
       },

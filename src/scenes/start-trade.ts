@@ -167,7 +167,8 @@ Para cancelar, use /cancelar.
     await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
       type: 'photo',
       media: imgURL.url,
-      caption: text
+      caption: text,
+      parse_mode: 'HTML' as ParseMode
     }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   }
 
@@ -182,7 +183,8 @@ Para cancelar, use /cancelar.
     await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
       type: 'photo',
       media: imgURL.url,
-      caption: text
+      caption: text,
+      parse_mode: 'HTML' as ParseMode
     }, msgData).catch((e) => warn('updateDisplayMessages', 'could not edit message: ' + e.message))
   }
 
@@ -236,7 +238,7 @@ export const removeCard = async (ctx: BotContext, card: any) => {
   const tradeID = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
   const userNumber = await getUserNumber(ctx)
   const cards = await _brklyn.cache.get(`ongoing_trades_cards${userNumber}`, tradeID)
-  const index = cards.findIndex((c) => c.id === card.id)
+  const index = cards.findIndex((c) => c.id === card)
   if (index === -1) return false
   cards.splice(index, 1)
   await _brklyn.cache.set(`ongoing_trades_cards${userNumber}`, tradeID, cards)
