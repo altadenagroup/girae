@@ -21,12 +21,13 @@ export const bootstrap = async () => {
   if (process.env.MAIN_CONTAINER || process.env.RUN_GQL) {
     await bootstrapGQLServer()
   } else {
-    const webhook = _brklyn.webhookCallback(`/telegraf/${_brklyn.secretPathComponent()}`, {
+    info('networking', 'starting webhook server')
+    const webhook = _brklyn.webhookCallback(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, {
       secretToken: undefined
     })
 
     // @ts-ignore
-    app!.post(`/telegraf/${_brklyn.secretPathComponent()}`, webhook)
+    app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, webhook)
 
     app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
