@@ -1,11 +1,20 @@
 import { BotContext } from '../types/context.js'
-import { getCountCardsOnSubcategoryOwnedByUser, getCardsOnSubcategoryOwnedByUser, getCountOfCardsBySubcategory } from '../utilities/engine/cards.js'
+import { getCountCardsOnSubcategoryOwnedByUser, getCardsOnSubcategoryOwnedByUser, getCountOfCardsBySubcategory, getCardsByTag } from '../utilities/engine/cards.js'
+import { migrateCardsToSubcategory } from '../utilities/engine/subcategories.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID da subcategoria a ser vista', '/clc Red Velvet')
-  let subs = await getSubcategoryFromArg(ctx.args.join(' '))
+  // @ts-ignore
+  let subs = await getSubcategoryFromArg(ctx.args.join(' '), ctx.message.text.startsWith('/tag'))
+  // @ts-ignore
+  if (!subs[0] && ctx.message.text.startsWith('/tag')) {
+    // check if there are any cards with the tag
+    const cards = await getCardsByTag(ctx.args.join(' '))
+    if (!cards || !cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card com essa tag')
+    subs = [await migrateCardsToSubcategory(ctx.args.join(' '))]
+  }
   if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
   if (subs.length > 1) {
     const text = subs.map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
@@ -39,5 +48,5 @@ export default async (ctx: BotContext) => {
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['sub', 'colec', 'collec', 'col']
+  aliases: ['sub', 'colec', 'collec', 'col', 'tag']
 }

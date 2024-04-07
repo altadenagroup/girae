@@ -16,15 +16,15 @@ export const getCardFromArg = async (arg: string) => {
   }
 }
 
-export const getSubcategoryFromArg = async (arg: string) => {
+export const getSubcategoryFromArg = async (arg: string, onlySecondaries: boolean = false) => {
   if (!arg) return null
   if (!isNaN(Number(arg))) {
     return [await getSubcategoryByID(Number(arg))]
   } else {
     // try getting by name
-    const subcategory = await getSubcategoryByName(arg)
+    const subcategory = await getSubcategoryByName(arg, onlySecondaries)
     if (subcategory) return [subcategory]
-    return searchSubcategories(escapeNamePG(arg).split(' ').join(' & '))
+    return searchSubcategories(escapeNamePG(arg).split(' ').join(' & '), onlySecondaries)
   }
 }
 

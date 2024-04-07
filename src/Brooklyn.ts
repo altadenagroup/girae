@@ -43,7 +43,7 @@ export default class Brooklyn extends Client {
   es2: SessionManager
   images = new S3Storage('girae-images')
   ditto = new Ditto()
-  #internalCache: RedisClientType = {} as RedisClientType
+  internalCache: RedisClientType = {} as RedisClientType
 
   constructor (cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {
@@ -59,7 +59,7 @@ export default class Brooklyn extends Client {
       middlewares: []
     })
 
-    this.#internalCache = cache
+    this.internalCache = cache
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.es2 = new SessionManager(this)
@@ -235,7 +235,7 @@ export default class Brooklyn extends Client {
   private onExit (code: number) {
     info('bot', `Exiting with code ${code}`)
     this.db.$disconnect()
-    this.#internalCache.quit()
+    this.internalCache.quit()
     process.exit(code)
   }
 

@@ -1,5 +1,6 @@
 import {Subcategory} from "@prisma/client"
 import { getRandomNumber } from "../misc.js"
+import { getCardsByTag } from "./cards.js"
 
 export const createSubcategory = async (name: string, categoryID: number) => {
   return _brklyn.db.subcategory.create({
@@ -21,8 +22,8 @@ export const getSubcategoryByID = async (id: number): Promise<Subcategory | null
   })
 }
 
-export const getSubcategoryByName = async (name: string) => {
-  const cached = await _brklyn.cache.get('subcategories_name', name)
+export const getSubcategoryByName = async (name: string, isSecondary: boolean = false) => {
+  const cached = await _brklyn.cache.get('subcategories_name', name + isSecondary)
   if (cached) return cached
 
   let subcategory = await _brklyn.db.subcategory.findFirst({
@@ -30,7 +31,8 @@ export const getSubcategoryByName = async (name: string) => {
       name: {
         equals: name,
         mode: 'insensitive'
-      }
+      },
+      isSecondary: isSecondary === true ? true : { }
     },
     include: {
       category: true
@@ -42,7 +44,8 @@ export const getSubcategoryByName = async (name: string) => {
       where: {
         aliases: {
           has: name.toLowerCase()
-        }
+        },
+        isSecondary: isSecondary === true ? true : { }
       },
       include: {
         category: true
@@ -51,21 +54,22 @@ export const getSubcategoryByName = async (name: string) => {
   }
 
   if (subcategory) {
-    await _brklyn.cache.setexp('subcategories_name', name, subcategory, 10)
+    await _brklyn.cache.setexp('subcategories_name', name + isSecondary, subcategory, 10)
   }
 
   return subcategory
 }
 
-export const searchSubcategories = async (name: string) => {
-  const cached = await _brklyn.cache.get('subcategories_search', name)
+export const searchSubcategories = async (name: string, isSecondary: boolean = false) => {
+  const cached = await _brklyn.cache.get('subcategories_search', name + isSecondary)
   if (cached) return cached
 
   const subcategories = await _brklyn.db.subcategory.findMany({
     where: {
       name: {
         search: name
-      }
+      },
+      isSecondary: isSecondary === true ? true : { }
     },
     include: {
       category: true
@@ -73,7 +77,7 @@ export const searchSubcategories = async (name: string) => {
   })
 
   if (subcategories) {
-    await _brklyn.cache.setexp('subcategories_search', name, subcategories, 5 * 60)
+    await _brklyn.cache.setexp('subcategories_search', name + isSecondary, subcategories, 5 * 60)
   }
 
   return subcategories
@@ -121,4 +125,30 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
   return result
 }
 
+// migrates all cards with a certain tag to a new secondary subcategory
+export const migrateCardsToSubcategory = async (tagName: string) => {
+  const cards = await getCardsByTag(tagName)
+  if (!cards[0]) return
 
+  const sub = await _brklyn.db.subcategory.create({
+    data: {
+      name: cards[0].tags[0],
+      isSecondary: true,
+      categoryId: cards[0].categoryId
+    }
+  })
+
+  await Promise.all(cards.map(card => {
+    return _brklyn.db.card.update({
+      where: {
+        id: card.id
+      },
+      data: {
+        secondarySubcategories: { connect: { id: sub.id } },
+        tags: { set: card.tags.filter(t => t !== tagName) }
+      }
+    })
+  }))
+
+  return getSubcategoryByID(sub.id)
+}
