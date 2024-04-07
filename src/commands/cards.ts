@@ -1,8 +1,11 @@
 import { BotContext } from '../types/context.js'
+import { getMentionedTgUser, mentionUser } from '../utilities/telegram.js'
 
 export default async (ctx: BotContext) => {
   if (ctx.chat!.type !== 'private') {
-    return ctx.replyWithMarkdownV2('[Veja todas suas cartas e coleções clicando aqui\\!](https://t.me/giraebot/giraecards)')
+    const tgUser = await getMentionedTgUser(ctx, ctx.args[0])
+    const url = `https://t.me/giraebot/giraecards?startapp=${tgUser.id}.${tgUser.first_name}`
+    return ctx.replyWithHTML(`<a href="${url}">Veja todas as cartas e coleções ${ctx.from.id === tgUser.id ? 'suas' : ('de '+ mentionUser(tgUser))} clicando aqui!</a>`)
   }
 
   return ctx.reply('Para ver sua coleção...', {
@@ -19,7 +22,6 @@ export default async (ctx: BotContext) => {
       ]
     }
   })
-  return ctx.scene.enter('SHOW_USER_CARDS')
 }
 
 export const info = {

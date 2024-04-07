@@ -12,7 +12,7 @@ interface DeleteData {
 }
 
 const rarityIdToPrice = {
-  1: ['🥉 Comunm', 250],
+  1: ['🥉 Comum', 250],
   3: ['🥈 Raro', 500],
   4: ['🎖️ Lendário', 1000]
 }
