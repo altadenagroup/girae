@@ -37,5 +37,5 @@ export default async (ctx: BotContext) => {
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['sub', 'colec', 'collec', 'col', 'tag']
+  aliases: ['sub', 'colec', 'collec', 'col']
 }
