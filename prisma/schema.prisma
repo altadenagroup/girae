@@ -28,6 +28,7 @@ model Category {
   id            Int           @id @default(autoincrement())
   name          String        @unique
   emoji         String        @default("🃏")
+  image         String?
   subcategories Subcategory[]
   cards         Card[]
   ShopItem      ShopItem[]
@@ -40,27 +41,31 @@ model Subcategory {
   category       Category @relation(fields: [categoryId], references: [id])
   categoryId     Int
   image          String?
+  isSecondary    Boolean  @default(false)
+  aliases        String[] @default([])
   cards          Card[]
+  secondaryCards Card[]   @relation("SecondarySubcategory")
   rarityModifier Float    @default(0)
 }
 
 // Card: defines a collectible card. it has a name, a description, a rarity, a set of tags, an image, and a rarity modifier
 model Card {
-  id                  Int                   @id @default(autoincrement())
-  name                String
-  rarity              Rarity                @relation(fields: [rarityId], references: [id])
-  rarityId            Int
-  tags                String[]
-  image               String                @default("https://placehold.co/400x624?text=Use+/setimage+id+para+trocar%20esta%20imagem.")
-  rarityModifier      Float
-  category            Category              @relation(fields: [categoryId], references: [id])
-  categoryId          Int
-  subcategory         Subcategory?          @relation(fields: [subcategoryId], references: [id])
-  subcategoryId       Int?
-  usersWithCard       UserCard[]
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @default(now()) @updatedAt
-  UserCardPreferences UserCardPreferences[]
+  id                     Int                   @id @default(autoincrement())
+  name                   String
+  rarity                 Rarity                @relation(fields: [rarityId], references: [id])
+  rarityId               Int
+  tags                   String[]
+  image                  String                @default("https://placehold.co/400x624.png?text=Use+/setimage+id+para+trocar%20esta%20imagem.")
+  rarityModifier         Float
+  category               Category              @relation(fields: [categoryId], references: [id])
+  categoryId             Int
+  secondarySubcategories Subcategory[]         @relation("SecondarySubcategory")
+  subcategory            Subcategory?          @relation(fields: [subcategoryId], references: [id])
+  subcategoryId          Int?
+  usersWithCard          UserCard[]
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @default(now()) @updatedAt
+  UserCardPreferences    UserCardPreferences[]
 }
 
 // User: defines a user. it has a telegram id, a set of cards

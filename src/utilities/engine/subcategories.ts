@@ -25,7 +25,7 @@ export const getSubcategoryByName = async (name: string) => {
   const cached = await _brklyn.cache.get('subcategories_name', name)
   if (cached) return cached
 
-  const subcategory = await _brklyn.db.subcategory.findFirst({
+  let subcategory = await _brklyn.db.subcategory.findFirst({
     where: {
       name: {
         equals: name,
@@ -36,6 +36,19 @@ export const getSubcategoryByName = async (name: string) => {
       category: true
     }
   })
+
+  if (!subcategory) {
+    subcategory = await _brklyn.db.subcategory.findFirst({
+      where: {
+        aliases: {
+          has: name.toLowerCase()
+        }
+      },
+      include: {
+        category: true
+      }
+    })
+  }
 
   if (subcategory) {
     await _brklyn.cache.setexp('subcategories_name', name, subcategory, 10)
@@ -86,6 +99,7 @@ export const getRandomSubcategories = async (categoryID: number, limit: number) 
   const subcategories = await _brklyn.db.subcategory.findMany({
     where: {
       categoryId: categoryID,
+      isSecondary: false,
       cards: { some: {} }
     }
   })
