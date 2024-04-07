@@ -4,7 +4,7 @@ import { getMentionedTgUser, mentionUser } from '../utilities/telegram.js'
 export default async (ctx: BotContext) => {
   if (ctx.chat!.type !== 'private') {
     const tgUser = await getMentionedTgUser(ctx, ctx.args[0])
-    const url = `https://t.me/giraebot/giraecards/?startapp=${tgUser.id}_${tgUser.first_name}`
+    const url = `https://t.me/giraebot/giraecards?startapp=${tgUser.id}`
     return ctx.replyWithHTML(`<a href="${url}">Veja todas as cartas e coleções ${ctx.from.id === tgUser.id ? 'suas' : ('de '+ mentionUser(tgUser))} clicando aqui!</a>`)
   }
 
