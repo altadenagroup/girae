@@ -194,7 +194,7 @@ export const selectRandomCard = async (rarity: Rarity, category: Category, subca
   if (cards.length === 0) {
     // just return the first card in the subcategory
     if (!noRarity) return selectRandomCard(rarity, category, subcategory, true)
-    
+
     return _brklyn.db.card.findFirst({
       where: {
         subcategoryId: subcategory.id
@@ -324,6 +324,12 @@ export const getCardsBySubcategory = async (subcategory: Subcategory) => {
 }
 
 export const getCountOfCardsBySubcategory = async (subcategory: Subcategory) => {
+  if (subcategory.isSecondary) {
+    return await _brklyn.db.card.count({
+      where: { secondarySubcategories: { some: { id: subcategory.id } } }
+    })
+  }
+
   return await _brklyn.db.card.count({
     where: {
       subcategoryId: subcategory.id
@@ -332,6 +338,30 @@ export const getCountOfCardsBySubcategory = async (subcategory: Subcategory) => 
 }
 
 export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
+  if (subcategory.isSecondary) {
+    return await _brklyn.db.userCard.findMany({
+      where: {
+        userId: user.id,
+        card: {
+          secondarySubcategories: {
+            some: {
+              id: subcategory.id
+            }
+          }
+        }
+      },
+      include: {
+        card: {
+          include: {
+            rarity: true,
+            category: true,
+            subcategory: true
+          }
+        }
+      }
+    })
+  }
+
   return await _brklyn.db.userCard.findMany({
     where: {
       userId: user.id,
@@ -347,6 +377,20 @@ export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory,
 }
 
 export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
+  if (subcategory.isSecondary) {
+    return await _brklyn.db.userCard.count({
+      where: {
+        userId: user.id,
+        card: {
+          secondarySubcategories: {
+            some: {
+              id: subcategory.id
+            }
+          }
+        }
+      }
+    })
+  }
   return await _brklyn.db.userCard.count({
     where: {
       userId: user.id,

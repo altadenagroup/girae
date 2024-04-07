@@ -28,11 +28,13 @@ export default async (ctx: BotContext) => {
     userOwned: uc,
     imageURL: sub.image ? parseImageString(sub.image, false) : undefined,
     // @ts-ignore
-    onlySecondary: ctx.message!.text!.startsWith('/tag'),
+    onlySecondary: sub.isSecondary,
     userID: ctx.userData.id
   }
 
   return ctx.es2.enter('SHOW_CLC', args)
+  // add add card id 6 to secondary subcategory 78
+
 }
 
 export const info = {

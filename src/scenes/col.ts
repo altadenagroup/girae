@@ -33,9 +33,15 @@ class CollectionPages extends PaginatedScene<CollectionData> {
   }
 
   async getCards (data: CollectionData, subcategoryId: number): Promise<Card[]> {
-    const filter = { subcategoryId }
+    let filter = {}
     if (data.onlySecondary) {
-      filter['isSecondary'] = true
+      filter['secondarySubcategories'] = {
+        some: {
+          id: subcategoryId
+        }
+      }
+    } else {
+      filter['subcategoryId'] = subcategoryId
     }
 
     if (data.currentModifiers.includes('1')) {
@@ -69,7 +75,9 @@ class CollectionPages extends PaginatedScene<CollectionData> {
     }
 
     const r = await _brklyn.db.card.findMany({
-      where: filter,
+      where: {
+        ...filter
+      },
       include: {
         rarity: true,
         category: true
@@ -125,7 +133,7 @@ class CollectionPages extends PaginatedScene<CollectionData> {
     const cards = await this.getCards(data, data.id)
     const texts = cards.map((c) => this.formatCard(c, data))
 
-    return `${data.emoji} <code>${data.id}</code>. <b>${data.name}</b>
+    return `${data.emoji} <code>${data.id}</code>. <b>${data.name}</b> ${data.onlySecondary ? '<i>(tag)</i>' : ''}
 🎲 <code>${data.totalCards}</code> cards no total, <code>${data.userOwnedCards}</code> na sua coleção.
 ${this.generateFilterAdvise(data)}
 ${texts.join('\n') || '<i>Nenhum card para mostrar.</i>'}
