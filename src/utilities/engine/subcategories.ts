@@ -145,7 +145,7 @@ export const migrateCardsToSubcategory = async (tagName: string) => {
       },
       data: {
         secondarySubcategories: { connect: { id: sub.id } },
-        tags: { set: card.tags.filter(t => t !== tagName) }
+        tags: card.tags.filter(tag => tag !== sub.name)
       }
     })
   }))

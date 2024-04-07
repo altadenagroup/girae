@@ -15,7 +15,19 @@ export default async (ctx: BotContext) => {
     if (!cards || !cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card com essa tag')
     subs = [await migrateCardsToSubcategory(ctx.args.join(' '))]
   }
+
+  subs = subs.filter(a => a)
+  // @ts-ignore
+  if (ctx.message.text.startsWith('/tag')) {
+    // remove everything that isn't a secondary subcategory
+    subs = subs.filter(sub => sub.isSecondary)
+  // @ts-ignore
+  } else if (ctx.message.text.startsWith('/clc')) {
+    // remove everything that isn't a primary subcategory
+    subs = subs.filter(sub => !sub.isSecondary)
+  }
   if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
+
   if (subs.length > 1) {
     // @ts-ignore
     if (ctx.message.text.startsWith('/tag')) {
