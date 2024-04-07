@@ -10,6 +10,7 @@ interface CollectionData extends PaginatedSceneData {
   userOwnedCards: number
   userOwned: number[]
   resultsCount?: number
+  onlySecondary: boolean
 }
 
 const modifierDescriptions = {
@@ -33,6 +34,10 @@ class CollectionPages extends PaginatedScene<CollectionData> {
 
   async getCards (data: CollectionData, subcategoryId: number): Promise<Card[]> {
     const filter = { subcategoryId }
+    if (data.onlySecondary) {
+      filter['isSecondary'] = true
+    }
+
     if (data.currentModifiers.includes('1')) {
       filter['id'] = {
         in: data.userOwned

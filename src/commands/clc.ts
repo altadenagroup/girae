@@ -27,6 +27,8 @@ export default async (ctx: BotContext) => {
     emoji: sub.category?.emoji,
     userOwned: uc,
     imageURL: sub.image ? parseImageString(sub.image, false) : undefined,
+    // @ts-ignore
+    onlySecondary: ctx.message!.text!.startsWith('/tag'),
     userID: ctx.userData.id
   }
 
@@ -35,5 +37,5 @@ export default async (ctx: BotContext) => {
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['sub', 'colec', 'collec', 'col']
+  aliases: ['sub', 'colec', 'collec', 'col', 'tag']
 }

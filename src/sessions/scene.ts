@@ -28,6 +28,7 @@ export class SceneController {
 
 export interface CurrentSceneStatus {
   nextStep: number | undefined
+  endSession?: boolean
 }
 
 export class AdvancedScene<T> {
@@ -67,7 +68,8 @@ export class AdvancedScene<T> {
 
     if (controller.leaveCalled) {
       currentStatus = {
-        nextStep: undefined
+        nextStep: undefined,
+        endSession: true
       }
     }
 

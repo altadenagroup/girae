@@ -198,6 +198,11 @@ export class SessionManager {
     const status = await this.runScene(ctx, session, scene)
     if (!status) return
 
+    if (status.endSession) {
+      await this.deleteSession(session.sessionKey)
+      return
+    }
+
     if (status?.nextStep !== undefined) {
       session.currentStep = status.nextStep
       await this.bot.cache.setexp('es2_sessions', session.sessionKey, {
@@ -319,12 +324,15 @@ export class SessionManager {
   }
 
   async deleteSession (sessionID: string) {
+    const userKey = await this.bot.cache.get('es2_user_keys', sessionID)
+    if (userKey) sessionID = userKey
     const attachedKeys = await this.bot.cache.get('es2_attached_users', sessionID)
     if (attachedKeys) {
       for (const key of attachedKeys) {
         await this.bot.cache.del('es2_user_keys', key)
       }
     }
+    await this.bot.cache.del('es2_attached_users', sessionID)
     await this.bot.cache.del('es2_sessions', sessionID)
     debug('es²', `deleted session ${sessionID}`)
   }

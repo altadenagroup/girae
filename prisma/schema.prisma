@@ -37,7 +37,7 @@ model Category {
 // Subcategory: defines a subcategory of cards. it has a name and a set of tags
 model Subcategory {
   id             Int      @id @default(autoincrement())
-  name           String   @unique
+  name           String
   category       Category @relation(fields: [categoryId], references: [id])
   categoryId     Int
   image          String?
