@@ -12,7 +12,7 @@ export default async (ctx: BotContext) => {
           {
             text: '⭕ Clique aqui',
             web_app: {
-              url: 'https://girae-web-app-dev.altadena.space/store'
+              url: 'https://girae-web-app-dev.altadena.space/loja'
             }
           }
         ]
