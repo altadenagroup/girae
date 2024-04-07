@@ -239,3 +239,7 @@ export const getMentionedTgUser = async (ctx: BotContext, arg: string | undefine
   }
   return ctx.from
 }
+
+export const getUserFromNamekeeper = async (id: string) => {
+  return _brklyn.cache.get('namekeeper', id)
+}

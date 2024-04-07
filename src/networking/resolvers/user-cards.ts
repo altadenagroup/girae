@@ -3,6 +3,7 @@ import { UserCard, ShopItem } from '@generated/type-graphql'
 import { parseImageString } from "../../utilities/lucky-engine.js";
 import { MISSING_CARD_IMG } from "../../constants.js";
 import { buyStoreItem } from "../../utilities/engine/store.js";
+import { getUserFromNamekeeper } from "../../utilities/telegram.js";
 
 @ObjectType({
   description: 'Subcategory information'
@@ -34,6 +35,8 @@ export class UserCardCountInfo {
   count!: number
   @Field(_type => Int, { nullable: false, description: 'The card id' })
   cardId!: number
+  // user name
+
 }
 
 // type that represents an image for a card
@@ -48,6 +51,17 @@ export class CardImage {
   count!: number
 }
 
+// an object that contains user info (firstName, id, lastName)
+@ObjectType({
+  description: 'User information'
+})
+export class UserInfo {
+  @Field(_type => String, { nullable: false, description: 'The user first name' })
+  firstName!: string
+
+  @Field(_type => String, { nullable: false, description: 'The user last name' })
+  lastName!: string
+}
 
 // an object that contains subcategory info and a list of user cards
 @ObjectType({
@@ -69,6 +83,9 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
   // array of untradable cards
   @Field(_type => [Int], { nullable: false, description: 'The untradeable cards' })
   untradeableCards!: number[]
+
+  @Field(_type => UserInfo, { nullable: false, description: 'The user info' })
+  userInfo!: UserInfo
 }
 
 @Resolver()
@@ -155,23 +172,32 @@ export class UserCardsResolver {
       return (b.cardsOwned / b.totalCards) - (a.cardsOwned / a.totalCards)
     })
 
+    const untradeableCards = await _brklyn.db.userCardPreferences.findMany({
+      where: {
+        user: {
+          tgId: parseInt(userId)
+        },
+        tradeable: false
+      }
+    }).then((t) => {
+      return t.map((i) => {
+        return i.cardId
+      })
+    })
+
+    const userInfoRaw = await getUserFromNamekeeper(userId)
+    const userInfo = {
+      firstName: userInfoRaw?.first_name || 'Usuário desconhecido',
+      lastName: userInfoRaw?.last_name || ''
+    }
+
     return {
       subcategoryInfo,
       userCards: cards,
       userCardCount,
       cardImages: userCardImages,
-      untradeableCards: await _brklyn.db.userCardPreferences.findMany({
-        where: {
-          user: {
-            tgId: parseInt(userId)
-          },
-          tradeable: false
-        }
-      }).then((t) => {
-        return t.map((i) => {
-          return i.cardId
-        })
-      })
+      untradeableCards,
+      userInfo
     }
   }
 
