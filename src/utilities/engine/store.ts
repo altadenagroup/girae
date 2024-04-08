@@ -65,6 +65,16 @@ export const buyStoreItem = async (user: User, item: ShopItem, amount: number | 
     }
   })
 
+  // add those funds to profile id 1983 (girae)
+  await _brklyn.db.user.update({
+    where: {
+      id: 1983
+    },
+    data: {
+      coins: { increment: item.price }
+    }
+  })
+
   await handleBoughtItem(user, item, amount)
 
   return true

@@ -236,6 +236,11 @@ export class UserCardsResolver {
     @Ctx() _: any,
     @Info() _a: any
   ) {
+    const cached = await _brklyn.cache.get('store_items', 'main')
+    if (cached) {
+      return cached
+    }
+
     const dRaw = await _brklyn.db.$queryRawUnsafe('SELECT * FROM "ShopItem" WHERE type = \'BACKGROUND\' ORDER BY RANDOM() LIMIT 40').then((d) => {
       return (d as ShopItem[]).map((i) => {
         i.image = parseImageString(i.image, false, undefined)
@@ -251,7 +256,42 @@ export class UserCardsResolver {
     })
 
     const draws = await _brklyn.db.shopItem.findMany({ where: { type: 'DRAWS' } })
-    return [...dRaw, ...stRaw, ...draws]
+    const d = [...dRaw, ...stRaw, ...draws]
+    await _brklyn.cache.setexp('store_items', 'main', d, 2 * 60 * 60)
+    return d
+  }
+
+  // search store items with a given text and optionally a type
+  @Query(_returns => [ShopItem])
+  async searchStoreItems(
+    @Ctx() _: any,
+    @Info() _a: any,
+    @Arg('text', _type => String, { nullable: false, description: 'The search text' }) text: string,
+    @Arg('type', _type => String, { nullable: true, description: 'The item type' }) type: string
+  ) {
+    const cached = await _brklyn.cache.get('store_items', text + type)
+    if (cached) {
+      return cached
+    }
+
+    let items = await _brklyn.db.shopItem.findMany({
+      take: 30,
+      orderBy: {
+        _relevance: {
+          fields: ['name', 'description'],
+          search: text,
+          sort: 'asc'
+        }
+      }
+    })
+
+    items = items.map((i) => {
+      i.image = parseImageString(i.image, false, undefined)
+      return i
+    })
+
+    await _brklyn.cache.setexp('store_items', text + type, items, 2 * 60 * 60)
+    return items
   }
 
   @Mutation(_returns => Boolean)
