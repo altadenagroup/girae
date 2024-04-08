@@ -130,6 +130,24 @@ export const migrateCardsToSubcategory = async (tagName: string) => {
   const cards = await getCardsByTag(tagName)
   if (!cards[0]) return
 
+  // if there's already a subcategory with the same name, return it
+  const existing = await getSubcategoryByName(tagName, true)
+  if (existing) {
+    await Promise.allSettled(cards.map(card => {
+      return _brklyn.db.card.update({
+        where: {
+          id: card.id
+        },
+        data: {
+          secondarySubcategories: { connect: { id: existing.id } },
+          tags: card.tags.filter(tag => tag !== existing.name)
+        }
+      })
+    }))
+
+    return existing
+  }
+
   const sub = await _brklyn.db.subcategory.create({
     data: {
       name: cards[0].tags.filter(tag => tag.toLowerCase() === tagName.toLowerCase())[0],

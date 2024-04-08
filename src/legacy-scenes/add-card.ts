@@ -1,5 +1,5 @@
 import { debug, error, Telegraf, warn } from 'melchior'
-import { generatePhotoLink, uploadAttachedPhoto } from '../utilities/telegram.js'
+import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
@@ -7,10 +7,9 @@ import { generate as inferCardData } from '../prompts/card-detection.js'
 import { CommonMessageBundle } from 'telegraf/types'
 import { Composer, Markup } from 'telegraf'
 import { getCategoryByName, getOrCreateCategory } from '../utilities/engine/category.js'
-import { getOrCreateSubcategory, getSubcategoryByName } from '../utilities/engine/subcategories.js'
+import { getOrCreateSubcategory, getSubcategoryByName, migrateCardsToSubcategory } from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
 import { Card, Category, Rarity, Subcategory } from '@prisma/client'
-import { generateID } from '../utilities/misc.js'
 
 const raritiesEnToPt = {
   '': '',
@@ -19,19 +18,34 @@ const raritiesEnToPt = {
   'Legendary': 'Lendário'
 }
 
+// checks if there are any tags which have a subcategory
+const checkIfTagsHaveSubcategory = async (tags: string[]) => {
+  let tags2: string[] = []
+  for (const tag of tags) {
+    const sub = await getSubcategoryByName(tag, true)
+    if (sub) tags2.push(tag)
+  }
+  return tags2
+}
+
 const generateCardView = async (cardData: any) => {
   const {
     missingSubcategory,
     missingCategory,
     mismatch
   } = await checkIfSubcategoryAndCategoryExist(cardData.subcategory, cardData.category)
+  const tags = await checkIfTagsHaveSubcategory(cardData.tags || [])
   let addText = '\n'
   if (mismatch) addText += '\n<b>⚠️ A categoria da subcategoria e a categoria do card em si não batem. Isso pode ser um erro. </b>'
   if (missingSubcategory) addText += '\n<b>⚠️ A subcategoria deste card não existe. Corrija.</b>'
   if (missingCategory) addText += '\n<b>⚠️ A categoria deste card não existe. Corrija.</b>'
+  // get missing tags and warn they'll become subcategories
+  if (cardData.tags && tags.length < cardData.tags.length) {
+    addText += `\n<b>⚠️ As seguintes tags não existem e serão transformadas em subcategorias secundárias: ${cardData.tags.filter(t => !tags.includes(t)).join(', ')}</b>`
+  }
 
   const isEditing = cardData.id ? `(<i>editando card ${cardData.id}</i>)\n` : ''
-  return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Tags:</b> ${cardData.tags?.join?.(', ')}${addText}`
+  return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Subcategorias secundárias (tags):</b> ${cardData.tags?.join?.(', ')}${addText}`
 }
 
 const CARD_MARKUP = Markup.inlineKeyboard([[
@@ -97,6 +111,13 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
         tags: cardData.tags || []
       }
     })
+
+    if (cardData.tags) {
+      for (const tag of cardData.tags) {
+        await migrateCardsToSubcategory(tag)
+      }
+    }
+
     await ctx.reply('Card atualizado com sucesso.')
     // @ts-ignore
     await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.messageId).catch((e) => {
@@ -117,6 +138,12 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
       tags: cardData.tags || []
     }
   })
+
+  if (cardData.tags) {
+    for (const tag of cardData.tags) {
+      await migrateCardsToSubcategory(tag)
+    }
+  }
 
   await ctx.reply('Card adicionado com sucesso.')
   // @ts-ignore
