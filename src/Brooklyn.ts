@@ -10,7 +10,6 @@ import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
 import { Sidecar } from './sidecar/index.js'
 import { SessionManager } from './sessions/manager.js'
-import userCooldown from './middleware/user-cooldown.js'
 import * as Sentry from '@sentry/node'
 import { nodeProfilingIntegration } from '@sentry/profiling-node'
 import { bootstrap } from './networking/index.js'
@@ -63,7 +62,6 @@ export default class Brooklyn extends Client {
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.es2 = new SessionManager(this)
-    this.use(middlewareSafety(userCooldown))
     this.use(middlewareSafety(functionEditing))
     this.use(middlewareSafety(argumentParser))
     this.use(middlewareSafety(userData))
