@@ -26,8 +26,10 @@ export const bootstrap = async () => {
       secretToken: undefined
     })
 
-    // @ts-ignore
-    app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, webhook)
+    app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, (req, res) => {
+      res.status(200).send()
+      webhook(req, res).then(() => 0)
+    })
 
     app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
