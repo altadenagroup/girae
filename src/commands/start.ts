@@ -18,7 +18,9 @@ export default async (ctx: BotContext) => {
     }
   }
 
-  return ctx.reply('oii')
+  return ctx.replyWithHTML(
+    `Boas-vindas à Giraê!\n\nDigite / para ver meus comandos. O mais importante é, obviamente, o /girar.\n\nPara usar a bot, entre no nosso canal de notícias <a href="https://t.me/giraenews">clicando aqui</a>.`
+  )
 }
 
 async function tradeMessage (ctx: BotContext) {
