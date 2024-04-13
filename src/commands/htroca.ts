@@ -31,7 +31,7 @@ export default async (ctx: BotContext) => {
     } else {
       tradeGiving[x.user2Id] = 1
       const user = await getTgUserFromText(x.user2Id.toString())
-      nameMap[x.user2Id] = user
+      nameMap[x.user2Id] = user || { id: x.user2Id, first_name: 'Usuário desconhecido' }
     }
   }
 
@@ -41,7 +41,7 @@ export default async (ctx: BotContext) => {
     } else {
       tradeReceiving[x.user1Id] = 1
       const user = await getTgUserFromText(x.user1Id.toString())
-      nameMap[x.user1Id] = user
+      nameMap[x.user1Id] = user || { id: x.user1Id, first_name: 'Usuário desconhecido' }
     }
   }
 
