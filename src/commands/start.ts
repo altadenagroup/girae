@@ -25,12 +25,6 @@ export default async (ctx: BotContext) => {
 
 async function tradeMessage (ctx: BotContext) {
   const tradeData = await _brklyn.es2.getEC(ctx.from!.id, 'tradeData')
-  if (!(await hasUserDisplayMessageID(ctx))) {
-    await _brklyn.es2.getEC(ctx.from!.id, 'tradeData')
-    await clearTradeData(tradeData)
-    return ctx.reply('Hmmm... acho que você clicou no botão errado, porque você não está trocando nada no momento. 🙃\nTente fazer a troca novamente?')
-  }
-
   const imgURL = await generateImageURL(tradeData)
 
   const m = await ctx.sendPhoto(imgURL ?? 'https://altadena.space/assets/banner-beta-low.jpg', {
