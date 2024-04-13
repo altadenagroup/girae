@@ -15,7 +15,7 @@ interface ScheduledRequests {
 
 const scheduledRequests: ScheduledRequests[] = []
 
-const scheduleRequest = (fnName: string, ctx: BotContext, extra: any, data: any, retries: number, retryAfter?: number) => {
+const scheduleRequest = (fnName: string, ctx: BotContext, data: any, extra: any, retries: number, retryAfter?: number) => {
   scheduledRequests.push({
     fnName,
     ctx,
