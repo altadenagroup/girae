@@ -140,11 +140,15 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   }
 
   async handleCallback (ctx: SessionContext<T>) {
-    const [page, totalPages, modifiers] = this.parseData(ctx.callbackQuery.data)
-    ctx.session.data.currentPage = page
-    ctx.session.data.totalPages = totalPages
-    ctx.session.data.currentModifiers = modifiers
-    return this.editMessage(ctx)
+    try {
+      const [page, totalPages, modifiers] = this.parseData(ctx.callbackQuery.data)
+      ctx.session.data.currentPage = page
+      ctx.session.data.totalPages = totalPages
+      ctx.session.data.currentModifiers = modifiers
+      return this.editMessage(ctx)
+    } catch (e) {
+      return { leave: true }
+    }
   }
 
   setInitialData (ctx: SessionContext<T>) {
@@ -156,7 +160,9 @@ export class PaginatedScene<T extends PaginatedSceneData> {
 
   async run(ctx: SessionContext<T>): Promise<CurrentSceneStatus> {
     if (ctx.updateType === 'callback_query') {
-      await this.handleCallback(ctx)
+      const r = await this.handleCallback(ctx)
+      // @ts-ignore
+      if (r?.leave) return { endSession: true, nextStep: undefined }
     } else {
       this.setInitialData(ctx)
       ctx.session.data = { ...(ctx.session.data || {}) }

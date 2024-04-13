@@ -29,7 +29,10 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   // @ts-ignore
   ctx.session.data.chatId = ctx.chat!.username ? `@${ctx.chat!.username}` : ctx.chat!.id
   // @ts-ignore
-  ctx.session.data.threadId = ctx.chat!.is_forum ? ctx.message?.message_thread_id : undefined
+  ctx.session.data.threadId = ctx.chat!.type === 'supergroup'
+  ? ctx.message?.message_thread_id
+  : undefined
+
   ctx.session.steps.next()
 
   return ctx.replyWithPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
@@ -108,14 +111,19 @@ export const hasUserDisplayMessageID = async (ctx: BotContext) => {
   return await _brklyn.cache.has(`ongoing_trades_display_message${userNumber}`, tradeID)
 }
 
-export const generateImageURL = async (tradeID: string) => {
+export const generateImageURL = async (tradeID: string): Promise<{ url: string }> => {
   const trade = await _brklyn.cache.get('ongoing_trades', tradeID)
   const cards1 = await _brklyn.cache.get('ongoing_trades_cards1', tradeID)
   const cards2 = await _brklyn.cache.get('ongoing_trades_cards2', tradeID)
-  return await _brklyn.generateImage('trade', {
+  const r = await _brklyn.generateImage('trade', {
     user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
     user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
-  }).then(a => a.url)
+  }).then(a => {
+    if (!a?.url) return { url: 'https://altadena.space/assets/banner-beta-low.jpg' }
+    return a
+  })
+
+  return r!
 }
 
 const mention = (name: string, id: number) => `<a href="tg://user?id=${id}">${name}</a>`
@@ -142,11 +150,7 @@ export const updateDisplayMessages = async (tradeID: string) => {
 Quando estiverem prontos, cliquem no botão abaixo.
 Para cancelar, use /cancelar.
   `
-  const imgURL = await _brklyn.generateImage('trade', {
-    user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
-    user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
-  })
-  if (!imgURL?.url) imgURL.url = 'https://altadena.space/assets/banner-beta-low.jpg'
+  const imgURL = await generateImageURL(tradeID)
 
   const msgData = {
     reply_markup: {
@@ -306,11 +310,13 @@ Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Pres
 
 export const clearTradeData = async (tradeID: string) => {
   const trade = await _brklyn.cache.get('ongoing_trades', tradeID)
+  if (trade?.users) {
+    await _brklyn.es2.delEC(trade.users[0], 'tradeData')
+    await _brklyn.es2.delEC(trade.users[1], 'tradeData')
+  }
   await _brklyn.cache.del('ongoing_trades', tradeID)
   await _brklyn.cache.del('ongoing_trades_cards1', tradeID)
   await _brklyn.cache.del('ongoing_trades_cards2', tradeID)
-  await _brklyn.es2.delEC(trade.users[0], 'tradeData')
-  await _brklyn.es2.delEC(trade.users[1], 'tradeData')
   await _brklyn.cache.del(`ongoing_trades_display_message1`, tradeID)
   await _brklyn.cache.del(`ongoing_trades_display_message2`, tradeID)
   await _brklyn.cache.del('ongoing_trades_isready1', tradeID)
@@ -461,10 +467,7 @@ export const finishTrade = async (tradeID: string) => {
     data: [...newCards1, ...newCards2]
   })
 
-  const imgURL = await _brklyn.generateImage('trade', {
-    user1: { avatarURL: trade.photos[0], cards: cards1.map(t => t.imageURL), name: trade.names[0] },
-    user2: { avatarURL: trade.photos[1], cards: cards2.map(t => t.imageURL), name: trade.names[1] }
-  })
+  const imgURL = await generateImageURL(tradeID)
 
   await clearTradeData(tradeID)
 

@@ -19,6 +19,10 @@ const rarityIdToPrice = {
 
 const firstStep = async (ctx: SessionContext<DeleteData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
+  if (!ctx.session.arguments) {
+    ctx.session.steps.leave()
+    return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente deletar o card novamente.')
+  }
   ctx.session.data.card = ctx.session.arguments!.card
   const first = await _brklyn.db.userCard.findFirst({
     where: {

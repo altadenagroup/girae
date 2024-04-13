@@ -1,17 +1,85 @@
 import { Context } from 'telegraf'
 import { escapeForHTML } from '../utilities/responses.js'
+import { BotContext } from '../types/context.js'
+import { error } from 'melchior'
+
+interface ScheduledRequests {
+  fnName: string
+  ctx: BotContext
+  extra: any
+  data: any
+  retries: number
+  retryAfter?: number
+  addedOn: number
+}
+
+const scheduledRequests: ScheduledRequests[] = []
+
+const scheduleRequest = (fnName: string, ctx: BotContext, extra: any, data: any, retries: number, retryAfter?: number) => {
+  scheduledRequests.push({
+    fnName,
+    ctx,
+    extra,
+    data,
+    retries,
+    retryAfter,
+    addedOn: Date.now()
+  })
+}
+
+const retryRequest = async (req: ScheduledRequests) => {
+  const fn = req.ctx[req.fnName]
+  return fn(req.data, req.extra)
+}
+
+setInterval(async () => {
+  const now = Date.now()
+  for (const req of scheduledRequests) {
+    if (now - req.addedOn > 60 * 1000) {
+      // get the request, remove it from the array and try again. if it fails, add it back
+      // do not add it back if it has already retried 3 times
+      const index = scheduledRequests.indexOf(req)
+      scheduledRequests.splice(index, 1)
+      await retryRequest(req).then(() => {
+        // @ts-ignore
+        req.ctx = null
+      }).catch((e) => {
+        if (req.retries < 3) {
+          req.retries++
+          scheduleRequest(req.fnName, req.ctx, req.extra, req.data, req.retries, req.retryAfter)
+        }
+        error('function-editing', 'retried request too many times. error is '+ e.message)
+      })
+    }
+  }
+}, 1000)
+
+const errorHandler = (fn: any, ...args: any[]) => {
+  return (e) => {
+    if (e.description.includes('Too Many Requests')) {
+      const retryAfter = e.parameters.retry_after
+      scheduleRequest(fn.name, args[0], args[1], args[2], 0, retryAfter)
+      return true
+    } else if (e.description.includes('not modified')) {
+      return true
+    } else if (e.description.includes('not enough rights')) {
+      return true
+    } else {
+      throw e
+    }
+  }
+}
 
 export const functionEditing = (ctx: Context, next: () => void) => {
   // makes methods like reply automatically quote the message
   if (ctx.message) {
     // @ts-ignore
     ctx.ogReply = ctx.reply
-    ctx.reply = (text, extra) => {
+    // @ts-ignore
+    ctx.reply = (data: any, extra: any) => {
+      const args = { reply_to_message_id: ctx.message!.message_id, ...extra }
       // @ts-ignore
-      return ctx.ogReply(text, {
-        reply_to_message_id: ctx.message!.message_id,
-        ...extra
-      })
+      return ctx.ogReply(data, args).catch(errorHandler(ctx.ogReply, ctx, data, extra))
     }
   }
 
@@ -19,12 +87,11 @@ export const functionEditing = (ctx: Context, next: () => void) => {
   if (ctx.message) {
     // @ts-ignore
     ctx.ogReplyWithPhoto = ctx.replyWithPhoto
-    ctx.replyWithPhoto = (photo, extra) => {
+    // @ts-ignore
+    ctx.replyWithPhoto = (data: any, extra: any) => {
+      const args = { reply_to_message_id: ctx.message!.message_id, ...extra }
       // @ts-ignore
-      return ctx.ogReplyWithPhoto(photo, {
-        reply_to_message_id: ctx.message!.message_id,
-        ...extra
-      })
+      return ctx.ogReplyWithPhoto(data, args).catch(errorHandler(ctx.ogReplyWithPhoto, ctx, data, extra))
     }
   }
 
@@ -32,12 +99,11 @@ export const functionEditing = (ctx: Context, next: () => void) => {
   if (ctx.message) {
     // @ts-ignore
     ctx.ogReplyWithAnimation = ctx.replyWithAnimation
-    ctx.replyWithAnimation = (animation, extra) => {
+    // @ts-ignore
+    ctx.replyWithAnimation = (data: any, extra: any) => {
+      const args = { reply_to_message_id: ctx.message!.message_id, ...extra }
       // @ts-ignore
-      return ctx.ogReplyWithAnimation(animation, {
-        reply_to_message_id: ctx.message!.message_id,
-        ...extra
-      })
+      return ctx.ogReplyWithAnimation(data, args).catch(errorHandler(ctx.ogReplyWithAnimation, ctx, data, extra))
     }
   }
 
@@ -45,12 +111,11 @@ export const functionEditing = (ctx: Context, next: () => void) => {
   if (ctx.message) {
     // @ts-ignore
     ctx.ogReplyWithHTML = ctx.replyWithHTML
-    ctx.replyWithHTML = (text, extra) => {
+    // @ts-ignore
+    ctx.replyWithHTML = (data: any, extra: any) => {
+      const args = { reply_to_message_id: ctx.message!.message_id, ...extra }
       // @ts-ignore
-      return ctx.ogReplyWithHTML(text, {
-        reply_to_message_id: ctx.message!.message_id,
-        ...extra
-      })
+      return ctx.ogReplyWithHTML(data, args).catch(errorHandler(ctx.ogReplyWithHTML, ctx, data, extra))
     }
   }
 

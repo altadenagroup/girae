@@ -109,14 +109,21 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
   frequency_penalty: 0,
   presence_penalty: 0
 }).then((response) => {
-  const r = response.choices[0].message.content
+  const r = response?.choices?.[0]?.message?.content
   if (!r) return null
   // remove {{ anything... }}
   const json = r.replace(/{{.*}}/, '').trim()
-  const data = JSON.parse(json)
-  if (data.error) return data
-  if (data.image === 'null') delete data.image
-  // add url: to image if it exists
-  if (data.image) data.image = `url:${data.image}`
-  return data
+  try {
+    const data = JSON.parse(json)
+    if (data.error) return data
+    if (data.image === 'null') delete data.image
+    // add url: to image if it exists
+    if (data.image) data.image = `url:${data.image}`
+    return data
+  } catch (_) {
+    // the AI probablly returned invalid json, so return whatever it said on the error field
+    return { error: r }
+  }
+}).catch((e) => {
+  return { error: `Um erro ocorreu: ${e.message}` }
 })
