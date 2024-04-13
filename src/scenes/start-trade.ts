@@ -29,9 +29,9 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   // @ts-ignore
   ctx.session.data.chatId = ctx.chat!.username ? `@${ctx.chat!.username}` : ctx.chat!.id
   // @ts-ignore
-  ctx.session.data.threadId = ctx.chat!.type === 'supergroup'
-  ? ctx.message?.message_thread_id
-  : undefined
+  ctx.session.data.threadId = ctx.chat!.is_forum
+    ? ctx.message?.message_thread_id
+    : undefined
 
   ctx.session.steps.next()
 

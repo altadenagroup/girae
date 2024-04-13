@@ -125,5 +125,22 @@ export const functionEditing = (ctx: Context, next: () => void) => {
     ctx.from.first_name = escapeForHTML(ctx.from.first_name)
   }
 
+  // add a small error handling system for the answerCallbackQuery method (so old queries won't throw an error and halt stack exec fully)
+  if (ctx.answerCbQuery) {
+    // @ts-ignore
+    ctx.ogAnswerCbQuery = ctx.answerCbQuery
+    // @ts-ignore
+    ctx.answerCbQuery = (...args) => {
+      // @ts-ignore
+      return ctx.ogAnswerCbQuery(...args).catch((e) => {
+        if (e.description.includes('query is too old')) {
+          return true
+        } else {
+          throw e
+        }
+      })
+    }
+  }
+
   return next()
 }

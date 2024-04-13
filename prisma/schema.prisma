@@ -66,6 +66,8 @@ model Card {
   createdAt              DateTime              @default(now())
   updatedAt              DateTime              @default(now()) @updatedAt
   UserCardPreferences    UserCardPreferences[]
+
+  @@index([name], name: "card_name_index")
 }
 
 // User: defines a user. it has a telegram id, a set of cards
@@ -102,6 +104,8 @@ model UserCard {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now()) @updatedAt
   userProfile UserProfile[]
+
+  @@index([userId, cardId], name: "user_card_index")
 }
 
 model ProfileBackground {
