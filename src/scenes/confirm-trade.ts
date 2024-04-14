@@ -28,7 +28,7 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   const ucid1 = ctx.session.arguments!.ucid1 as number
   const ucid2 = ctx.session.arguments!.ucid2 as number
 
-  
+
   ctx.session.steps.next()
   ctx.session.data.card1 = card1
   ctx.session.data.card2 = card2
@@ -47,6 +47,7 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   const text = `💱 Troca entre <b>${mentionUser(user1)}</b> e <b>${mentionUser(user2)}</b>
 
 🃏 <b>${user1.name}</b> está oferecendo ${formatCard(card1)}
+
 🃏 <b>${user2.name}</b> está oferecendo ${formatCard(card2)}
 
 Cliquem em <b>✅ Confirmar</b> para finalizar a troca, ou <b>❌ Cancelar</b> para cancelar a troca.
@@ -60,8 +61,7 @@ Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Pres
         [{
           text: '✅ Confirmar',
           callback_data: 'CONFIRM'
-        }],
-        [{
+        }, {
           text: '❌ Cancelar',
           callback_data: 'CANCEL'
         }]
@@ -77,7 +77,7 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
     ctx.session.steps.leave()
     await ctx.session.deleteMainMessage()
     return ctx.replyWithHTML(`Vish... <b>${ctx.from.first_name}</b> desistiu da troca. Será que se arrependeu? 😅`)
-  } else if (data !== 'CONFIRM') {
+  } else if (data === 'CONFIRM') {
     if (ctx.from.id !== ctx.session.data.user2.id) return ctx.answerCbQuery('Você não pode confirmar a troca, ela não é pra você! 😅', { show_alert: true })
 
     ctx.session.steps.leave()
