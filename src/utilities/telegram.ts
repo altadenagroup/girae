@@ -159,11 +159,12 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
   }
   const id = generateID(32)
   // upload with the correct extension
-  const exts = mimeToExtension[photo.mime_type]
-  if (!exts) {
+  let exts = mimeToExtension[photo.mime_type]
+  if (!exts && photo.mime_type) {
     respond && await ctx.reply('Formato de imagem inválido.')
     return false
   }
+  if (!exts) exts = 'jpg'
   const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async () => {
     respond && await ctx.reply('Erro ao fazer upload da imagem.')
     return false
