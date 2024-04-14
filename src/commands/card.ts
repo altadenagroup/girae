@@ -70,7 +70,6 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
   }
 
   const method = determineMethodToSendMedia(img)
-  console.log('method', method)
   return ctx[method!](img, {
     caption: text,
     parse_mode: 'HTML',
