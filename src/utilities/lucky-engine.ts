@@ -213,6 +213,6 @@ export const parseImageString = (imageString: string, modifications: string | bo
   }
 
   const url = imageString.split('url:')[1].replace('https://', '').replace('http://', '').replace('.gifv', '.gif')
-  if (typeof modifications === 'boolean' && !modifications) return imageString.split('url:').pop()!
+  if ((typeof modifications === 'boolean' && !modifications) || aa) return imageString.split('url:').pop()!
   return `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
 }

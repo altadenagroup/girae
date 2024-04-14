@@ -122,7 +122,7 @@ export const getAttachedPhotoURL = async (ctx: BotContext) => {
   let photo = photos?.[0] ? photos[photos.length - 1].file_id : null
   // @ts-ignore
   const doc = ctx.message.document || ctx.message.reply_to_message?.document
-  if (doc && doc.mime_type?.startsWith('image')) photo = doc.file_id
+  if (doc) photo = doc.file_id
   if (!photo) return null
   return await generatePhotoLink(photo)
 }

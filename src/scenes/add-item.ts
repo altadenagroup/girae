@@ -49,6 +49,7 @@ const firstStep = async (ctx: SessionContext<ItemData>) => {
   // @ts-ignore
   let dittoData = await _brklyn.ditto.generateProfile(ctx.userData, ctx.profileData, null, ctx.from as User)
   if (!dittoData?.url) dittoData.url = fileID
+  console.log(dittoData)
 
   ctx.session.steps.next()
 

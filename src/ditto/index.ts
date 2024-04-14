@@ -40,14 +40,14 @@ export class Ditto {
       favoriteColor: completeUserData.favoriteColor,
       reputation: completeUserData.reputation,
       coins: userD.coins,
-      backgroundURL: parseImageString(completeUserData!.background?.image!, undefined, true),
+      backgroundURL: parseImageString(completeUserData!.background?.image!, false),
       favoriteCardImageURL: favoriteCard && (parseImageString(favoriteCard!.image, undefined, true) ?? MISSING_CARD_IMG),
       favoriteCardName: favoriteCard && favoriteCard!.name,
       favoriteCardRarity: favoriteCard && rarityIdToName[favoriteCard!.rarityId],
       position: 1,
       badgeEmojis: badges,
       totalCards: await getUserCardsCount(userD.id),
-      stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, undefined, true)
+      stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, false)
     }
 
     return _brklyn.generateImage('user_profile', data)

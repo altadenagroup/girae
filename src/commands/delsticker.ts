@@ -12,6 +12,15 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Sticker não encontrado.')
   }
 
+  await _brklyn.db.userProfile.updateMany({
+    where: {
+      stickerId: c.id
+    },
+    data: {
+      stickerId: null
+    }
+  })
+
   await _brklyn.db.profileSticker.delete({
     where: {
       id: c.id

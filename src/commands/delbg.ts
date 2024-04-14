@@ -12,6 +12,16 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Papel de parede não encontrado.')
   }
 
+  // disconnetct all user profiles using this bg
+  await _brklyn.db.userProfile.updateMany({
+    where: {
+      backgroundId: c.id
+    },
+    data: {
+      backgroundId: 1
+    }
+  })
+
   await _brklyn.db.profileBackground.delete({
     where: {
       id: c.id
