@@ -117,11 +117,11 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
 
     const text = `🎉 Troca realizada com sucesso!
 
-<b>${escapeForHTML(ctx.session.data.user1.name)}</b> recebeu:
+🃏 <b>${escapeForHTML(ctx.session.data.user1.name)}</b> recebeu:
 
   ${formatCard(ctx.session.data.card2)}
 
-<b>${escapeForHTML(ctx.session.data.user2.name)}</b> recebeu:
+🃏 <b>${escapeForHTML(ctx.session.data.user2.name)}</b> recebeu:
 
   ${formatCard(ctx.session.data.card1)}.`
 
