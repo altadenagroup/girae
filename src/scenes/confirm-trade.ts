@@ -46,9 +46,13 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
 
   const text = `💱 Troca entre <b>${mentionUser(user1)}</b> e <b>${mentionUser(user2)}</b>
 
-🃏 <b>${user1.name}</b> está oferecendo ${formatCard(card1)}
+🃏 <b>${user1.name}</b> está oferecendo:
 
-🃏 <b>${user2.name}</b> está oferecendo ${formatCard(card2)}
+  ${formatCard(card1)}
+
+🃏 <b>${user2.name}</b> está oferecendo:
+
+  ${formatCard(card2)}
 
 Cliquem em <b>✅ Confirmar</b> para finalizar a troca, ou <b>❌ Cancelar</b> para cancelar a troca.
 Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Preste atenção!
@@ -113,8 +117,13 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
 
     const text = `🎉 Troca realizada com sucesso!
 
-<b>${escapeForHTML(ctx.session.data.user1.name)}</b> recebeu ${formatCard(ctx.session.data.card2)}; e,
-<b>${escapeForHTML(ctx.session.data.user2.name)}</b> recebeu ${formatCard(ctx.session.data.card1)}.`
+<b>${escapeForHTML(ctx.session.data.user1.name)}</b> recebeu:
+
+  ${formatCard(ctx.session.data.card2)}
+
+<b>${escapeForHTML(ctx.session.data.user2.name)}</b> recebeu:
+
+  ${formatCard(ctx.session.data.card1)}.`
 
     return _brklyn.telegram.editMessageCaption(ctx.chat!.id, ctx.session.data._mainMessage, undefined, text, {
       parse_mode: 'HTML'
