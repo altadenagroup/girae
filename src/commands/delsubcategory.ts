@@ -33,5 +33,6 @@ export default async (ctx: BotContext) => {
 }
 
 export const info = {
-  guards: ['isAdmin']
+  guards: ['isAdmin'],
+  aliases: ['delsub']
 }
