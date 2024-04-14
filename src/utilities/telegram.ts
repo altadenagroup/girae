@@ -139,7 +139,7 @@ export const getAttachedPhotoURL = async (ctx: BotContext) => {
 export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = true, onlyDocuments: boolean = false) => {
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
-  let photo = photos?.[0] ? photos[photos.length - 1].file_id : null
+  let photo = photos?.[0] ? photos[photos.length - 1] : null
   // @ts-ignore
   const doc = ctx.message.document || ctx.message.reply_to_message?.document
   if (onlyDocuments && (!doc || !(doc.mime_type?.startsWith('image') || doc.mime_type?.startsWith('video')))) {

@@ -14,7 +14,7 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Card não encontrado.')
   }
 
-  const imgString = await uploadAttachedPhoto(ctx, true, false)
+  const imgString = await uploadAttachedPhoto(ctx, true)
   if (!imgString) return
 
   await _brklyn.db.card.update({

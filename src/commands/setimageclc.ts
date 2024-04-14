@@ -15,7 +15,7 @@ export default async (ctx: BotContext) => {
   }
 
   const c = cs[0]
-  const imgString = await uploadAttachedPhoto(ctx)
+  const imgString = await uploadAttachedPhoto(ctx, true)
   if (!imgString) return
 
   await _brklyn.db.subcategory.update({
