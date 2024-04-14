@@ -1,4 +1,4 @@
-import { ShopItem, User } from "@prisma/client";
+import { ItemType, ShopItem, User } from "@prisma/client";
 
 export const handleBoughtItem = async (user: User, item: ShopItem, amount: number | undefined = undefined) => {
   switch (item.type) {
@@ -78,4 +78,13 @@ export const buyStoreItem = async (user: User, item: ShopItem, amount: number | 
   await handleBoughtItem(user, item, amount)
 
   return true
+}
+
+export const findStoreItem = async (type: ItemType, itemId: number) => {
+  return await _brklyn.db.shopItem.findFirst({
+    where: {
+      type,
+      itemId
+    }
+  })
 }

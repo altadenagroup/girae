@@ -1,8 +1,7 @@
 import { BotContext } from '../types/context.js'
-import { generatePhotoLink, uploadAttachedPhoto } from '../utilities/telegram.js'
+import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
-import { generateID } from '../utilities/misc.js'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) {
