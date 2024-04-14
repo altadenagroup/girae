@@ -15,8 +15,7 @@ const formatUsers = (sortByProperty, itemName) => {
     }
 
     return users.map((user, i) => {
-      const name = names[user.id].first_name
-      return `  ${i + 1}. <b>${mentionUser({ ...user, first_name: name })}</b> (<code>${user.id}</code>) - ${readableNumber(user[sortByProperty])} ${itemName}`
+      return `  ${i + 1}. <b>${mentionUser({ ...names[user.id], ...user })}</b> (<code>${user.id}</code>) - ${readableNumber(user[sortByProperty])} ${itemName}`
     }).join('\n')
   }
 }
@@ -42,7 +41,10 @@ ${repsText}
 
 🃏 <b>Usuários com mais cards:</b>
 
-${cardsText}`)
+${cardsText}`, {
+    // @ts-ignore
+    disable_web_page_preview: true
+  })
 }
 
 export const info = {

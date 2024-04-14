@@ -87,6 +87,9 @@ export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string)
 
 export const mentionUser = (user: User) => {
   // @ts-ignore
+  if (user?.username) return `<a href="https://t.me/${user.username}">${escapeForHTML(user.first_name || user.name)}</a>`
+
+  // @ts-ignore
   return `<a href="tg://user?id=${user.tgId || user.id}">${escapeForHTML(user.first_name || user.name)}</a>`
 }
 
