@@ -1,4 +1,6 @@
-export default async (ctx) => {
+import { BotContext } from '../types/context.js'
+
+export default async (ctx: BotContext) => {
   // if this doesn't have a message, return
   if (!ctx.message) return
 
@@ -15,7 +17,17 @@ export default async (ctx) => {
     return true
   }
 
+  const config = await _brklyn.db.groupConfig.findFirst({ where: { groupId: ctx.chat!.id } })
+  if ((config?.disabledCommands?.length || 0) > 0) {
+    // @ts-ignore
+    const commandName = ctx.message.text?.split(' ')[0].replace('/', '').split('@')[0].toLowerCase()
+    if (config?.disabledCommands?.includes(commandName)) {
+      return false
+    }
+  }
+
   // if this is the beta bot and it's a dm, return true
+  // @ts-ignore
   if (process.env.RUN_BETA && ctx.chat?.type === 'private') {
     return true
   }

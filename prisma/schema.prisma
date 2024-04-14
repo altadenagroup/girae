@@ -259,6 +259,7 @@ model GroupConfig {
   isBanned         Boolean  @default(false)
   banReason        String?
   allowSimpleTrade Boolean  @default(false)
+  disabledCommands String[] @default([])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @default(now()) @updatedAt
 }
