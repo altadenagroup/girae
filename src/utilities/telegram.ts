@@ -45,13 +45,7 @@ export const determineMethodToSendMedia = (link: string) => {
   link = link.split('?')[0]
   // if it is an animation (.gif, .gifv), use replyWithAnimation
   if (link.endsWith('.gif') || link.endsWith('.gifv')) return 'replyWithAnimation'
-  // if it is an image, use replyWithPhoto
-  if (link.endsWith('.png') || link.endsWith('.jpg') || link.endsWith('.jpeg')) return 'replyWithPhoto'
-  // if it is a video, use replyWithVideo
   if (link.endsWith('.mp4')) return 'replyWithVideo'
-  // if it is a sticker, use replyWithSticker
-  if (link.endsWith('.webp')) return 'replyWithSticker'
-
   return 'replyWithPhoto'
 }
 
@@ -60,9 +54,6 @@ export const determineMediaType = (link: string) => {
   link = link.split('?')[0]
   // if it is an animation (.gif, .gifv), use replyWithAnimation
   if (link.endsWith('.gif') || link.endsWith('.gifv')) return 'animation'
-  // if it is an image, use replyWithPhoto
-  if (link.endsWith('.png') || link.endsWith('.jpg') || link.endsWith('.jpeg')) return 'photo'
-  // if it is a video, use replyWithVideo
   if (link.endsWith('.mp4')) return 'video'
 
   return 'photo'
