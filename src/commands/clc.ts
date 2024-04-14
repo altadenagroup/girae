@@ -6,43 +6,38 @@ import { getSubcategoryFromArg } from '../utilities/parser.js'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID da subcategoria a ser vista', '/clc Red Velvet')
-  // @ts-ignore
-  let subs = await getSubcategoryFromArg(ctx.args.join(' '), ctx.message.text.startsWith('/tag'))
-  // @ts-ignore
-  if (!subs[0] && ctx.message.text.startsWith('/tag')) {
-    // check if there are any cards with the tag
-    const cards = await getCardsByTag(ctx.args.join(' '))
-    if (!cards || !cards?.[0]) return ctx.responses.replyCouldNotFind('nenhum card com essa tag')
-    subs = [await migrateCardsToSubcategory(ctx.args.join(' '))]
-  }
-
-  subs = subs.filter(a => a)
+  let sub
   // @ts-ignore
   if (ctx.message.text.startsWith('/tag')) {
-    // remove everything that isn't a secondary subcategory
-    subs = subs.filter(sub => sub.isSecondary)
-  // @ts-ignore
-  } else if (ctx.message.text.startsWith('/clc')) {
-    // remove everything that isn't a primary subcategory
-    subs = subs.filter(sub => !sub.isSecondary)
-  }
-  if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
+    let subs = await getSubcategoryFromArg(ctx.args.join(' '), true)
+    if (!subs[0]) {
+      const cards = await getCardsByTag(ctx.args.join(' '))
+      if (cards?.[0]) {
+        subs = [await migrateCardsToSubcategory(ctx.args.join(' '))]
+        subs = subs.filter(a => a)
+      } else {
+        return ctx.responses.replyCouldNotFind('uma tag com esse nome/ID')
+      }
+    }
 
-  if (subs.length > 1) {
-    // @ts-ignore
-    if (ctx.message.text.startsWith('/tag')) {
+    if (subs.length > 1) {
       const text = subs
         .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
       return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas tags, use <code>/tag id</code>`)
     }
-
-    const text = subs
-      .filter(sub => !sub.isSecondary)
-      .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
-    return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas subcategorias, use <code>/clc id</code>`)
+    sub = subs[0]
+  } else {
+    let subs = await getSubcategoryFromArg(ctx.args.join(' '), false)
+    if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
+    if (subs.length > 1) {
+      const text = subs
+        .filter(sub => !sub.isSecondary)
+        .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
+      return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas subcategorias, use <code>/clc id</code>`)
+    }
+    sub = subs[0]
   }
 
-  const sub = subs[0]
   const cardCount = await getCountOfCardsBySubcategory(sub)
   if (cardCount === 0) return ctx.responses.replyCouldNotFind('nenhum card nessa subcategoria/tag')
   // sort cards by rarest and get top 20

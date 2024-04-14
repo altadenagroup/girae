@@ -32,7 +32,7 @@ export const getSubcategoryByName = async (name: string, isSecondary: boolean = 
         equals: name,
         mode: 'insensitive'
       },
-      isSecondary: isSecondary === true ? true : { }
+      isSecondary: isSecondary
     },
     include: {
       category: true
@@ -45,7 +45,7 @@ export const getSubcategoryByName = async (name: string, isSecondary: boolean = 
         aliases: {
           has: name.toLowerCase()
         },
-        isSecondary: isSecondary === true ? true : { }
+        isSecondary: isSecondary
       },
       include: {
         category: true
