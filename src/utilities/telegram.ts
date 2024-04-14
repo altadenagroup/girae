@@ -146,7 +146,12 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     respond && await ctx.reply('Você precisa enviar uma foto como documento.')
     return false
   }
-  if (onlyDocuments || !photo) photo = doc
+  if (doc && !photo) photo = doc
+  if (!photo) {
+    respond && await ctx.reply('Você precisa enviar uma foto.')
+    return false
+  }
+
   const link = await generatePhotoLink(photo.file_id)
   if (!link) {
     respond && await ctx.reply('Não foi possível obter o link da foto.')

@@ -24,7 +24,7 @@ const middlewareSafety = (fun) => {
       const data = await fun(...args)
       return data
     } catch (e: any) {
-      error('middleware', `an exception was thrown in a middleware. THIS IS UNACCEPTABLE! (${e.message})`)
+      error('middleware', `an exception was thrown in a middleware. THIS IS UNACCEPTABLE!\n${e.stack}`)
       Sentry.setTag('wasMiddleware', 'true')
       Sentry.captureException(e)
     }
