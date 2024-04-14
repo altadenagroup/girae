@@ -17,6 +17,7 @@ export default async (ctx: BotContext) => {
         banMessage: null
       }
     })
+    await _brklyn.cache.del('banned', userD.tgId.toString())
 
     return ctx.replyWithHTML(`O usuário ${mentionUser(tgUser)} foi desbanido de usar a Giraê.`)
   }
@@ -34,7 +35,7 @@ export default async (ctx: BotContext) => {
     }
   })
 
-  return ctx.replyWithHTML(`O usuário ${mentionUser(tgUser)} foi banido de usar a Giraê. Motivo: ${banReason}\n\nPara desbanir o usuário, execute o comando novamente.`)
+  return ctx.replyWithHTML(`O usuário ${mentionUser(tgUser)} foi banido de usar a Giraê.\nMotivo: ${banReason}\n\nPara desbanir o usuário, execute o comando novamente.`)
 }
 
 export const info = {
