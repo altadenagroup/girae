@@ -2,6 +2,8 @@ import { BotContext } from '../types/context.js'
 import { getMentionedTgUser, getMentionedUser, mentionUser } from '../utilities/telegram.js'
 
 export default async (ctx: BotContext) => {
+  if (ctx.userData.id !== 1 && ctx.userData.id !== 2) return
+
   const tgUser = await getMentionedTgUser(ctx, ctx.args[0])
   const userD = await getMentionedUser(ctx, ctx.args[0])
   if (!tgUser || !userD) {
