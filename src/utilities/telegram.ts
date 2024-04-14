@@ -87,7 +87,7 @@ export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string)
 
 export const mentionUser = (user: User) => {
   // @ts-ignore
-  return `<a href="tg://user?id=${user.id}">${escapeForHTML(user.first_name || user.name)}</a>`
+  return `<a href="tg://user?id=${user.tgId || user.id}">${escapeForHTML(user.first_name || user.name)}</a>`
 }
 
 export const launchStartURL = (commandName: string, args: string) => {
