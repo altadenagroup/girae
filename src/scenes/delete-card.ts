@@ -81,6 +81,7 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
     // @ts-ignore
   } else if (ctx.message?.text?.startsWith?.('/cancel')) {
     ctx.session.steps.leave()
+    await ctx.session.deleteSession()
     await ctx.reply('Operação cancelada.')
     return
   }

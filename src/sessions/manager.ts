@@ -171,6 +171,10 @@ export class SessionManager {
       setAttribute: (key, value) => {
         ctx.session.data[`_${key}`] = value
       },
+      deleteSession: async () => {
+        await _brklyn.cache.del('es2_user_keys', userKey)
+        return this.deleteSession(session.sessionKey)
+      },
       nextStepData: (data) => {
         return `ES2S.${session.scene}.${(session.currentStep || 0) + 1}.${data}`
       },

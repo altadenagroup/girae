@@ -19,6 +19,7 @@ export interface SessionContext<T> extends BotContext {
     setMessageToBeQuoted: (messageId: number | undefined) => void
     deleteMainMessage: () => Promise<true | void>
     setAttribute: (key: string, value: any) => void
+    deleteSession: () => void
     nextStepData: (data: string) => string
     getCurrentStepData: <T>(parsingFn: ((string) => T | undefined) | undefined) => T | undefined
     generateSessionQuery (data: string): string
