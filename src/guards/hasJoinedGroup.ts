@@ -9,7 +9,7 @@ async function checkCooldown (ctx: BotContext) {
   return hasNextBeenCalled
 }
 
-export default async (ctx) => {
+export default async (ctx: BotContext) => {
   // if this doesn't have a message, return
   if (!ctx.message) return
 
@@ -20,6 +20,15 @@ export default async (ctx) => {
     if (config?.disabledCommands?.includes(commandName)) {
       return false
     }
+  }
+
+  if (ctx.userData.isBanned) {
+    const warnedAboutBan = await _brklyn.cache.get('banned', ctx.from.id.toString())
+    if (!warnedAboutBan) {
+      await ctx.replyWithHTML(`Você foi banido de usar a Giraê. 😢\n\nMotivo do ban: <pre>${ctx.userData.banMessage || 'Sem motivo especificado.'}</pre>\n\nCaso você ache que isso tenha sido um erro, por favor, entre em contato com o suporte <a href="https://t.me/giraesuportebot">clicando aqui.</a>`)
+      await _brklyn.cache.set('banned', ctx.from.id.toString(), true)
+    }
+    return false
   }
 
   if (!(await isUserOnNewsChannel(ctx.from.id))) {

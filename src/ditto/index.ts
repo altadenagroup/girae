@@ -25,10 +25,11 @@ export class Ditto {
     const file = await cachedGetUserPhotoAndFile(tgUser!.id)
     const avatarURL = file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
 
-    let badges = completeUserData?.badgeEmojis || []
+    let badges: string[] = []
     if (userD.isAdmin) badges = [...badges, '👮‍♂️']
     if (userD.isBanned) badges = [...badges, '🚫']
     if (userD.isPremium) badges = [...badges, '💎']
+    if (completeUserData?.badgeEmojis.length > 0) badges = [...badges, ...completeUserData.badgeEmojis]
     // remove duplicates
     badges = [...new Set(badges)]
 
