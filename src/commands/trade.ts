@@ -27,6 +27,7 @@ export default async (ctx: BotContext) => {
   const user = await getUserFromQuotesOrAt(ctx, ctx.args[0])
   if (!user) return ctx.responses.replyCouldNotFind('o usuário que você quer realizar a troca de cartas')
   if (user?.id === ctx.from!.id) return ctx.reply('Você não pode trocar cartas com você mesmo! 😅')
+  if (user.is_bot) return ctx.reply('Você não pode trocar cartas com um bot! 😅')
   const ecData = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
   if (ecData?.tradingWith) return ctx.reply('Você já está em uma troca de cartas! 😅\nFinalize-a para trocar mais cartas.')
   const ecData2 = await _brklyn.es2.getEC(user.id, 'tradeData')

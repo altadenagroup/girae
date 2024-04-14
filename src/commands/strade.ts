@@ -47,6 +47,7 @@ export default async (ctx: BotContext) => {
   const user = await getUserFromQuotesOrAt(ctx, '')
   if (!user) return ctx.responses.replyCouldNotFind('o usuário que você quer realizar a troca de cartas')
   if (user?.id === ctx.from!.id) return ctx.reply('Você não pode trocar cartas com você mesmo! 😅')
+  if (user.is_bot) return ctx.reply('Você não pode trocar cartas com um bot! 😅')
   if (!ctx.args[0] || !ctx.args[1]) {
     return ctx.reply('Você precisa especificar duas cartas para trocar.\n\nUsa-se /stroca carta1 carta2.')
   }
