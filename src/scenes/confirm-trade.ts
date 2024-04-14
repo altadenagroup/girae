@@ -81,30 +81,30 @@ const secondStep = async (ctx: SessionContext<TradeData>) => {
     if (ctx.from.id !== ctx.session.data.user2.id) return ctx.answerCbQuery('Você não pode confirmar a troca, ela não é pra você! 😅', { show_alert: true })
 
     ctx.session.steps.leave()
+
+    const u1 = await _brklyn.db.user.findUnique({ where: { tgId: ctx.session.data.user1.id } })
+    const u2 = await _brklyn.db.user.findUnique({ where: { tgId: ctx.session.data.user2.id } })
+
     // delete first card with matching id
     await _brklyn.db.$transaction([
       _brklyn.db.userCard.delete({ where: { id: ctx.session.data.card1UserCardId } }),
-      _brklyn.db.userCard.delete({ where: { id: ctx.session.data.card2UserCardId } })
-    ])
-
-    // now add cards
-    await _brklyn.db.$transaction([
+      _brklyn.db.userCard.delete({ where: { id: ctx.session.data.card2UserCardId } }),
       _brklyn.db.userCard.create({
         data: {
           cardId: ctx.session.data.card1.id,
-          userId: ctx.session.data.user2.id
+          userId: u2!.id
         }
       }),
       _brklyn.db.userCard.create({
         data: {
           cardId: ctx.session.data.card2.id,
-          userId: ctx.session.data.user1.id
+          userId: u1!.id
         }
       }),
       _brklyn.db.consumedTrade.create({
         data: {
-          user1Id: ctx.session.data.user1.id,
-          user2Id: ctx.session.data.user2.id,
+          user1Id: u1!.id,
+          user2Id: u2!.id,
           cardsUser1: [ctx.session.data.card1.id],
           cardsUser2: [ctx.session.data.card2.id]
         }
