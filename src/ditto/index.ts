@@ -11,6 +11,11 @@ const rarityIdToName = {
   4: 'Legendary'
 }
 
+export interface UserData {
+  name: string
+  id: number
+}
+
 export class Ditto {
   async generateProfile (userD: User, completeUserData: UserProfile & {
     background: ProfileBackground | null,
@@ -45,5 +50,20 @@ export class Ditto {
     }
 
     return _brklyn.generateImage('user_profile', data)
+  }
+
+  async generateTrade (user1: UserData, user2: UserData, user1Images: string[], user2Images: string[]) {
+    const user1File = await cachedGetUserPhotoAndFile(user1.id)
+    const user2File = await cachedGetUserPhotoAndFile(user2.id)
+    const user1AvatarURL = user1File ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${user1File.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+    const user2AvatarURL = user2File ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${user2File.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+
+    return _brklyn.generateImage('trade', {
+      user1: { name: user1.name, avatarURL: user1AvatarURL, cards: user1Images },
+      user2: { name: user2.name, avatarURL: user2AvatarURL, cards: user2Images }
+    }).then(a => {
+      if (!a?.url) return { url: 'https://altadena.space/assets/banner-beta-low.jpg' }
+      return a
+    })
   }
 }

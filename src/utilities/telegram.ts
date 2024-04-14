@@ -1,5 +1,5 @@
-import {ChatMember, User} from "telegraf/types"
-import {BotContext} from "../types/context.js"
+import { ChatMember, User } from "telegraf/types"
+import { BotContext } from "../types/context.js"
 import { generateID } from "./misc.js"
 import { info } from "melchior"
 import { escapeForHTML } from "./responses.js"
@@ -9,7 +9,7 @@ export const isUserOnNewsChannel = async (id: number) => {
   const cache = await _brklyn.cache.get('news', id.toString())
   if (cache === true) return true
 
-  const member = await _brklyn.telegram.getChatMember(process.env.NEWS_CHANNEL_ID!, id).catch(() => ({status: 'left'}))
+  const member = await _brklyn.telegram.getChatMember(process.env.NEWS_CHANNEL_ID!, id).catch(() => ({ status: 'left' }))
   if (member.status === 'member' || member.status === 'creator' || member.status === 'administrator' || member.status === 'restricted') {
     await _brklyn.cache.setexp('news', id.toString(), true, 86400)
     return true
@@ -86,7 +86,8 @@ export const getUserByMentionOrID = async (ctx: BotContext, mentionOrId: string)
 }
 
 export const mentionUser = (user: User) => {
-  return `<a href="tg://user?id=${user.id}">${escapeForHTML(user.first_name)}</a>`
+  // @ts-ignore
+  return `<a href="tg://user?id=${user.id}">${escapeForHTML(user.first_name || user.name)}</a>`
 }
 
 export const launchStartURL = (commandName: string, args: string) => {
@@ -142,56 +143,28 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     respond && await ctx.reply('Você precisa enviar uma foto como documento.')
     return false
   }
-  if (onlyDocuments) photo = null
-  if (!photo && doc) {
-    // @ts-ignore
-    // if the mime type isn't jpeg or gif, we have to convert
-    if (!doc.mime_type.includes('jpeg')) {
-      const link = await generatePhotoLink(doc.file_id)
-      if (!link) {
-        respond && await ctx.reply('Não foi possível obter o link da foto.')
-        return false
-      }
-      const id = generateID(32)
-      // upload with the correct extension
-      const exts = mimeToExtension[doc.mime_type]
-      if (!exts) {
-        respond && await ctx.reply('Formato de imagem inválido.')
-        return false
-      }
-      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async () => {
-        respond && await ctx.reply('Erro ao fazer upload da imagem.')
-        return false
-      })
-      if (aa) return `url:https://s3.girae.altadena.space/${id}.${exts}`
-      else return false
-    }
-
-    photo = doc.file_id
-  }
-
-  let imgString: string | null = null
-  if (photo) {
-    const link = await generatePhotoLink(photo)
-    if (link) {
-      const id = generateID(32)
-      const aa = await _brklyn.images.uploadFileFromUrl(`${id}.jpg`, link).catch(async () => {
-        respond && await ctx.reply('Erro ao fazer upload da imagem.')
-        return false
-      })
-      if (aa) imgString = `id:${id}`
-    } else {
-      respond && await ctx.reply('Não foi possível obter o link da foto.')
-      return false
-    }
-  }
-  if (!imgString) {
-    respond && await ctx.reply('Você precisa enviar uma foto ou passar um link para a imagem.')
+  if (onlyDocuments || !photo) photo = doc
+  const link = await generatePhotoLink(photo.file_id)
+  if (!link) {
+    respond && await ctx.reply('Não foi possível obter o link da foto.')
     return false
   }
+  const id = generateID(32)
+  // upload with the correct extension
+  const exts = mimeToExtension[photo.mime_type]
+  if (!exts) {
+    respond && await ctx.reply('Formato de imagem inválido.')
+    return false
+  }
+  const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async () => {
+    respond && await ctx.reply('Erro ao fazer upload da imagem.')
+    return false
+  })
 
-  info('storage', `uploaded image ${imgString}`)
-  return imgString
+  info('storage', `uploaded image id ${id}.${exts}`)
+
+  if (aa) return `url:https://s3.girae.altadena.space/${id}.${exts}`
+  else return false
 }
 
 export const getTgUserFromText = async (text: string) => {

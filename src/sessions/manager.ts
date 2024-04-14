@@ -13,6 +13,7 @@ import addItem from '../scenes/add-item.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
 import * as Sentry from '@sentry/node'
+import confirmTrade from '../scenes/confirm-trade.js'
 
 export interface ES2Methods {
   enter (sceneID: string, args?: { [key: string]: any } | undefined): Promise<void>
@@ -36,6 +37,7 @@ export class SessionManager {
     this.scenes.push(addItem)
     // @ts-ignore
     this.scenes.push(showCollection)
+    this.scenes.push(confirmTrade)
   }
 
   get cancelButtonArray (): InlineKeyboardButton[] {

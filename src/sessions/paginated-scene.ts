@@ -108,14 +108,14 @@ export class PaginatedScene<T extends PaginatedSceneData> {
         reply_markup: {
           inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
-      })
+      }).catch(() => {})
     } else {
       return ctx.editMessageText(text, {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
-      })
+      }).catch(() => { })
     }
   }
 

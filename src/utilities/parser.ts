@@ -10,7 +10,7 @@ import { getCategoryByID, searchCategory } from './engine/category.js'
 export const getCardFromArg = async (arg: string) => {
   if (!arg) return null
   if (!isNaN(Number(arg))) {
-    return getCardByID(Number(arg))
+    return getCardByID(Number(arg)).catch(() => null)
   } else {
     return getCardByName(arg)
   }

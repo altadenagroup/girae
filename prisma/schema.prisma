@@ -252,3 +252,13 @@ model UserAchievement {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @default(now()) @updatedAt
 }
+
+model GroupConfig {
+  id               Int      @id @default(autoincrement())
+  groupId          BigInt   @unique
+  isBanned         Boolean  @default(false)
+  banReason        String?
+  allowSimpleTrade Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+}
