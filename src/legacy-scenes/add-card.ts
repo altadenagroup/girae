@@ -253,6 +253,8 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
 
   const exists = editing ? false : await getCardByNameAndSubcategory(cardData.name, cardData.subcategory)
   if (cardData.image) imgString = cardData.image
+  if (!cardData.tags) cardData.tags = []
+  cardData.tags = cardData.tags.filter(a => a)
 
   const img = imgString ? parseImageString(imgString as string) : MISSING_CARD_IMG
   debug('scenes.addCard', `imgString: ${imgString}, img: ${img}`)
