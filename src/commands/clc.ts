@@ -51,7 +51,7 @@ export default async (ctx: BotContext) => {
     name: sub.name,
     emoji: sub.category?.emoji,
     userOwned: uc,
-    imageURL: sub.image ? parseImageString(sub.image, false) : undefined,
+    imageURL: sub.image ? parseImageString(sub.image, false, true) : undefined,
     // @ts-ignore
     onlySecondary: sub.isSecondary,
     userID: ctx.userData.id
