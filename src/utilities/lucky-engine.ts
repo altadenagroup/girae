@@ -204,9 +204,8 @@ export const getCategoryById = async (id: number) => {
 }
 
 export const parseImageString = (imageString: string, modifications: string | boolean | undefined = undefined, aa: any = undefined): string => {
-  // if it starts with http, return it as is
+  // if it starts with http, return it as id
   if (!imageString || imageString.includes('placehold.co')) return MISSING_CARD_IMG
-  console.log(imageString)
   if (imageString.endsWith('.mp4') || imageString.endsWith('.gif')) return imageString.replace('url:', '')
   // if starts with url: then it's a url
   if (imageString.startsWith('id:')) {
