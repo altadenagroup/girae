@@ -475,6 +475,12 @@ export const finishTrade = async (tradeID: string) => {
     caption: text,
     parse_mode: 'HTML' as ParseMode,
     ...adds
+  }).catch(() => {
+    // retry sending without the adds
+    return _brklyn.telegram.sendPhoto(trade.chatId, imgURL.url, {
+      caption: text,
+      parse_mode: 'HTML' as ParseMode
+    }).catch(() => 0)
   })
 }
 
