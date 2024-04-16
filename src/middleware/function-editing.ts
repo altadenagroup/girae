@@ -2,6 +2,7 @@ import { Context } from 'telegraf'
 import { escapeForHTML } from '../utilities/responses.js'
 import { BotContext } from '../types/context.js'
 import { error } from 'melchior'
+import * as Sentry from '@sentry/node'
 
 interface ScheduledRequests {
   fnName: string
@@ -56,6 +57,10 @@ setInterval(async () => {
 
 const errorHandler = (fn: any, ...args: any[]) => {
   return (e) => {
+    if (!e.description) {
+      Sentry.captureException(e)
+      return false
+    }
     if (e.description.includes('Too Many Requests')) {
       const retryAfter = e.parameters.retry_after
       scheduleRequest(fn.name, args[0], args[1], args[2], 0, retryAfter)

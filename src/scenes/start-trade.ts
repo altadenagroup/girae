@@ -488,7 +488,7 @@ export const cancelTrade = async (tradeID: string) => {
   const trade = await _brklyn.cache.get('ongoing_trades', tradeID)
   Sentry.setContext('trade', trade)
   Sentry.setTag('tradeID', tradeID)
-  await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit)
+  await _brklyn.telegram.deleteMessage(trade.chatId, trade.msgToEdit).catch(() => undefined)
   const text = `😬 Vish... ${mention(trade.names[0], trade.users[0])} e ${mention(trade.names[1], trade.users[1])} cancelaram a troca de última hora. Brigaram?`
 
   await clearTradeData(tradeID)
@@ -501,6 +501,11 @@ export const cancelTrade = async (tradeID: string) => {
   await _brklyn.telegram.sendMessage(trade.chatId, text, {
     parse_mode: 'HTML' as ParseMode,
     ...adds
+  }).catch(() => {
+    // retry sending without the adds
+    return _brklyn.telegram.sendMessage(trade.chatId, text, {
+      parse_mode: 'HTML' as ParseMode
+    }).catch(() => 0)
   })
 }
 
