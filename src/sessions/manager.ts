@@ -168,6 +168,12 @@ export class SessionManager {
           warn('es²', `(${userKey}) failed to delete main message: ${e.message}`)
         })
       },
+      editMainMessageText: (text, extra) => {
+        return this.bot.telegram.editMessageText(ctx.chat!.id, ctx.session.data._mainMessage, undefined, text, extra)
+      },
+      editMainMessageCaption: (caption, extra) => {
+        return this.bot.telegram.editMessageCaption(ctx.chat!.id, ctx.session.data._mainMessage, undefined, caption, extra)
+      },
       setAttribute: (key, value) => {
         ctx.session.data[`_${key}`] = value
       },

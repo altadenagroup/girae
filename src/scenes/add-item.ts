@@ -10,6 +10,11 @@ interface ItemData {
   fileLink: string
   type: ItemType
   price: number
+  editing: boolean
+  id?: number
+  shopItemID?: number
+
+  expecting?: 'NAME' | 'DESCRIPTION' | 'PRICE' | null
 }
 
 const typeToEmoji: Record<ItemType, string> = {
@@ -19,12 +24,101 @@ const typeToEmoji: Record<ItemType, string> = {
   'MARRIAGE_RING': '💍'
 }
 
+const creationButtons = [
+  [{ text: '✅ Criar', callback_data: 'CREATE' }, { text: '❌ Cancelar', callback_data: 'CANCEL' }]
+]
+
+const editionButtons = [
+  [
+    { text: '📑 Nome', callback_data: 'NAME' },
+    { text: '📓 Descrição', callback_data: 'DESCRIPTION' },
+    { text: '💰 Preço', callback_data: 'PRICE' }
+  ],
+  [{ text: '✅ Salvar', callback_data: 'SAVE' }, { text: '❌ Cancelar', callback_data: 'CANCEL' }]
+]
+
+const editingText = (ctx) => `Editando ${typeToEmoji[ctx.session.data.type]} <code>${ctx.session.data.id}</code>. <b>${ctx.session.data.name}</b>\n\n<i>${ctx.session.data.description}</i>\n\n💰 ${readableNumber(ctx.session.data.price)} moedas\n\nEdite o item usando os botões abaixo.`
+const editSentMessage = (ctx) => ctx.session.editMainMessageCaption(editingText(ctx), {
+  reply_markup: {
+    inline_keyboard: editionButtons
+  },
+  parse_mode: 'HTML'
+})
+
+const prefixed = (a) => a.startsWith('url:') ? a : `url:${a}`
+const generateUserProfile = async (ctx: SessionContext<ItemData>) => {
+  switch (ctx.session.data.type) {
+    case 'BACKGROUND':
+      // @ts-ignore
+      ctx.profileData.background = { image: prefixed(ctx.session.data.fileLink) }
+      break
+    case 'STICKER':
+      // @ts-ignore
+      ctx.profileData.stickers = { image: prefixed(ctx.session.data.fileLink) }
+      break
+    default:
+      break
+  }
+
+  // @ts-ignore
+  const dittoData = await _brklyn.ditto.generateProfile(ctx.userData, ctx.profileData, null, ctx.from as User)
+  return dittoData?.url
+}
+
+const saveItem = async (ctx: SessionContext<ItemData>) => {
+  const updateData = {
+    name: ctx.session.data.name
+  }
+
+  const shopUpdateData = {
+    name: ctx.session.data.name,
+    description: ctx.session.data.description,
+    price: ctx.session.data.price
+  }
+
+  ctx.session.steps.leave()
+  await ctx.session.deleteMainMessage()
+
+  await _brklyn.db.shopItem.update({
+    where: {
+      id: ctx.session.data.shopItemID
+    },
+    data: shopUpdateData
+  })
+
+  switch (ctx.session.data.type) {
+    case 'BACKGROUND':
+      await _brklyn.db.profileBackground.update({
+        where: {
+          id: ctx.session.data.id
+        },
+        data: updateData
+      })
+      break
+    case 'STICKER':
+      await _brklyn.db.profileSticker.update({
+        where: {
+          id: ctx.session.data.id
+        },
+        data: updateData
+      })
+      break
+    default:
+      break
+  }
+
+  return ctx.replyWithHTML(`Item <code>${ctx.session.data.id}</code> atualizado com sucesso.`)
+}
+
 const firstStep = async (ctx: SessionContext<ItemData>) => {
   const name = ctx.session.arguments!.name as string
   const description = ctx.session.arguments!.description as string
   const fileID = ctx.session.arguments!.file as string
   const type = ctx.session.arguments!.type as ItemType
   const price = ctx.session.arguments!.price as number
+  const editing = ctx.session.arguments!.editing as boolean
+  const id = ctx.session.arguments!.id as number
+  const shopItemID = ctx.session.arguments!.shopItemID as number
 
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
   ctx.session.data.name = name
@@ -32,33 +126,19 @@ const firstStep = async (ctx: SessionContext<ItemData>) => {
   ctx.session.data.fileLink = fileID
   ctx.session.data.type = type
   ctx.session.data.price = price
+  ctx.session.data.editing = editing
+  ctx.session.data.id = id
+  ctx.session.data.shopItemID = shopItemID
 
-  switch (type) {
-    case 'BACKGROUND':
-      // @ts-ignore
-      ctx.profileData.background = { image: `url:${fileID}` }
-      break
-    case 'STICKER':
-      // @ts-ignore
-      ctx.profileData.stickers = { image: `url:${fileID}` }
-      break
-    default:
-      break
-  }
-
-  // @ts-ignore
-  let dittoData = await _brklyn.ditto.generateProfile(ctx.userData, ctx.profileData, null, ctx.from as User)
-  if (!dittoData?.url) dittoData.url = fileID
-  console.log(dittoData)
-
+  const profileURL = await generateUserProfile(ctx)
   ctx.session.steps.next()
 
-  return ctx.replyWithPhoto(dittoData.url, {
-    caption: `Criando ${typeToEmoji[type]} <b>${name}</b>\n\n<i>${description}</i>\n\n💰 ${readableNumber(price)} moedas\n\nConfirme a criação do item clicando nos botões abaixo.`,
+  return ctx.replyWithPhoto(profileURL || fileID, {
+    caption: editing
+      ? editingText(ctx)
+      : `Criando ${typeToEmoji[type]} <b>${name}</b>\n\n<i>${description}</i>\n\n💰 ${readableNumber(price)} moedas\n\nConfirme a criação do item clicando nos botões abaixo.`,
     reply_markup: {
-      inline_keyboard: [
-        [{ text: '✅ Criar', callback_data: 'CREATE' }, { text: '❌ Cancelar', callback_data: 'CANCEL' }]
-      ]
+      inline_keyboard: editing ? editionButtons : creationButtons
     },
     parse_mode: 'HTML'
   }).then((t) => ctx.session.setMainMessage(t.message_id))
@@ -70,8 +150,55 @@ const secondStep = async (ctx: SessionContext<ItemData>) => {
     await ctx.session.deleteMainMessage()
     return ctx.reply('Operação cancelada.')
   }
-  if (ctx.callbackQuery?.data !== 'CREATE') return
 
+  if (ctx.callbackQuery?.data === 'CREATE') return createItem(ctx)
+
+  if (ctx.callbackQuery?.data) {
+    await ctx.answerCbQuery()
+    switch (ctx.callbackQuery.data) {
+      case 'NAME':
+        ctx.session.data.expecting = 'NAME'
+        return ctx.reply('Digite o novo nome do item.')
+      case 'DESCRIPTION':
+        ctx.session.data.expecting = 'DESCRIPTION'
+        return ctx.reply('Digite a nova descrição do item.')
+      case 'PRICE':
+        ctx.session.data.expecting = 'PRICE'
+        return ctx.reply('Digite o novo preço do item.')
+      case 'SAVE':
+        return saveItem(ctx)
+      default:
+        return
+    }
+  } else {
+    switch (ctx.session.data.expecting) {
+      case 'NAME':
+        // @ts-ignore
+        ctx.session.data.name = ctx.message!.text
+        ctx.session.data.expecting = null
+        return editSentMessage(ctx)
+      case 'DESCRIPTION':
+        // @ts-ignore
+        ctx.session.data.description = ctx.message!.text
+        ctx.session.data.expecting = null
+        return editSentMessage(ctx)
+      case 'PRICE':
+        // @ts-ignore
+        if (isNaN(parseInt(ctx.message!.text))) return ctx.reply('O preço precisa ser um número inteiro.')
+        // check if number is 32 bits
+        // @ts-ignore
+        if (parseInt(ctx.message!.text) > 2147483645) return ctx.reply('O preço precisa ser um número inteiro de 32 bits (menor que 2147483647).')
+        // @ts-ignore
+        ctx.session.data.price = parseInt(ctx.message!.text)
+        ctx.session.data.expecting = null
+        return editSentMessage(ctx)
+      default:
+        return
+    }
+  }
+}
+
+const createItem = async (ctx: SessionContext<ItemData>) => {
   await ctx.session.deleteMainMessage()
   const fileExtension = ctx.session.data.fileLink.split('.').pop()
   const id = generateID(32)
@@ -128,4 +255,4 @@ const secondStep = async (ctx: SessionContext<ItemData>) => {
 }
 
 // @ts-ignore
-export default new AdvancedScene<ItemData>('ADD_ITEM', [firstStep, secondStep])
+export default new AdvancedScene<ItemData>('ADD_ITEM', [firstStep, secondStep], ['message', 'callback_query'])

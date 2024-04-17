@@ -11,10 +11,11 @@ import { functionEditing } from './middleware/function-editing.js'
 import { Sidecar } from './sidecar/index.js'
 import { SessionManager } from './sessions/manager.js'
 import * as Sentry from '@sentry/node'
-import { nodeProfilingIntegration } from '@sentry/profiling-node'
 import { bootstrap } from './networking/index.js'
 import { S3Storage } from './storage/index.js'
 import { Ditto } from './ditto/index.js'
+const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
+
 
 export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 
@@ -130,6 +131,7 @@ export default class Brooklyn extends Client {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       integrations: [
+        // @ts-ignore
         nodeProfilingIntegration(),
         new Sentry.Integrations.Prisma({ client: this.db }),
         Sentry.anrIntegration({ captureStackTrace: true })

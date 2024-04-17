@@ -18,6 +18,8 @@ export interface SessionContext<T> extends BotContext {
     setMainMessage: (messageId: number) => void
     setMessageToBeQuoted: (messageId: number | undefined) => void
     deleteMainMessage: () => Promise<true | void>
+    editMainMessageText: (text: string, extra?: any) => Promise<any>
+    editMainMessageCaption: (caption: string, extra?: any) => Promise<any>
     setAttribute: (key: string, value: any) => void
     deleteSession: () => void
     nextStepData: (data: string) => string

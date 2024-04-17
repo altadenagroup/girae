@@ -21,6 +21,7 @@ const firstStep = async () => {
 const secondStep = async (ctx: SessionContext<TradeData>) => {
   let data = ctx.callbackQuery?.data
   if (data === 'CANCEL') {
+    if ((ctx.from.id !== ctx.session.data.user1.id) && (ctx.from.id !== ctx.session.data.user2.id)) return ctx.answerCbQuery('Você não pode cancelar a troca, ela não é sua! 😅', { show_alert: true })
     ctx.session.steps.leave()
     await ctx.session.deleteMainMessage()
     return ctx.replyWithHTML(`Vish... <b>${ctx.from.first_name}</b> desistiu da troca. Será que se arrependeu? 😅`)
