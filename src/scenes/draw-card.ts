@@ -27,6 +27,8 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   })
 
   let categories: Category[] = await getAllCategories()
+  categories = [...categories, { name: 'NÃO GIRE!', emoji: '❌️', id: 0 }]
+  
   if (lock) {
     categories = categories.filter((cat) => lock.allowedCategories.includes(cat.id))
   }
