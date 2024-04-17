@@ -27,7 +27,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
   })
 
   let categories: Category[] = await getAllCategories()
-  categories = [...categories, { name: 'NÃO GIRE!', emoji: '❌️', id: 0 }]
+  categories = [...categories, { name: 'NÃO GIRE!', emoji: '🔮', id: 0 }]
   
   if (lock) {
     categories = categories.filter((cat) => lock.allowedCategories.includes(cat.id))
@@ -76,8 +76,8 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
 
 const secondStep = async (ctx: SessionContext<DrawData>) => {
+  if (!ctx.callbackQuery?.data) return
   const categoryId = ctx.session.getDataFromSessionQuery<number>(parseInt)
-  if (!categoryId) return
   const cat = await getCategoryByID(categoryId!)
   if (!cat) {
     await ctx.session.deleteMainMessage()
