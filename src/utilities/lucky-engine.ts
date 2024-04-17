@@ -208,6 +208,7 @@ export const parseImageString = (imageString: string, modifications: string | bo
   if (!imageString || imageString.includes('placehold.co')) return MISSING_CARD_IMG
   if (imageString.endsWith('.mp4') || imageString.endsWith('.gif')) return imageString.replace('url:', '')
   // if starts with url: then it's a url
+
   if (imageString.startsWith('id:')) {
     imageString = `url:https://s3.girae.altadena.space/${imageString.replace('id:', '')}.jpg`
   }

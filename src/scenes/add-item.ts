@@ -45,7 +45,7 @@ const editSentMessage = (ctx) => ctx.session.editMainMessageCaption(editingText(
   parse_mode: 'HTML'
 })
 
-const prefixed = (a) => a.startsWith('url:') ? a : `url:${a}`
+const prefixed = (a) => a.startsWith('url:') || a.startsWith('id') ? a : `url:${a}`
 const generateUserProfile = async (ctx: SessionContext<ItemData>) => {
   switch (ctx.session.data.type) {
     case 'BACKGROUND':
