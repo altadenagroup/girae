@@ -82,13 +82,15 @@ class CollectionPages extends PaginatedScene<CollectionData> {
         rarity: true,
         category: true
       },
-      skip: (data.currentPage * 20) || 0,
+      skip: data.currentPage * 20 || 0,
       take: 20,
       // sort by rarity id: 4 first, 3 second, 1 last
       orderBy: {
         rarityId: 'desc'
       }
     })
+
+    console.log('now showing page', data.currentPage, 'with', r.length, 'cards, skipping', data.currentPage * 20)
 
     const resultCount = await _brklyn.db.card.count({ where: filter })
     data.resultsCount = resultCount

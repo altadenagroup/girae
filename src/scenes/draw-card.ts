@@ -12,8 +12,6 @@ import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine
 import { determineMediaType, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
 import { BotContext } from '../types/context.js'
 
-const sixOptionsCategories = ['GIRÁSIA', 'Variedades']
-
 interface DrawData {
   chosenCategory: Category
 }
@@ -87,7 +85,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   ctx.session.data.chosenCategory = cat
-  const subcategories = await getRandomSubcategories(cat.id, sixOptionsCategories.includes(cat.name) ? 6 : 4)
+  const subcategories = await getRandomSubcategories(cat.id, 6)
   const keyboard = subcategories.map((sub, i) => {
     return {
       text: `${NUMBER_EMOJIS[i + 1]}`,

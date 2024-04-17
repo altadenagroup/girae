@@ -106,6 +106,12 @@ export class SessionManager {
     const sessionKey = await this.bot.cache.get('es2_user_keys', key)
     if (!sessionKey) return next()
 
+    // if this is a message and it contains the text /cancel, delete the session but keep running
+    // @ts-ignore
+    if (ctx.message?.text?.startsWith?.('/cancel')) {
+      await this.deleteSession(sessionKey)
+    }
+
     const session = await this.bot.cache.get('es2_sessions', sessionKey)
     if (!session || !session.es2Enabled) return next()
 
