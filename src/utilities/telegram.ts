@@ -95,7 +95,7 @@ export const escapeHTML = (text: string) => {
 }
 
 export const getAvatarURL = (file) => file
-? `https://tg.altadena.space/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+? `tg:${file.file_path}`
 : 'https://placehold.co/300x300.png?text=sem+foto'
 
 export const generateMessageLink = (chatID: number | string, messageID: number, threadId: number | undefined) => {

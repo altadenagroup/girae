@@ -1,6 +1,6 @@
 import { Card, ProfileBackground, ProfileSticker, User, UserCard, UserProfile } from '@prisma/client'
 import { User as TelegramUser } from 'telegraf/types'
-import { cachedGetUserPhotoAndFile } from '../utilities/telegram.js'
+import { cachedGetUserPhotoAndFile, getAvatarURL } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
 import { MISSING_CARD_IMG } from '../constants.js'
@@ -23,7 +23,7 @@ export class Ditto {
     favoriteCard: UserCard | null
   }, favoriteCard: Card | null, tgUser: TelegramUser) {
     const file = await cachedGetUserPhotoAndFile(tgUser!.id)
-    const avatarURL = file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+    const avatarURL = getAvatarURL(file)
 
     let badges: string[] = []
     if (userD.isAdmin) badges = [...badges, '👮‍♂️']
