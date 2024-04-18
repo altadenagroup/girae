@@ -56,6 +56,10 @@ export default class Brooklyn extends Client {
       errorThreshold: 5,
       useSessions: false,
       middlewares: []
+    }, {
+      telegram: {
+        apiRoot: 'https://tg.altadena.space/'
+      }
     })
 
     this.internalCache = cache
