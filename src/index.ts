@@ -8,6 +8,7 @@ import { info } from 'melchior'
 
 if (process.env.RUN_BETA) {
   info('giraê', 'running in beta mode')
+  process.env.OG_TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN
   process.env.TELEGRAM_TOKEN = process.env.BETA_TELEGRAM_TOKEN
   process.env.LAUNCH_POLLING = 'true'
 }

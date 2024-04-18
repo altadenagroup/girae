@@ -37,7 +37,7 @@ export const cachedGetUserPhotoAndFile = async (id: number) => {
 export const generatePhotoLink = async (fileID: string) => {
   const file = await _brklyn.telegram.getFile(fileID).catch(() => null)
   if (!file) return null
-  return `https://tg.altadena.space/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+  return `tg:${file.file_path}`
 }
 
 export const determineMethodToSendMedia = (link: string) => {
