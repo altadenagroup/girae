@@ -37,7 +37,7 @@ export const cachedGetUserPhotoAndFile = async (id: number) => {
 export const generatePhotoLink = async (fileID: string) => {
   const file = await _brklyn.telegram.getFile(fileID).catch(() => null)
   if (!file) return null
-  return `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+  return `https://tg.altadena.space/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
 }
 
 export const determineMethodToSendMedia = (link: string) => {
@@ -94,7 +94,9 @@ export const escapeHTML = (text: string) => {
     .replaceAll(/>/g, '&gt;')
 }
 
-export const getAvatarURL = (file) => file ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+export const getAvatarURL = (file) => file
+? `https://tg.altadena.space/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`
+: 'https://placehold.co/300x300.png?text=sem+foto'
 
 export const generateMessageLink = (chatID: number | string, messageID: number, threadId: number | undefined) => {
   // if the chatId is a string, it's a public group, so we have to drop the /c/ part

@@ -2,6 +2,7 @@ import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
 import { info } from 'melchior'
 import { fastify } from 'fastify'
+import * as Sentry from '@sentry/node'
 
 const app = process.env.MAIN_CONTAINER ? null : fastify()
 
@@ -26,8 +27,19 @@ export const bootstrap = async () => {
       secretToken: undefined
     })
 
+
     // @ts-ignore
-    app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, webhook)
+    app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, async (req, res) => {
+      try {
+        // @ts-ignore
+        const t = await webhook(req, res)
+        return t
+      } catch (e) {
+        Sentry.setTags({ type: 'webhook' })
+        Sentry.captureException(e)
+        res.status(200).send()
+      }
+    })
 
     app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
