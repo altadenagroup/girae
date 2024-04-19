@@ -8,12 +8,12 @@ import { OpenAI } from 'openai'
 import { AdvancedRedisStore } from './utilities/session-store.js'
 import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
-import { Sidecar } from './sidecar'
+import { Sidecar } from './sidecar/index.js'
 import { SessionManager } from './sessions/manager.js'
 import * as Sentry from '@sentry/node'
-import { bootstrap } from './networking'
-import { S3Storage } from './storage'
-import { Ditto } from './ditto'
+import { bootstrap } from './networking/index.js'
+import { S3Storage } from './storage/index.js'
+import { Ditto } from './ditto/index.js'
 
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
