@@ -173,7 +173,7 @@ Para cancelar, use /cancelar.
       ...msgData
       // @ts-ignore
     }).then((t) => setUserDisplayMessageID({
-      from: { id: trade.users[0] } as BotContext,
+      from: { id: trade.users[0] } as any,
       chat: { id: trade.users[0] } as any
     }, t.message_id))
   } else {
@@ -192,7 +192,7 @@ Para cancelar, use /cancelar.
       ...msgData
       // @ts-ignore
     }).then((t) => setUserDisplayMessageID({
-      from: { id: trade.users[1] } as BotContext,
+      from: { id: trade.users[1] } as any,
       chat: { id: trade.users[1] } as any
     }, t.message_id))
   } else {
