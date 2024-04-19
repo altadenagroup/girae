@@ -32,7 +32,7 @@ export const createCard = async (options: CreateCardOptions) => {
   if (card) {
     // if the only difference is the rarity, we'll update the rarity and return the card.
     if (card.rarityId !== rarityID) {
-      const updatedCard = await _brklyn.db.card.update({
+      return _brklyn.db.card.update({
         where: {
           id: card.id
         },
@@ -40,10 +40,9 @@ export const createCard = async (options: CreateCardOptions) => {
           rarityId: rarityID
         }
       })
-      return updatedCard
     }
   }
-  const newCard = await _brklyn.db.card.create({
+  return _brklyn.db.card.create({
     data: {
       name,
       subcategoryId: sub.id,
@@ -53,13 +52,11 @@ export const createCard = async (options: CreateCardOptions) => {
       rarityModifier
     }
   })
-
-  return newCard
 }
 
 export const getCardByID = async (id: number | undefined) => {
   if (!id) return null
-  return await _brklyn.db.card.findFirst({
+  return _brklyn.db.card.findFirst({
     where: {
       id
     },
@@ -73,7 +70,7 @@ export const getCardByID = async (id: number | undefined) => {
 
 export const getCardFullByID = async (id: number | undefined) => {
   if (!id) return null
-  return await _brklyn.db.card.findFirst({
+  return _brklyn.db.card.findFirst({
     where: {
       id
     },
@@ -370,8 +367,7 @@ export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory,
       }
     },
     include: {
-      card: {
-      }
+      card: {}
     }
   })
 }

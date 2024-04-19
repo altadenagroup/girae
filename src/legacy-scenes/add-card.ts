@@ -7,7 +7,11 @@ import { generate as inferCardData } from '../prompts/card-detection.js'
 import { CommonMessageBundle } from 'telegraf/types'
 import { Composer, Markup } from 'telegraf'
 import { getCategoryByName, getOrCreateCategory } from '../utilities/engine/category.js'
-import { getOrCreateSubcategory, getSubcategoryByName, migrateCardsToSubcategory } from '../utilities/engine/subcategories.js'
+import {
+  getOrCreateSubcategory,
+  getSubcategoryByName,
+  migrateCardsToSubcategory
+} from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
 import { Card, Category, Rarity, Subcategory } from '@prisma/client'
 

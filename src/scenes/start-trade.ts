@@ -1,7 +1,13 @@
 import { ParseMode, User } from 'telegraf/types.js'
 import { SessionContext } from '../sessions/context.js'
 import { AdvancedScene } from '../sessions/scene.js'
-import { cachedGetUserPhotoAndFile, generateMessageLink, getAvatarURL, launchStartURL, mentionUser } from '../utilities/telegram.js'
+import {
+  cachedGetUserPhotoAndFile,
+  generateMessageLink,
+  getAvatarURL,
+  launchStartURL,
+  mentionUser
+} from '../utilities/telegram.js'
 import { generateID } from '../utilities/misc.js'
 import { BotContext } from '../types/context.js'
 import { MEDAL_MAP } from '../constants.js'
@@ -165,8 +171,11 @@ Para cancelar, use /cancelar.
       caption: text,
       parse_mode: 'HTML' as ParseMode,
       ...msgData
-    // @ts-ignore
-    }).then((t) => setUserDisplayMessageID({ from: { id: trade.users[0] } as BotContext, chat: { id: trade.users[0] } as any }, t.message_id))
+      // @ts-ignore
+    }).then((t) => setUserDisplayMessageID({
+      from: { id: trade.users[0] } as BotContext,
+      chat: { id: trade.users[0] } as any
+    }, t.message_id))
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
       type: 'photo',
@@ -181,8 +190,11 @@ Para cancelar, use /cancelar.
       caption: text,
       parse_mode: 'HTML' as ParseMode,
       ...msgData
-    // @ts-ignore
-    }).then((t) => setUserDisplayMessageID({ from: { id: trade.users[1] } as BotContext, chat: { id: trade.users[1] } as any }, t.message_id))
+      // @ts-ignore
+    }).then((t) => setUserDisplayMessageID({
+      from: { id: trade.users[1] } as BotContext,
+      chat: { id: trade.users[1] } as any
+    }, t.message_id))
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
       type: 'photo',
@@ -208,10 +220,7 @@ export const setUserReady = async (ctx: BotContext, ready: boolean): Promise<boo
   await _brklyn.cache.set(`ongoing_trades_isready${userNumber}`, tradeID, ready)
   const isReady1 = await _brklyn.cache.get('ongoing_trades_isready1', tradeID)
   const isReady2 = await _brklyn.cache.get('ongoing_trades_isready2', tradeID)
-  if (isReady1 && isReady2) {
-    return true
-  }
-  return false
+  return !!(isReady1 && isReady2)
 }
 
 const sessionsBeingUpdated = new Set<string>()
@@ -515,10 +524,7 @@ export const setUserDone = async (ctx: BotContext, done: boolean): Promise<boole
   await _brklyn.cache.set(`ongoing_trades_isdone${userNumber}`, tradeID, done)
   const isDone1 = await _brklyn.cache.get('ongoing_trades_isdone1', tradeID)
   const isDone2 = await _brklyn.cache.get('ongoing_trades_isdone2', tradeID)
-  if (isDone1 && isDone2) {
-    return true
-  }
-  return false
+  return !!(isDone1 && isDone2)
 }
 
 // @ts-ignore

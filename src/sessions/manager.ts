@@ -78,19 +78,22 @@ export class SessionManager {
       const sessionKey = ctx.callbackQuery.data.split('.').slice(1)[0]
       const session = await this.bot.cache.get('es2_sessions', sessionKey)
       if (!session) {
-        await ctx.answerCbQuery('1 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        await ctx.answerCbQuery('1 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {
+        })
         return next()
       }
       // get attached users. if the sender isn't one of them, return
       if (session.sessionID !== this.generateUserKey(ctx)) {
-        await ctx.answerCbQuery('2 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        await ctx.answerCbQuery('2 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {
+        })
         return next()
       }
 
       const scene = this.scenes.find(s => s.id === session.scene)
       if (!scene) {
         warn('es²', `tried to resume scene ${session.scene} but it was not found`)
-        await ctx.answerCbQuery('3 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {})
+        await ctx.answerCbQuery('3 - Esse comando é velho e não pode mais ser usado. Use o comando novamente.').catch(() => {
+        })
         return next()
       }
       const allowedUpdates = scene.allowedEvents
@@ -147,11 +150,7 @@ export class SessionManager {
 
   async checkAttributes (ctx: SessionContext<any>, data: { [key: string]: any }) {
     // @ts-ignore
-    if (data?._prohibitMultipleCommands && ctx.message?.text?.startsWith?.('/')) {
-      return false
-    }
-
-    return true
+    return !(data?._prohibitMultipleCommands && ctx.message?.text?.startsWith?.('/'))
   }
 
   async handleSession (ctx: SessionContext<any>, session: SessionData, scene: AdvancedScene<any>, userKey: string, args: {
@@ -271,7 +270,8 @@ export class SessionManager {
     }
 
     if (ctx.callbackQuery) {
-      await ctx.deleteMessage().catch(() => {})
+      await ctx.deleteMessage().catch(() => {
+      })
     }
     await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())
 

@@ -18,8 +18,14 @@ export default async (ctx: BotContext) => {
   }
 
   // get the id of all users they have traded with and get the top 5 most traded with
-  const tradeGivingEnd = await _brklyn.db.consumedTrade.findMany({ where: { user1Id: userD.id }, select: { user2Id: true } })
-  const tradeReceivingEnd = await _brklyn.db.consumedTrade.findMany({ where: { user2Id: userD.id }, select: { user1Id: true } })
+  const tradeGivingEnd = await _brklyn.db.consumedTrade.findMany({
+    where: { user1Id: userD.id },
+    select: { user2Id: true }
+  })
+  const tradeReceivingEnd = await _brklyn.db.consumedTrade.findMany({
+    where: { user2Id: userD.id },
+    select: { user1Id: true }
+  })
 
   const tradeGiving = {}
   const tradeReceiving = {}

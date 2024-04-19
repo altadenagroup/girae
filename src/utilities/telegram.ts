@@ -1,8 +1,8 @@
-import { ChatMember, User } from "telegraf/types"
-import { BotContext } from "../types/context.js"
-import { generateID } from "./misc.js"
-import { info } from "melchior"
-import { escapeForHTML } from "./responses.js"
+import { ChatMember, User } from 'telegraf/types'
+import { BotContext } from '../types/context.js'
+import { generateID } from './misc.js'
+import { info } from 'melchior'
+import { escapeForHTML } from './responses.js'
 
 
 export const isUserOnNewsChannel = async (id: number) => {
@@ -95,8 +95,8 @@ export const escapeHTML = (text: string) => {
 }
 
 export const getAvatarURL = (file) => file
-? `tg:${file.file_path}`
-: 'https://placehold.co/300x300.png?text=sem+foto'
+  ? `tg:${file.file_path}`
+  : 'https://placehold.co/300x300.png?text=sem+foto'
 
 export const generateMessageLink = (chatID: number | string, messageID: number, threadId: number | undefined) => {
   // if the chatId is a string, it's a public group, so we have to drop the /c/ part
@@ -105,8 +105,7 @@ export const generateMessageLink = (chatID: number | string, messageID: number, 
     // if it doesn't start with -100, just remove the -
     if (chatID.toString().startsWith('-') && !chatID.toString().startsWith('-100')) return `https://t.me/c/${chatID.toString().substring(1)}/${threadId ? `${threadId}/` : ''}${messageID}`
     return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
-  }
-  else return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
+  } else return `https://t.me/c/${chatID.toString().substring(4)}/${threadId ? `${threadId}/` : ''}${messageID}`
 }
 
 const mimeToExtension = {
@@ -199,8 +198,7 @@ export const getMentionedUser = async (ctx: BotContext, arg: string | undefined 
   // @ts-ignore
   const reply = ctx.message.reply_to_message
   if (reply && reply.from && reply.from.id !== 777000) {
-    const user = await _brklyn.db.user.findUnique({ where: { tgId: reply.from.id } })
-    return user
+    return _brklyn.db.user.findUnique({ where: { tgId: reply.from.id } })
   }
   return ctx.userData
 }

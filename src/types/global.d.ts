@@ -7,6 +7,6 @@ declare global {
 // add chunk method to Array definition
 declare global {
   interface Array<T> {
-    chunk(chunkSize: number): T[][]
+    chunk (chunkSize: number): T[][]
   }
 }

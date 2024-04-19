@@ -14,7 +14,12 @@ export default async (ctx: BotContext) => {
     return ctx.replyWithHTML('Categoria não encontrada. As seguintes categorias estão disponíveis:\n\n' + cats.map(c => `${c.emoji} <code>${c.id}</code>. <b>${c.name}</b>`).join('\n'))
   }
 
-  const sub = await _brklyn.db.subcategory.findFirst({ where: { name: { equals: name, mode: 'insensitive' }, categoryId: cat.id } })
+  const sub = await _brklyn.db.subcategory.findFirst({
+    where: {
+      name: { equals: name, mode: 'insensitive' },
+      categoryId: cat.id
+    }
+  })
   if (sub) {
     return ctx.reply('Subcategoria já existe.')
   }

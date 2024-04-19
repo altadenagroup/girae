@@ -1,6 +1,6 @@
 import { inspect } from 'node:util'
 
-const clean = async (val) => {
+const clean = async (val: any) => {
   if (val && val.constructor?.name === 'Promise') val = await val
   if (typeof val !== 'string') val = inspect(val, { depth: 2 })
   return val
@@ -11,17 +11,8 @@ const clean = async (val) => {
 }
 
 export default async (ctx) => {
-  const engine = await import('../utilities/engine/index.js')
-  let r2s = engine.r2s
-  let subcategories = engine.subcategories
-  let users = engine.users
-  let rarities = engine.rarities
-  let economy = engine.economy
-  let cards = engine.cards
-  let categories = engine.categories
-
   let code = ctx.update.message.text.split(' ').slice(1).join(' ')
-  let r = '"no assignment made"'
+  let r: string
   // if the code doesn't have an \n, we assume it's a single line and we wrap it in a function
   if (!code.includes('\n')) code = `(async () => (${code}))()`
 

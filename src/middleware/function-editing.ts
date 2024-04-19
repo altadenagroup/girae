@@ -49,7 +49,7 @@ setInterval(async () => {
           req.retries++
           scheduleRequest(req.fnName, req.ctx, req.extra, req.data, req.retries, req.retryAfter)
         }
-        error('function-editing', 'retried request too many times. error is '+ e.message)
+        error('function-editing', 'retried request too many times. error is ' + e.message)
       })
     }
   }

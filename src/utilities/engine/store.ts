@@ -1,4 +1,4 @@
-import { ItemType, ShopItem, User } from "@prisma/client";
+import { ItemType, ShopItem, User } from '@prisma/client'
 
 export const handleBoughtItem = async (user: User, item: ShopItem, amount: number | undefined = undefined) => {
   switch (item.type) {

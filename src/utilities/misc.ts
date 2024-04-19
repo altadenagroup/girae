@@ -53,10 +53,10 @@ export const getRandomNumber = () => {
 
 export const pluralize = (count: number, word: string, suffix = 's', amountOfLettersToDrop = 0) => {
   const w = count === 1
-  ? word
-  : (amountOfLettersToDrop >= 1 ?
-    word.slice(0, -amountOfLettersToDrop) + suffix
-    : word + suffix)
+    ? word
+    : (amountOfLettersToDrop >= 1 ?
+      word.slice(0, -amountOfLettersToDrop) + suffix
+      : word + suffix)
 
   return `${readableNumber(count)} ${w}`
 }

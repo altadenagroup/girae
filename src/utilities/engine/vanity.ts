@@ -1,4 +1,4 @@
-import { ProfileBackground, ProfileSticker } from "@prisma/client"
+import { ProfileBackground, ProfileSticker } from '@prisma/client'
 
 export const searchBackgrounds = async (query: string, page: number = 1, limit: number = 10): Promise<ProfileBackground[]> => {
   const cached = await _brklyn.cache.get('backgrounds', `${query}-${page}-${limit}`)

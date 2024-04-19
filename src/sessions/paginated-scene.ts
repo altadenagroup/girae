@@ -27,7 +27,8 @@ export class PaginatedScene<T extends PaginatedSceneData> {
   private buttons: string[][] = []
 
   constructor (public id: string, public handlers: SceneHandler<T>[],
-    public allowedEvents: UpdateType[] = ['callback_query']) {}
+               public allowedEvents: UpdateType[] = ['callback_query']) {
+  }
 
   generateCallbackText (ctx, renderPage: number, userID: number, totalPages: number, modifiers: string[]) {
     return ctx.session.generateSessionQuery(`${this.id}.${userID}.${renderPage}/${totalPages}.${modifiers.join(',')}`)
@@ -108,14 +109,16 @@ export class PaginatedScene<T extends PaginatedSceneData> {
         reply_markup: {
           inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
-      }).catch(() => {})
+      }).catch(() => {
+      })
     } else {
       return ctx.editMessageText(text, {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: this.generateButtons(ctx, ctx.session.data)
         }
-      }).catch(() => { })
+      }).catch(() => {
+      })
     }
   }
 
@@ -158,7 +161,7 @@ export class PaginatedScene<T extends PaginatedSceneData> {
     ctx.session.data.hasImage = false
   }
 
-  async run(ctx: SessionContext<T>): Promise<CurrentSceneStatus> {
+  async run (ctx: SessionContext<T>): Promise<CurrentSceneStatus> {
     if (ctx.updateType === 'callback_query') {
       const r = await this.handleCallback(ctx)
       // @ts-ignore

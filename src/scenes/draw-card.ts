@@ -73,7 +73,6 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 }
 
 
-
 const secondStep = async (ctx: SessionContext<DrawData>) => {
   if (!ctx.callbackQuery?.data) return
   const categoryId = ctx.session.getDataFromSessionQuery<number>(parseInt)
@@ -104,18 +103,18 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.steps.next()
 
   await ctx.editMessageMedia({
-      type: 'animation',
-      media: 'https://altadena.space/assets/girar-two.mp4',
-      caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
-      parse_mode: 'HTML'
-    }, {
-      reply_markup: {
-        inline_keyboard: chunked
-      },
-    }).catch(async (e) => {
-      warn('scenes.draw', 'could not edit message: ' + e.message)
-      return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
-    })
+    type: 'animation',
+    media: 'https://altadena.space/assets/girar-two.mp4',
+    caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
+    parse_mode: 'HTML'
+  }, {
+    reply_markup: {
+      inline_keyboard: chunked
+    }
+  }).catch(async (e) => {
+    warn('scenes.draw', 'could not edit message: ' + e.message)
+    return exitCommand(ctx, true, 'Oops! Estão girando rápido demais neste grupo. Aguarde e selecione a categoria novamente, ou use /cancelar e gire de novo.')
+  })
 }
 
 const thirdStep = async (ctx: SessionContext<DrawData>) => {
@@ -171,7 +170,7 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
   }, {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🎲', url: launchStartURL('delete', card.id.toString()) }],
+        [{ text: '🎲', url: launchStartURL('delete', card.id.toString()) }]
       ]
     }
   }).catch(async (e) => {
@@ -187,8 +186,10 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
 
 const exitCommand = async (ctx: SessionContext<DrawData>, giveDrawBack: boolean = false, message: string = '🚪 Comando cancelado.') => {
   // if this was a callback query, delete the message from which it originated from.
-  if (ctx.callbackQuery) await ctx.deleteMessage().catch(() => {})
-  else await ctx.session.deleteMainMessage().catch(() => {})
+  if (ctx.callbackQuery) await ctx.deleteMessage().catch(() => {
+  })
+  else await ctx.session.deleteMainMessage().catch(() => {
+  })
 
   ctx.session.steps.leave()
   await _brklyn.cache.del('is_drawing', ctx.from?.id.toString())

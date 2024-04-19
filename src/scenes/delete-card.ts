@@ -1,10 +1,10 @@
-import {Card} from '@prisma/client'
-import {SessionContext} from '../sessions/context.js'
-import {AdvancedScene} from '../sessions/scene.js'
-import {parseImageString} from '../utilities/lucky-engine.js'
-import {determineMethodToSendMedia} from '../utilities/telegram.js'
-import {addBalance} from '../utilities/engine/economy.js'
-import {warn} from 'melchior'
+import { Card } from '@prisma/client'
+import { SessionContext } from '../sessions/context.js'
+import { AdvancedScene } from '../sessions/scene.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { determineMethodToSendMedia } from '../utilities/telegram.js'
+import { addBalance } from '../utilities/engine/economy.js'
+import { warn } from 'melchior'
 
 interface DeleteData {
   card: Card

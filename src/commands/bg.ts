@@ -40,7 +40,7 @@ const viewBackground = async (ctx: BotContext, bg: ProfileBackground) => {
   const method = determineMethodToSendMedia(img)
   return ctx[method!](img, {
     caption: text,
-    parse_mode: 'HTML',
+    parse_mode: 'HTML'
   }).catch(() => {
     return ctx.replyWithPhoto(MISSING_CARD_IMG, { caption: text, parse_mode: 'HTML' })
   })
@@ -48,5 +48,5 @@ const viewBackground = async (ctx: BotContext, bg: ProfileBackground) => {
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['background', 'header', 'banner'],
+  aliases: ['background', 'header', 'banner']
 }

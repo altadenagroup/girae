@@ -1,4 +1,3 @@
-
 // gets the top 3 users with the most money, and returns the user placement
 export const getTopRichestUsers = async (limit: number) => {
   const cached = await _brklyn.cache.get('rankings', 'richest' + limit)

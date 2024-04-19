@@ -97,34 +97,34 @@ Cliquem em <b>✅ Confirmar</b> para finalizar a troca, ou <b>❌ Cancelar</b> p
 Atenção: a troca será desfeita caso um dos usuários clique em cancelar. Preste atenção!
     `
 
-    const data = {
-      card1,
-      card1UserCardId: userCardCount1.id,
-      card2,
-      card2UserCardId: userCardCount2.id,
-      user1: { name: user1.name, id: user1.id.toString() },
-      user2: { name: user2.name, id: user2.id.toString() },
-      _mainMessage: 0
-    } as TradeData
+  const data = {
+    card1,
+    card1UserCardId: userCardCount1.id,
+    card2,
+    card2UserCardId: userCardCount2.id,
+    user1: { name: user1.name, id: user1.id.toString() },
+    user2: { name: user2.name, id: user2.id.toString() },
+    _mainMessage: 0
+  } as TradeData
 
-    const tradeID = await createTradeCache(data)
-    return ctx.replyWithPhoto(dittoData.url, {
-      caption: text,
-      reply_markup: {
-        inline_keyboard: [
-          [{
-            text: '✅ Confirmar',
-            callback_data: tcqc.generateCallbackQuery('qt.confirm', { tradeID })
-          }, {
-            text: '❌ Cancelar',
-            callback_data: tcqc.generateCallbackQuery('qt.cancel', { tradeID })
-          }]
-        ]
-      },
-      parse_mode: 'HTML'
-    }).then((t) => {
-      return updateTradeCache(tradeID, { ...data, _mainMessage: t.message_id })
-    })
+  const tradeID = await createTradeCache(data)
+  return ctx.replyWithPhoto(dittoData.url, {
+    caption: text,
+    reply_markup: {
+      inline_keyboard: [
+        [{
+          text: '✅ Confirmar',
+          callback_data: tcqc.generateCallbackQuery('qt.confirm', { tradeID })
+        }, {
+          text: '❌ Cancelar',
+          callback_data: tcqc.generateCallbackQuery('qt.cancel', { tradeID })
+        }]
+      ]
+    },
+    parse_mode: 'HTML'
+  }).then((t) => {
+    return updateTradeCache(tradeID, { ...data, _mainMessage: t.message_id })
+  })
 }
 
 export const info = {

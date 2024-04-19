@@ -8,12 +8,13 @@ import { OpenAI } from 'openai'
 import { AdvancedRedisStore } from './utilities/session-store.js'
 import { Context, session } from 'telegraf'
 import { functionEditing } from './middleware/function-editing.js'
-import { Sidecar } from './sidecar/index.js'
+import { Sidecar } from './sidecar'
 import { SessionManager } from './sessions/manager.js'
 import * as Sentry from '@sentry/node'
-import { bootstrap } from './networking/index.js'
-import { S3Storage } from './storage/index.js'
-import { Ditto } from './ditto/index.js'
+import { bootstrap } from './networking'
+import { S3Storage } from './storage'
+import { Ditto } from './ditto'
+
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
 
@@ -22,8 +23,7 @@ export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
 const middlewareSafety = (fun) => {
   return async (...args) => {
     try {
-      const data = await fun(...args)
-      return data
+      return await fun(...args)
     } catch (e: any) {
       error('middleware', `an exception was thrown in a middleware. THIS IS UNACCEPTABLE!\n${e.stack}`)
       Sentry.setTag('wasMiddleware', 'true')
@@ -83,7 +83,7 @@ export default class Brooklyn extends Client {
 
   async generateImage (templateKey: string, data: Record<string, any>) {
     // request to ditto
-    const res = await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
+    return await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -99,15 +99,13 @@ export default class Brooklyn extends Client {
       info('ditto.generateImage', `got an error: ${e}`)
       return null
     })
-
-    return res
   }
 
   async getDittoMetadata (): Promise<DittoMetadata> {
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
 
-  healthCheck(): Promise<boolean> {
+  healthCheck (): Promise<boolean> {
     // check if we can set and get from cache and database
     return Promise.all([
       this.cache.set('health', 'check', 'ok'),
@@ -148,15 +146,15 @@ export default class Brooklyn extends Client {
     })
   }
 
+  setUpNetworkingFeatures () {
+    bootstrap()
+  }
+
   private setUpMainContainerTasks () {
     if (!process.env.MAIN_CONTAINER) return
 
     info('bot', 'considering this instance as the main container')
     this.sidecar.scheduleAll()
-  }
-
-  setUpNetworkingFeatures () {
-    bootstrap()
   }
 
   private onExit (code: number) {

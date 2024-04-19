@@ -40,7 +40,7 @@ const viewSticker = async (ctx: BotContext, bg: ProfileSticker) => {
   const method = determineMethodToSendMedia(img)
   return ctx[method!](img, {
     caption: text,
-    parse_mode: 'HTML',
+    parse_mode: 'HTML'
   }).catch(() => {
     return ctx.replyWithPhoto(MISSING_CARD_IMG, { caption: text, parse_mode: 'HTML' })
   })
@@ -48,5 +48,5 @@ const viewSticker = async (ctx: BotContext, bg: ProfileSticker) => {
 
 export const info = {
   guards: ['hasJoinedGroup'],
-  aliases: ['figurinha'],
+  aliases: ['figurinha']
 }

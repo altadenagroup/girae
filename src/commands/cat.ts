@@ -1,6 +1,6 @@
-import { BotContext } from "../types/context.js"
-import { parseImageString } from "../utilities/lucky-engine.js"
-import { getCategoryFromArg } from "../utilities/parser.js"
+import { BotContext } from '../types/context.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { getCategoryFromArg } from '../utilities/parser.js'
 
 export const prettyCategories = (cats) =>
   cats

@@ -1,5 +1,5 @@
-import {UpdateType} from 'telegraf/typings/telegram-types'
-import {SessionContext} from './context.js'
+import { UpdateType } from 'telegraf/typings/telegram-types'
+import { SessionContext } from './context.js'
 
 export type SceneHandler<DataType> = (ctx: SessionContext<DataType>) => Promise<void>
 
@@ -9,19 +9,19 @@ export class SceneController {
   leaveCalled = false
   jumpToStep: number | null = null
 
-  next() {
+  next () {
     this.nextCalled = true
   }
 
-  back() {
+  back () {
     this.backCalled = true
   }
 
-  leave() {
+  leave () {
     this.leaveCalled = true
   }
 
-  jumpTo(step: number) {
+  jumpTo (step: number) {
     this.jumpToStep = step
   }
 }
@@ -32,14 +32,14 @@ export interface CurrentSceneStatus {
 }
 
 export class AdvancedScene<T> {
-  constructor(
+  constructor (
     public id: string,
     public handlers: SceneHandler<T>[],
     public allowedEvents: UpdateType[] = ['callback_query']
   ) {
   }
 
-  async run(ctx: SessionContext<T>, step: number): Promise<CurrentSceneStatus> {
+  async run (ctx: SessionContext<T>, step: number): Promise<CurrentSceneStatus> {
     const controller = ctx.session.steps
     const handler = this.handlers[step]
 

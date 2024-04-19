@@ -1,9 +1,9 @@
-import { Arg, Ctx, Field, Info, Int, Mutation, ObjectType, Query, Resolver } from "type-graphql";
-import { UserCard, ShopItem } from '@generated/type-graphql'
-import { parseImageString } from "../../utilities/lucky-engine.js";
-import { MISSING_CARD_IMG } from "../../constants.js";
-import { buyStoreItem } from "../../utilities/engine/store.js";
-import { getUserFromNamekeeper } from "../../utilities/telegram.js";
+import { Arg, Ctx, Field, Info, Int, Mutation, ObjectType, Query, Resolver } from 'type-graphql'
+import { ShopItem, UserCard } from '@generated/type-graphql'
+import { parseImageString } from '../../utilities/lucky-engine.js'
+import { MISSING_CARD_IMG } from '../../constants.js'
+import { buyStoreItem } from '../../utilities/engine/store.js'
+import { getUserFromNamekeeper } from '../../utilities/telegram.js'
 
 @ObjectType({
   description: 'Subcategory information'
@@ -91,7 +91,7 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
 @Resolver()
 export class UserCardsResolver {
   @Query(_returns => SubcategoryProgressWithCards)
-  async fullUserCards(
+  async fullUserCards (
     @Ctx() _: any,
     @Info() _a: any,
     // user ids are bigint
@@ -202,11 +202,16 @@ export class UserCardsResolver {
   }
 
   @Mutation(_returns => Boolean)
-  async markCardUntradeable(
+  async markCardUntradeable (
     @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
     @Arg('cardId', _type => Int, { nullable: false, description: 'The card id' }) cardId: number
   ) {
-    const c = await _brklyn.db.userCardPreferences.findFirst({ where: { user: { tgId: parseInt(userId) }, card: { id: cardId } } })
+    const c = await _brklyn.db.userCardPreferences.findFirst({
+      where: {
+        user: { tgId: parseInt(userId) },
+        card: { id: cardId }
+      }
+    })
     if (c) {
       await _brklyn.db.userCardPreferences.updateMany({
         where: {
@@ -232,7 +237,7 @@ export class UserCardsResolver {
   }
 
   @Query(_returns => [ShopItem])
-  async storeItems(
+  async storeItems (
     @Ctx() _: any,
     @Info() _a: any
   ) {
@@ -263,7 +268,7 @@ export class UserCardsResolver {
 
   // search store items with a given text and optionally a type
   @Query(_returns => [ShopItem])
-  async searchStoreItems(
+  async searchStoreItems (
     @Ctx() _: any,
     @Info() _a: any,
     @Arg('text', _type => String, { nullable: false, description: 'The search text' }) text: string,
@@ -295,7 +300,7 @@ export class UserCardsResolver {
   }
 
   @Mutation(_returns => Boolean)
-  async buyItem(
+  async buyItem (
     @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
     @Arg('shopEntryId', _type => Int, { nullable: false, description: 'The shop entry id' }) shopEntryId: number,
     @Arg('quantity', _type => Int, { nullable: false, description: 'The quantity of items to buy' }) quantity: number

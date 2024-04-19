@@ -1,8 +1,8 @@
-import {BotContext} from "../types/context.js"
-import {setFavoriteCard} from "../utilities/engine/users.js"
-import {parseImageString} from "../utilities/lucky-engine.js"
-import {getCardFromArg} from "../utilities/parser.js"
-import {determineMethodToSendMedia} from "../utilities/telegram.js"
+import { BotContext } from '../types/context.js'
+import { setFavoriteCard } from '../utilities/engine/users.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { getCardFromArg } from '../utilities/parser.js'
+import { determineMethodToSendMedia } from '../utilities/telegram.js'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) return ctx.responses.replyMissingArgument('o nome ou ID do personagem a ser favoritado', '/fav Katsuragi Misato')

@@ -5,6 +5,7 @@ import './utilities/prototypes.js'
 import { createClient, RedisClientType } from 'redis'
 import 'reflect-metadata'
 import { info } from 'melchior'
+import Brooklyn from './Brooklyn.js'
 
 if (process.env.RUN_BETA) {
   info('giraê', 'running in beta mode')
@@ -13,9 +14,7 @@ if (process.env.RUN_BETA) {
   process.env.LAUNCH_POLLING = 'true'
 }
 
-import Brooklyn from './Brooklyn.js'
-
-const client = createClient({url: process.env.REDIS_URL})
+const client = createClient({ url: process.env.REDIS_URL })
 client.on('error', (err) => {
   console.error('An error occurred:', err)
   if (err.message.includes('ECONNREFUSED')) {

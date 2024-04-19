@@ -1,6 +1,6 @@
-import {Subcategory} from "@prisma/client"
-import { getRandomNumber } from "../misc.js"
-import { getCardsByTag } from "./cards.js"
+import { Subcategory } from '@prisma/client'
+import { getRandomNumber } from '../misc.js'
+import { getCardsByTag } from './cards.js'
 
 export const createSubcategory = async (name: string, categoryID: number) => {
   return _brklyn.db.subcategory.create({
@@ -69,7 +69,7 @@ export const searchSubcategories = async (name: string, isSecondary: boolean = f
       name: {
         search: name
       },
-      isSecondary: isSecondary === true ? true : { }
+      isSecondary: isSecondary ? true : {}
     },
     include: {
       category: true

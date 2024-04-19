@@ -1,4 +1,4 @@
-import { clearTradeData, generateImageURL, hasUserDisplayMessageID, setUserDisplayMessageID } from '../scenes/start-trade.js'
+import { generateImageURL, hasUserDisplayMessageID, setUserDisplayMessageID } from '../scenes/start-trade.js'
 import { BotContext } from '../types/context.js'
 import deleteCommand from './delete.js'
 
