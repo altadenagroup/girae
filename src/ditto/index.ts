@@ -56,8 +56,8 @@ export class Ditto {
   async generateTrade (user1: UserData, user2: UserData, user1Images: string[], user2Images: string[]) {
     const user1File = await cachedGetUserPhotoAndFile(user1.id)
     const user2File = await cachedGetUserPhotoAndFile(user2.id)
-    const user1AvatarURL = user1File ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${user1File.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
-    const user2AvatarURL = user2File ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${user2File.file_path}` : 'https://placehold.co/300x300.png?text=sem+foto'
+    const user1AvatarURL = getAvatarURL(user1File)
+    const user2AvatarURL = getAvatarURL(user2File)
 
     return _brklyn.generateImage('trade', {
       user1: { name: user1.name, avatarURL: user1AvatarURL, cards: user1Images },
