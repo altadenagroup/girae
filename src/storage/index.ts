@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { readFile } from 'node:fs/promises'
 
 export class S3Storage {
   #client: S3Client
@@ -48,6 +49,12 @@ export class S3Storage {
 
   // uploads a file from a url to the bucket
   async uploadFileFromUrl (key: string, url: string) {
+    // if the url starts with tg:, it's a local file, so we have to read it and put the buffer
+    if (url.startsWith('tg:')) {
+      const file = await readFile(url.slice(3))
+      return this.putObject(key, file)
+    }
+
     const response = await fetch(url)
     const buffer = await response.arrayBuffer()
     // @ts-ignore
