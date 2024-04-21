@@ -1,7 +1,7 @@
 export {}
 
 declare global {
-  let _brklyn: import('../Brooklyn.ts').default
+  var _brklyn: import('../Brooklyn.ts').default
 }
 
 // add chunk method to Array definition
