@@ -14,6 +14,7 @@ import * as Sentry from '@sentry/node'
 import { bootstrap } from './networking/index.js'
 import { S3Storage } from './storage/index.js'
 import { Ditto } from './ditto/index.js'
+import { AI } from './ai/index.js'
 
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
@@ -35,9 +36,7 @@ const middlewareSafety = (fun) => {
 export default class Brooklyn extends Client {
   db: PrismaClient
   cache: BrooklynCacheLayer = {} as BrooklynCacheLayer
-  ai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || ''
-  })
+  ai = new AI()
   sidecar = new Sidecar()
   es2: SessionManager
   images = new S3Storage('girae-images')

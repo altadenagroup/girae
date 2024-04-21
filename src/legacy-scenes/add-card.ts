@@ -3,7 +3,6 @@ import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
-import { generate as inferCardData } from '../prompts/card-detection.js'
 import { CommonMessageBundle } from 'telegraf/types'
 import { Composer, Markup } from 'telegraf'
 import { getCategoryByName, getOrCreateCategory } from '../utilities/engine/category.js'
@@ -231,7 +230,11 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
     return ctx.scene.leave()
   }
   // @ts-ignore
-  const message = (ctx.message as CommonMessageBundle).reply_to_message?.text || (ctx.message as CommonMessageBundle).reply_to_message?.caption
+  const message = (ctx.message as CommonMessageBundle).reply_to_message?.text || (ctx.message as CommonMessageBundle).reply_to_message?.caption || ctx.args.join(' ')
+  if (!message) {
+    await ctx.reply('Não foi possível inferir o texto da mensagem.')
+    return ctx.scene.leave()
+  }
 
   // get any photos from the message
   // @ts-ignore
@@ -244,7 +247,7 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   // infer the card data
 
   // @ts-ignore
-  const cardData = !editing ? await inferCardData(message) : ctx.wizard.state.cardData
+  const cardData = !editing ? await _brklyn.ai.generateCard(message) : ctx.wizard.state.cardData
   if (!cardData) {
     await ctx.reply('Não foi possível inferir os dados do card.')
     return ctx.scene.leave()
