@@ -58,11 +58,15 @@ export const reportWithContext = async (ctx: BotContext, id: Change['id'], objec
   await registerChange(changeObj as unknown as Change)
 }
 
+const forbiddenFields = ['id', 'createdAt', 'updatedAt']
 export const calculateChangesBetweenObjects = (oldObject: Object, newObject: Object) => {
   const changes: { field: string, oldValue: string, newValue: string }[] = []
   for (const key in oldObject) {
-    if (oldObject[key] !== newObject[key]) {
-      changes.push({ field: key, oldValue: oldObject[key], newValue: newObject[key] })
+    if (oldObject[key] !== newObject[key] && oldObject[key] !== undefined && newObject[key] !== undefined && !forbiddenFields.includes(key)) {
+      // if the oldObject is an object, check if it has a name property. if so, use it as the old value
+      if (typeof oldObject[key] === 'object' && oldObject[key].name) {
+        if (oldObject[key].name !== newObject[key]) changes.push({ field: key, oldValue: oldObject[key].name, newValue: newObject[key] })
+      } else changes.push({ field: key, oldValue: oldObject[key], newValue: newObject[key] })
     }
   }
 
