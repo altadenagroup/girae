@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getMentionedTgUser, getMentionedUser, mentionUser } from '../utilities/telegram.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   if (ctx.userData.id !== 1 && ctx.userData.id !== 2) return
@@ -20,6 +21,7 @@ export default async (ctx: BotContext) => {
       }
     })
     await _brklyn.cache.del('banned', userD.tgId.toString())
+    await reportWithContext(ctx, 'DESBANIMENTO_DE_USUÁRIO', { giraeID: userD.id, tgID: tgUser.id.toString(), name: tgUser.first_name })
 
     return ctx.replyWithHTML(`O usuário ${mentionUser(tgUser)} foi desbanido de usar a Giraê.`)
   }
@@ -36,6 +38,8 @@ export default async (ctx: BotContext) => {
       banMessage: banReason
     }
   })
+
+  await reportWithContext(ctx, 'BANIMENTO_DE_USUÁRIO', { giraeID: userD.id, tgID: tgUser.id.toString(), name: tgUser.first_name }, { newValue: banReason, field: 'motivo', oldValue: '...' })
 
   return ctx.replyWithHTML(`O usuário ${mentionUser(tgUser)} foi banido de usar a Giraê.\nMotivo: ${banReason}\n\nPara desbanir o usuário, execute o comando novamente.`)
 }

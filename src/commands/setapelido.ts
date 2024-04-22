@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getSubcategoryByID } from '../utilities/engine/subcategories.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const firstCategory = ctx.args[0]
@@ -25,6 +26,8 @@ export default async (ctx: BotContext) => {
       }
     }
   })
+
+  await reportWithContext(ctx, 'ADIÇÃO_DE_APELIDO_DE_SUBCATEGORIA', { subcategoryID: sub1.id, name: sub1.name, categoryEmoji: '❌' }, { newValue: alias, field: 'apelido', oldValue: '...' })
 
   return ctx.reply(`Apelido ${alias} definido para a subcategoria ${sub1.name}.`)
 }

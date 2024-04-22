@@ -1,0 +1,28 @@
+services:
+  girae-database:
+    image: postgres
+    container_name: girae-database
+    restart: always
+    environment:
+      POSTGRES_DB: girae
+      POSTGRES_USER: girae
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - pg-girae:/var/lib/postgresql/data
+    ports:
+      - '127.0.0.1:5432:5432'
+
+  girae-redis:
+    image: redis
+    container_name: girae-redis
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redis-girae:/data
+
+volumes:
+  redis-girae:
+    driver: local
+  pg-girae:
+    driver: local

@@ -3,6 +3,7 @@ import { SessionContext } from '../sessions/context.js'
 import { AdvancedScene } from '../sessions/scene.js'
 import { generateID, readableNumber } from '../utilities/misc.js'
 import { ItemType } from '@prisma/client'
+import { reportWithContext } from '../reporting/index.js'
 
 interface ItemData {
   name: string
@@ -94,6 +95,7 @@ const saveItem = async (ctx: SessionContext<ItemData>) => {
         },
         data: updateData
       })
+      await reportWithContext(ctx, 'EDIÇÃO_DE_PAPEL_DE_PAREDE', { backgroundImageID: ctx.session.data.id!, name: ctx.session.data.name }, { field: 'name', oldValue: ctx.session.data.name, newValue: ctx.session.data.name })
       break
     case 'STICKER':
       await _brklyn.db.profileSticker.update({
@@ -102,6 +104,7 @@ const saveItem = async (ctx: SessionContext<ItemData>) => {
         },
         data: updateData
       })
+      await reportWithContext(ctx, 'EDIÇÃO_DE_STICKER', { stickerID: ctx.session.data.id!, name: ctx.session.data.name }, { field: 'name', oldValue: ctx.session.data.name, newValue: ctx.session.data.name })
       break
     default:
       break
@@ -218,6 +221,7 @@ const createItem = async (ctx: SessionContext<ItemData>) => {
           image: imgString
         }
       })
+      await reportWithContext(ctx, 'CRIAÇÃO_DE_PAPEL_DE_PAREDE', { backgroundImageID: dbId.id, name: ctx.session.data.name })
       break
     case 'STICKER':
       dbId = await _brklyn.db.profileSticker.create({
@@ -226,6 +230,7 @@ const createItem = async (ctx: SessionContext<ItemData>) => {
           image: imgString
         }
       })
+      await reportWithContext(ctx, 'CRIAÇÃO_DE_STICKER', { stickerID: dbId.id, name: ctx.session.data.name })
       break
     default:
       break

@@ -27,16 +27,18 @@ export default async (ctx: BotContext) => {
 
     if (subs.length > 1) {
       const text = subs
+        .filter(sub => sub.isSecondary)
         .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
-      return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas tags, use <code>/tag id</code>`)
+      return ctx.replyWithHTML(`🔍 <b>${subs.filter(sub => sub.isSecondary).length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas tags, use <code>/tag id</code>`)
     }
     sub = subs[0]
   } else {
     let subs = await getSubcategoryFromArg(ctx.args.join(' '), false)
     if (!subs || !subs?.[0]) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
     if (subs.length > 1) {
+      subs = subs.filter(sub => !sub.isSecondary)
+      if (subs.length === 0) return ctx.responses.replyCouldNotFind('uma subcategoria com esse nome/ID')
       const text = subs
-        .filter(sub => !sub.isSecondary)
         .map(sub => `${sub.category?.emoji} <code>${sub.id}</code>. <b>${sub.name}</b>`).join('\n')
       return ctx.replyWithHTML(`🔍 <b>${subs.length}</b> resultados encontrados:\n\n${text}\n\nPara ver uma dessas subcategorias, use <code>/clc id</code>`)
     }

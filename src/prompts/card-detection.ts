@@ -119,6 +119,10 @@ export const generate = (text: string) => _brklyn.ai.chat.completions.create({
     if (data.image === 'null') delete data.image
     // add url: to image if it exists
     if (data.image) data.image = `url:${data.image}`
+    // if the subcategory is also present in the tags, remove it from the tags
+    if (data.tags?.includes?.(data.subcategory)) {
+      data.tags = data.tags.filter((t: string) => t !== data.subcategory)
+    }
     return data
   } catch (_) {
     // the AI probablly returned invalid json, so return whatever it said on the error field

@@ -272,7 +272,7 @@ export const drawCard = async (user: User, category: Category, subcategory: Subc
 
 // performs a full text search on the cards (their name, subcategory and category)
 export const searchCards = async (query: string, limit: number = 10) => {
-  return await _brklyn.db.card.findMany({
+  return _brklyn.db.card.findMany({
     where: {
       name: {
         search: query
@@ -293,7 +293,7 @@ const caseEveryInitial = (str: string) => {
 
 export const getCardsByTag = async (tag: string) => {
   // case insensitive search
-  return await _brklyn.db.card.findMany({
+  return _brklyn.db.card.findMany({
     where: {
       tags: {
         hasSome: [tag, tag.toLowerCase(), tag.toUpperCase(), caseEveryInitial(tag)]
@@ -308,7 +308,7 @@ export const getCardsByTag = async (tag: string) => {
 }
 
 export const getCardsBySubcategory = async (subcategory: Subcategory) => {
-  return await _brklyn.db.card.findMany({
+  return _brklyn.db.card.findMany({
     where: {
       subcategoryId: subcategory.id
     },
@@ -321,22 +321,22 @@ export const getCardsBySubcategory = async (subcategory: Subcategory) => {
 }
 
 export const getCountOfCardsBySubcategory = async (subcategory: Subcategory) => {
-  if (subcategory.isSecondary) {
-    return await _brklyn.db.card.count({
+  if (!subcategory.isSecondary) {
+    return _brklyn.db.card.count({
+      where: {
+        subcategoryId: subcategory.id
+      }
+    })
+  } else {
+    return _brklyn.db.card.count({
       where: { secondarySubcategories: { some: { id: subcategory.id } } }
     })
   }
-
-  return await _brklyn.db.card.count({
-    where: {
-      subcategoryId: subcategory.id
-    }
-  })
 }
 
 export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
   if (subcategory.isSecondary) {
-    return await _brklyn.db.userCard.findMany({
+    return _brklyn.db.userCard.findMany({
       where: {
         userId: user.id,
         card: {
@@ -359,7 +359,7 @@ export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory,
     })
   }
 
-  return await _brklyn.db.userCard.findMany({
+  return _brklyn.db.userCard.findMany({
     where: {
       userId: user.id,
       card: {
@@ -374,7 +374,7 @@ export const getCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory,
 
 export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcategory, user: User) => {
   if (subcategory.isSecondary) {
-    return await _brklyn.db.userCard.count({
+    return _brklyn.db.userCard.count({
       where: {
         userId: user.id,
         card: {
@@ -387,7 +387,7 @@ export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcate
       }
     })
   }
-  return await _brklyn.db.userCard.count({
+  return _brklyn.db.userCard.count({
     where: {
       userId: user.id,
       card: {
@@ -398,41 +398,32 @@ export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcate
 }
 
 export const getHowManyCardsAreThere = async (cardID: number) => {
-  return await _brklyn.db.userCard.count({
+  return _brklyn.db.userCard.count({
     where: {
       cardId: cardID
     }
   })
 }
 
-export const getFirstUserCard = async (userId: number, cardId: number) => {
-  return await _brklyn.db.userCard.findFirst({
+export const getNamesOfSecondarySubcategories = async (cardID: number) => {
+  return _brklyn.db.subcategory.findMany({
     where: {
-      userId,
-      cardId
-    }
-  })
-}
-
-export const getUserCardByID = async (id: number) => {
-  return await _brklyn.db.userCard.findFirst({
-    where: {
-      id
-    }
-  })
-}
-
-export const deleteUserCard = async (id: number) => {
-  return await _brklyn.db.userCard.delete({
-    where: {
-      id
+      secondaryCards: {
+        some: {
+          id: cardID
+        }
+      },
+      isSecondary: true
+    },
+    select: {
+      name: true
     }
   })
 }
 
 // transfers cards between two users. the cards are not deleted, they are just transferred by editing the userId.
 export const transferCards = async (from: User, to: User, cardIds: number[]) => {
-  return await _brklyn.db.userCard.updateMany({
+  return _brklyn.db.userCard.updateMany({
     where: {
       userId: from.id,
       cardId: {

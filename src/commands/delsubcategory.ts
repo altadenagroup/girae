@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getSubcategoryByID } from '../utilities/engine/subcategories.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const firstCategory = ctx.args[0]
@@ -28,6 +29,8 @@ export default async (ctx: BotContext) => {
       id: sub1.id
     }
   })
+
+  await reportWithContext(ctx, 'REMOÇÃO_DE_SUBCATEGORIA', { subcategoryID: sub1.id, name: sub1.name, categoryEmoji: '❌' })
 
   return ctx.reply(`Subcategoria ${sub1.name} deletada.`)
 }

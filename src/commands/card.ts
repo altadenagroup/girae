@@ -2,7 +2,12 @@ import type { Card, Category, Rarity, Subcategory } from '@prisma/client'
 import { BotContext } from '../types/context.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { determineMethodToSendMedia } from '../utilities/telegram.js'
-import { getCardByID, getHowManyCardsAreThere, searchCards } from '../utilities/engine/cards.js'
+import {
+  getCardByID,
+  getHowManyCardsAreThere,
+  getNamesOfSecondarySubcategories,
+  searchCards
+} from '../utilities/engine/cards.js'
 import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from '../utilities/engine/users.js'
 import { readableNumber } from '../utilities/misc.js'
 import { MEDAL_MAP, MISSING_CARD_IMG } from '../constants.js'
@@ -40,8 +45,9 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
   const repeated = await getHowManyCardsUserHas(ctx.userData.id, char.id)
   const userWithCard = await getHowManyUsersHaveCard(char.id)
   const inCirc = await getHowManyCardsAreThere(char.id)
+  const secondNames = await getNamesOfSecondarySubcategories(char.id)
 
-  const tagExtra = char.tags?.[0] ? `\n🔖 ${char.tags[0]}` : ''
+  const tagExtra = secondNames.length > 0 ? `\n🔖 ${secondNames.map(t => t.name).join(', ')}` : ''
   const text = `${MEDAL_MAP[char.rarity?.name || 'Comum']} <code>${char.id}</code>. <b>${char.name}</b>
 ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra}
 

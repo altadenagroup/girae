@@ -14,6 +14,7 @@ import * as Sentry from '@sentry/node'
 import { bootstrap } from './networking/index.js'
 import { S3Storage } from './storage/index.js'
 import { Ditto } from './ditto/index.js'
+import { populateDatabase } from './development/index.js'
 
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
@@ -66,6 +67,8 @@ export default class Brooklyn extends Client {
     this.cache = new BrooklynCacheLayer(cache)
     this.db = new PrismaClient()
     this.es2 = new SessionManager(this)
+
+    populateDatabase(this.db).then(() => true)
     this.use(middlewareSafety(functionEditing))
     this.use(middlewareSafety(argumentParser))
     this.use(middlewareSafety(userData))
@@ -82,6 +85,9 @@ export default class Brooklyn extends Client {
   }
 
   async generateImage (templateKey: string, data: Record<string, any>) {
+    // if there's no INTERNAL_DITTO_URL, we can't generate images
+    if (!process.env.INTERNAL_DITTO_URL) return null
+
     // request to ditto
     return await fetch(`${process.env.INTERNAL_DITTO_URL}/generate`, {
       method: 'POST',
@@ -101,7 +107,9 @@ export default class Brooklyn extends Client {
     })
   }
 
-  async getDittoMetadata (): Promise<DittoMetadata> {
+  async getDittoMetadata (): Promise<DittoMetadata | null> {
+    if (!process.env.INTERNAL_DITTO_URL) return null
+
     return fetch(`${process.env.INTERNAL_DITTO_URL}/metadata`).then(t => t.json())
   }
 

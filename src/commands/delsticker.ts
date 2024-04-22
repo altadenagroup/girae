@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getStickerByID } from '../utilities/engine/vanity.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const card = ctx.args[0]
@@ -33,6 +34,8 @@ export default async (ctx: BotContext) => {
       type: 'STICKER'
     }
   })
+
+  await reportWithContext(ctx, 'REMOÇÃO_DE_STICKER', { stickerID: c.id, name: c.name })
 
   return ctx.reply(`Sticker ${c.name} deletado.`)
 }

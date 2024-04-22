@@ -5,6 +5,10 @@ import './utilities/prototypes.js'
 import { createClient, RedisClientType } from 'redis'
 import 'reflect-metadata'
 import { info } from 'melchior'
+import { checkIfIsFirstBoot } from './development/index.js'
+
+checkIfIsFirstBoot()
+
 import Brooklyn from './Brooklyn.js'
 
 if (process.env.RUN_BETA) {

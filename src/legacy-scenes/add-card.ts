@@ -2,7 +2,7 @@ import { debug, error, Telegraf, warn } from 'melchior'
 import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
+import { getCardByID, getCardByNameAndSubcategory } from '../utilities/engine/cards.js'
 import { generate as inferCardData } from '../prompts/card-detection.js'
 import { CommonMessageBundle } from 'telegraf/types'
 import { Composer, Markup } from 'telegraf'
@@ -14,6 +14,8 @@ import {
 } from '../utilities/engine/subcategories.js'
 import { getRarityByName } from '../utilities/engine/rarity.js'
 import { Card, Category, Rarity, Subcategory } from '@prisma/client'
+import { calculateChangesBetweenObjects, reportWithContext } from '../reporting/index.js'
+import { BotContext } from '../types/context'
 
 const raritiesEnToPt = {
   '': '',
@@ -102,6 +104,7 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
   }
 
   if (cardData.id) {
+    const ogCard = await getCardByID(cardData.id)
     await _brklyn.db.card.update({
       where: {
         id: cardData.id
@@ -121,6 +124,13 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
         await migrateCardsToSubcategory(tag)
       }
     }
+
+    await reportWithContext(ctx as unknown as BotContext, 'EDIÇÃO_DE_CARD', {
+      cardID: cardData.id,
+      name: cardData.name,
+      rarityName: cardData.rarity,
+      categoryEmoji: category.emoji
+    }, calculateChangesBetweenObjects(ogCard!, cardData))
 
     await ctx.reply('Card atualizado com sucesso.')
     // @ts-ignore
@@ -148,6 +158,13 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
       await migrateCardsToSubcategory(tag)
     }
   }
+
+  await reportWithContext(ctx as unknown as BotContext, 'ADIÇÃO_DE_CARD', {
+    cardID: cardData.id,
+    name: cardData.name,
+    rarityName: cardData.rarity,
+    categoryEmoji: category.emoji
+  })
 
   await ctx.reply('Card adicionado com sucesso.')
   // @ts-ignore

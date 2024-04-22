@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getBackgroundByID } from '../utilities/engine/vanity.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const card = ctx.args[0]
@@ -34,6 +35,8 @@ export default async (ctx: BotContext) => {
       type: 'BACKGROUND'
     }
   })
+
+  await reportWithContext(ctx, 'REMOÇÃO_DE_PAPEL_DE_PAREDE', { backgroundImageID: c.id, name: c.name })
 
   return ctx.reply(`Papel de parede ${c.name} deletado.`)
 }

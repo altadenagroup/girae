@@ -1,5 +1,6 @@
 import { BotContext } from '../types/context.js'
 import { getCategoryByID } from '../utilities/engine/category.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const firstCategory = ctx.args[0]
@@ -30,6 +31,8 @@ export default async (ctx: BotContext) => {
       categoryId: cat.id
     }
   })
+
+  await reportWithContext(ctx, 'CRIAÇÃO_DE_SUBCATEGORIA', { subcategoryID: doc.id, name, categoryEmoji: cat.emoji })
 
   return ctx.replyWithHTML(`Subcategoria criada com sucesso.\n\n${cat.emoji} <code>${doc.id}</code>. <b>${name}</b>\n\nPara adicionar uma capa à subcategoria, use <code>/setimageclc ${doc.id}</code>`)
 }

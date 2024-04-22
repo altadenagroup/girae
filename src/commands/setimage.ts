@@ -2,6 +2,7 @@ import { BotContext } from '../types/context.js'
 import { getCardByID } from '../utilities/engine/cards.js'
 import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
+import { reportWithContext } from '../reporting/index.js'
 
 export default async (ctx: BotContext) => {
   const card = ctx.args[0]
@@ -26,6 +27,7 @@ export default async (ctx: BotContext) => {
     }
   })
 
+  await reportWithContext(ctx, 'EDIÇÃO_DE_IMAGEM_DE_CARD', { cardID: c.id, name: c.name, rarityName: 'desconhecida', categoryEmoji: '🔄' })
   return ctx.replyWithPhoto(parseImageString(imgString, 'ar_3:4,c_crop'), {
     caption: `Imagem do card ${c.name} atualizada.`,
     parse_mode: 'HTML'
