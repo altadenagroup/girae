@@ -141,7 +141,7 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
     return ctx.scene.leave()
   }
 
-  await _brklyn.db.card.create({
+  const r = await _brklyn.db.card.create({
     data: {
       name: cardData.name,
       image: cardData.image,
@@ -160,7 +160,7 @@ composer.action('CONFIRM_ADD_CARD', async (ctx) => {
   }
 
   await reportWithContext(ctx as unknown as BotContext, 'ADIÇÃO_DE_CARD', {
-    cardID: cardData.id,
+    cardID: r.id,
     name: cardData.name,
     rarityName: cardData.rarity,
     categoryEmoji: category.emoji

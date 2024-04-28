@@ -19,7 +19,7 @@ import { populateDatabase } from './development/index.js'
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
 
-export const prebuiltPath = (c: string) => `./dist${c.replace('.', '')}`
+export const prebuiltPath = (c: string) => process.versions.bun ? c : `./dist${c.replace('.', '')}`
 
 const middlewareSafety = (fun) => {
   return async (...args) => {
@@ -132,7 +132,7 @@ export default class Brooklyn extends Client {
   }
 
   async prelaunch () {
-    await this.sidecar.cleanUpTasks()
+
   }
 
   setUpSentry () {

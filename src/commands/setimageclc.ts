@@ -3,6 +3,9 @@ import { uploadAttachedPhoto } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getSubcategoryFromArg } from '../utilities/parser.js'
 import { reportWithContext } from '../reporting/index.js'
+import { getSubcategoryByID } from '../utilities/engine/subcategories.js'
+import { notifySubcategoryImageChange } from '../sidecar/functions/changelog.js'
+import { error } from 'melchior'
 
 export default async (ctx: BotContext) => {
   if (!ctx.args[0]) {
@@ -25,6 +28,12 @@ export default async (ctx: BotContext) => {
     data: {
       image: imgString
     }
+  })
+
+  const fullSub = await getSubcategoryByID(c.id)
+  // @ts-ignore
+  await notifySubcategoryImageChange(fullSub!).catch((e) => {
+    error('setimageclc', 'error while notifying subcategory image change: '+ e.stack)
   })
 
   await reportWithContext(ctx, 'EDIÇÃO_DE_IMAGEM_DE_SUBCATEGORIA', { subcategoryID: c.id, name: c.name, categoryEmoji: '🔄' })

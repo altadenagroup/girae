@@ -157,8 +157,8 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     return false
   }
   if (!exts) exts = 'jpg'
-  const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async () => {
-    respond && await ctx.reply('Erro ao fazer upload da imagem.')
+  const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async (e) => {
+    respond && await ctx.reply('Erro ao fazer upload da imagem. Erro: '+ e.message)
     return false
   })
 
