@@ -156,12 +156,18 @@ export const getHowManyUsersHaveCard = async (cardId: number): Promise<number> =
 }
 
 export const getHowManyCardsUserHas = async (userId: number, cardId: number): Promise<number> => {
-  return _brklyn.db.userCard.count({
+  const cached = await _brklyn.cache.get('userCardCount', `${userId}-${cardId}`)
+  if (cached) return cached
+
+  const r = _brklyn.db.userCard.count({
     where: {
       userId,
       cardId
     }
   })
+
+  await _brklyn.cache.setexp('userCardCount', `${userId}-${cardId}`, r, 5)
+  return r
 }
 
 export const addDraw = async (userId: number, amount: number = 1): Promise<boolean> => {
@@ -173,7 +179,10 @@ export const addDraw = async (userId: number, amount: number = 1): Promise<boole
 
 // gets how many cards from a certain category a user has
 export const getHowManyCardsUserHasFromCategory = async (userId: number, categoryId: number): Promise<number> => {
-  return _brklyn.db.userCard.count({
+  const cached = await _brklyn.cache.get('userCardCategoryCount', `${userId}-${categoryId}`)
+  if (cached) return cached
+
+  const rr = _brklyn.db.userCard.count({
     where: {
       userId,
       card: {
@@ -181,4 +190,7 @@ export const getHowManyCardsUserHasFromCategory = async (userId: number, categor
       }
     }
   })
+
+  await _brklyn.cache.setexp('userCardCategoryCount', `${userId}-${categoryId}`, rr, 2 * 60)
+  return rr
 }

@@ -398,11 +398,17 @@ export const getCountCardsOnSubcategoryOwnedByUser = async (subcategory: Subcate
 }
 
 export const getHowManyCardsAreThere = async (cardID: number) => {
-  return _brklyn.db.userCard.count({
+  const cached = await _brklyn.cache.get('cards_draws', cardID.toString())
+  if (cached) return cached
+
+  const aa = _brklyn.db.userCard.count({
     where: {
       cardId: cardID
     }
   })
+
+  await _brklyn.cache.setexp('cards_draws', cardID.toString(), aa, 30 * 60)
+  return aa
 }
 
 export const getNamesOfSecondarySubcategories = async (cardID: number) => {
