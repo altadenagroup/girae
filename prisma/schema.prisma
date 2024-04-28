@@ -107,6 +107,8 @@ model UserCard {
   userProfile UserProfile[]
 
   @@index([userId, cardId], name: "user_card_index")
+  @@index([userId], name: "user_card_user_index")
+  @@index([cardId], name: "user_card_card_index")
 }
 
 model ProfileBackground {
