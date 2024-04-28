@@ -47,10 +47,8 @@ export class Sidecar {
     return resetAllDailies()
   }
 
-  async cleanUpTasks () {
-    // remove all subcategories with no cards in them
-    // const victims = await _brklyn.db.subcategory.deleteMany({ where: { cards: { none: {} } } })
-    // info('sidecar', `cleaned up ${victims.count} subcategories`)
+  async generateCardLog () {
+
   }
 
   willRunIn (expr: string) {
