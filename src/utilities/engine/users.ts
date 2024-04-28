@@ -159,7 +159,7 @@ export const getHowManyCardsUserHas = async (userId: number, cardId: number): Pr
   const cached = await _brklyn.cache.get('userCardCount', `${userId}-${cardId}`)
   if (cached) return cached
 
-  const r = _brklyn.db.userCard.count({
+  const r = await _brklyn.db.userCard.count({
     where: {
       userId,
       cardId
