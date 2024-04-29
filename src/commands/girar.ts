@@ -16,7 +16,7 @@ export default async (ctx: BotContext) => {
   }
 
   if (ctx.userData.usedDraws >= ctx.userData.maximumDraws) {
-    return ctx.reply('Ah... sinto muito, mas você já girou os cards que podia por agora. 😣\nVocê receberá mais um giros em ' + _brklyn.sidecar.willRunIn(DRAW_CRON) + '.')
+    return ctx.replyWithHTML('Ah... sinto muito, mas você já girou os cards que podia por agora. 😣\nVocê receberá mais um giros em ' + _brklyn.sidecar.willRunIn(DRAW_CRON) + '.\n\nP.S.: Você sabia que agora você pode comprar giros? Use <code>/comprar giros quantidade</code>!')
   }
 
   const cooldownDraws = await _brklyn.cache.get('draw_cooldowns', ctx.from?.id.toString()) || 0
