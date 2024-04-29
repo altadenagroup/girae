@@ -125,7 +125,7 @@ function _getItemText(purchaseOrder: PurchaseOrder, shopItem: any) {
   return `Comprando ${TYPE_TO_EMOJI[shopItem.type]} <b>${shopItem.name}</b> por <b>${purchaseOrder.itemPrice}</b> moedas...
 
 
-✅ Clique em <b>Comprar</b> para comprar e adicionar ao seu inventário
+✅ Clique em <b>Comprar</b> para comprar e adicionar ao seu inventário.
 
 🔒 Use <b>Comprar e equipar</b> para comprar e equipar imediatamente. Você poderá reequipar o item antigo posteriormente.
 
