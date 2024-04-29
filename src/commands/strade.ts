@@ -204,6 +204,10 @@ tcqc.add<{ tradeID: string }>('qt.cancel', async (ctx) => {
   const data = await getTradeCache(tradeID)
   if (!data) return ctx.answerCbQuery('Essa troca não existe mais! 😅\nRealize-a novamente.', { show_alert: true })
 
+  if (ctx.from.id.toString() !== data.user1.id && ctx.from.id.toString() !== data.user2.id) {
+    return ctx.answerCbQuery('Você não pode cancelar a troca, ela não é sua! 😅', { show_alert: true })
+  }
+
   await _brklyn.telegram.deleteMessage(ctx.chat!.id, data._mainMessage).catch(() => 0)
   await deleteTradeCache(tradeID)
   await ctx.replyWithHTML(`Vish... <b>${ctx.from.first_name}</b> desistiu da troca. Será que se arrependeu? 😅`)

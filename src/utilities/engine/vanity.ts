@@ -49,3 +49,39 @@ export const getStickerByID = async (id: number): Promise<ProfileSticker | null>
     where: { id }
   })
 }
+
+export const checkIfUserOwnsBackground = async (userId: number, backgroundId: number): Promise<boolean> => {
+  return _brklyn.db.userInventory.findFirst({
+    where: {
+      userId,
+      backgroundIDs: { has: backgroundId }
+    }
+  }).then(Boolean)
+}
+
+export const checkIfUserOwnsSticker = async (userId: number, stickerId: number): Promise<boolean> => {
+  return _brklyn.db.userInventory.findFirst({
+    where: {
+      userId,
+      stickerIDs: { has: stickerId }
+    }
+  }).then(Boolean)
+}
+
+export const equipBackground = async (userId: number, backgroundId: number): Promise<boolean> => {
+  return _brklyn.db.userProfile.update({
+    where: { userId },
+    data: {
+      backgroundId
+    }
+  }).then(Boolean)
+}
+
+export const equipSticker = async (userId: number, stickerId: number): Promise<boolean> => {
+  return _brklyn.db.userProfile.update({
+    where: { userId },
+    data: {
+      stickerId
+    }
+  }).then(Boolean)
+}

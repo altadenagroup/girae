@@ -51,6 +51,34 @@ export const handleBoughtItem = async (user: User, item: ShopItem, amount: numbe
   }
 }
 
+export const equipItem = async (user: User, item: ShopItem) => {
+  switch (item.type) {
+    case 'BACKGROUND':
+      await _brklyn.db.userProfile.update({
+        where: {
+          userId: user.id
+        },
+        data: {
+          background: { connect: { id: item.itemId } }
+        }
+      })
+      break
+    case 'STICKER':
+      await _brklyn.db.userProfile.update({
+        where: {
+          userId: user.id
+        },
+        data: {
+          stickers: { connect: { id: item.itemId } }
+        }
+      })
+      break
+    default:
+      break
+  }
+}
+
+
 export const buyStoreItem = async (user: User, item: ShopItem, amount: number | undefined = undefined) => {
   if (user.coins < item.price) {
     return false
@@ -61,7 +89,7 @@ export const buyStoreItem = async (user: User, item: ShopItem, amount: number | 
       id: user.id
     },
     data: {
-      coins: { decrement: item.price }
+      coins: { decrement: item.price * (amount || 1) }
     }
   })
 
@@ -71,7 +99,7 @@ export const buyStoreItem = async (user: User, item: ShopItem, amount: number | 
       id: 1983
     },
     data: {
-      coins: { increment: item.price }
+      coins: { increment: item.price * (amount || 1) }
     }
   })
 

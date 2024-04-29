@@ -13,7 +13,6 @@ import addItem from '../scenes/add-item.js'
 import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
 import * as Sentry from '@sentry/node'
-import confirmTrade from '../scenes/confirm-trade.js'
 import showCategory from '../scenes/ctg.js'
 
 export interface ES2Methods {
@@ -40,7 +39,6 @@ export class SessionManager {
     this.scenes.push(showCollection)
     // @ts-ignore
     this.scenes.push(showCategory)
-    this.scenes.push(confirmTrade)
   }
 
   get cancelButtonArray (): InlineKeyboardButton[] {

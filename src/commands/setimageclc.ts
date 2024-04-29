@@ -31,8 +31,8 @@ export default async (ctx: BotContext) => {
   })
 
   const fullSub = await getSubcategoryByID(c.id)
-  // @ts-ignore
-  !c.image && await notifySubcategoryImageChange(fullSub!).catch((e) => {
+
+  if (!c.image) await notifySubcategoryImageChange(fullSub as any).catch((e) => {
     error('setimageclc', 'error while notifying subcategory image change: '+ e.stack)
   })
 

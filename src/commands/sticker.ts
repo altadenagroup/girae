@@ -1,11 +1,13 @@
-import type { ProfileSticker } from '@prisma/client'
+import type { ProfileSticker, ShopItem } from '@prisma/client'
 import { BotContext } from '../types/context.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { determineMethodToSendMedia } from '../utilities/telegram.js'
 import { readableNumber } from '../utilities/misc.js'
 import { MISSING_CARD_IMG } from '../constants.js'
 import { findStoreItem } from '../utilities/engine/store.js'
-import { getStickerByID, searchStickers } from '../utilities/engine/vanity.js'
+import { checkIfUserOwnsSticker, getStickerByID, searchStickers } from '../utilities/engine/vanity.js'
+import { tcqc } from '../sessions/tcqc.js'
+import { InlineKeyboardButton } from 'telegraf/types.js'
 
 // escapes names containg chars used by pgsql full text search
 const escapeName = (name: string) => name.replace(/([!|&(){}[\]^"~*?:\\])/g, '\\$1')
@@ -40,7 +42,10 @@ const viewSticker = async (ctx: BotContext, bg: ProfileSticker) => {
   const method = determineMethodToSendMedia(img)
   return ctx[method!](img, {
     caption: text,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: await determineButtons(ctx, bg, storeListing)
+    }
   }).catch(() => {
     return ctx.replyWithPhoto(MISSING_CARD_IMG, { caption: text, parse_mode: 'HTML' })
   })
@@ -49,4 +54,23 @@ const viewSticker = async (ctx: BotContext, bg: ProfileSticker) => {
 export const info = {
   guards: ['hasJoinedGroup'],
   aliases: ['figurinha']
+}
+
+async function determineButtons (ctx: BotContext, bg: ProfileSticker, sl: ShopItem | null) {
+  const buttons: InlineKeyboardButton[][] = []
+
+  const userOwns = await checkIfUserOwnsSticker(ctx.userData.id, bg.id)
+  if (userOwns) {
+    buttons.push([{
+      text: '🪴 Equipar sticker',
+      callback_data: tcqc.generateCallbackQuery('equip', { t: 'stk', id: bg.id })
+    }])
+  } else if (!userOwns && sl?.price && ctx.userData.coins >= sl.price) {
+    buttons.push([{
+      text: '💰 Comprar sticker',
+      callback_data: tcqc.generateCallbackQuery('buy', { t: 'stk', id: bg.id })
+    }])
+  }
+
+  return buttons || null
 }

@@ -43,8 +43,6 @@ export const checkIfIsFirstBoot = () => {
     console.log('Quando terminar, execute a bot novamente.')
     process.exit(0)
   }
-
-  info('development', 'hopefully you are in a development environment...')
 }
 
 export const populateDatabase = async (prisma: PrismaClient) => {
