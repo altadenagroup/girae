@@ -106,7 +106,7 @@ tcqc.add<{ purchaseID: string, aq?: boolean }>('store.confirm', async (ctx) => {
     return ctx.replyWithHTML(`✅ Compra finalizada! Você comprou e equipou <b>${shopItem!.name}</b> por <b>${purchaseOrder.itemPrice}</b> moedas.`)
   }
 
-  if (shopItem!.type === 'DRAWS') return ctx.replyWithHTML(`✅ Compra finalizada! Você comprou <b>${purchaseOrder.amount}</b> giros por <b>${purchaseOrder.amount! * purchaseOrder.itemPrice}</b> moedas.`)
+  if (shopItem!.type === 'DRAWS') return ctx.replyWithHTML(`✅ Compra finalizada! Você comprou <b>${purchaseOrder.amount}</b> giros por <b>${purchaseOrder.itemPrice}</b> moedas.`)
   return ctx.replyWithHTML(`✅ Compra finalizada! Você comprou <b>${shopItem!.name}</b> por <b>${purchaseOrder.itemPrice}</b> moedas.\n\nPara equipar, use <code>/${shopItem!.type === 'BACKGROUND' ? 'bg' : 'sticker'} ${shopItem!.itemId}</code>`)
 })
 
