@@ -41,7 +41,7 @@ interface TradeData {
 export default async (ctx: BotContext) => {
   if (ctx.chat?.type === 'private') return ctx.reply('Esse comando só pode ser usado em grupos!')
   const config = await getOrCreateGroupConfig(ctx.chat!.id)
-  if (!config.allowSimpleTrade && !ctx.userData.isAdmin) return ctx.reply('Esse grupo não tem permissão para realizar trocas simples. Sinto muito! 😅')
+  if (!config.allowSimpleTrade && !ctx.userData.isAdmin && !ctx.userData.isPremium) return ctx.reply('Esse grupo não tem permissão para realizar trocas simples. Sinto muito! 😅\n\nQuer usar o /strade em todos grupos? Doe para a Giraê e receba isso e mais! Use /doar para mais informações.')
 
   if (!(ctx.message as CommonMessageBundle).reply_to_message) return ctx.reply('Você precisa responder a uma mensagem de um usuário para trocar cartas com ele. Do mesmo jeito que fiz nessa mensagem aqui! 😊')
   const user = await getUserFromQuotesOrAt(ctx, '')
@@ -55,6 +55,9 @@ export default async (ctx: BotContext) => {
   const nUser = await _brklyn.db.user.findFirst({ where: { tgId: user.id } })
   if (!nUser) {
     return ctx.reply('O usuário mencionado nunca usou a bot! Talvez você marcou a pessoa errada?')
+  }
+  if (nUser.isBanned) {
+    return ctx.reply('Esse usuário está banido de usar a Giraê e não pode realizar trocas de cartas.')
   }
 
   // arg[0] is the card they wanna trade and arg[1] is the card they wanna receive from the user
