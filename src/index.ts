@@ -32,7 +32,11 @@ global._brklyn = new Brooklyn(client as RedisClientType)
 if (!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) _brklyn.launchPlugins()
 
 if (process.env.LAUNCH_POLLING) {
-  await _brklyn.launch(undefined, () => info('giraê', `logged in as @${_brklyn.botInfo!.username}`))
+  process.env.RUN_GQL = undefined
+  await _brklyn.launch(undefined, () => {
+    _brklyn.setUpNetworkingFeatures()
+    info('giraê', `logged in as @${_brklyn.botInfo!.username}`)
+  })
 } else {
   _brklyn.setUpNetworkingFeatures()
 }

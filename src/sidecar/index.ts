@@ -40,8 +40,24 @@ export class Sidecar {
 
   async increaseUserDraws () {
     debug('sidecar', 'called increaseUserDraws')
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 1 WHERE "usedDraws" > 0`
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 1 WHERE "usedDraws" >= "maximumDraws"`
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 1 WHERE "usedDraws" > 0 AND "isPremium" = false`
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 1 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = false"`
+    // for premium, decrease 2
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 2 WHERE "usedDraws" > 0 AND "isPremium" = true`
+    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 2 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = true"`
+  }
+
+  async findExpiredSubscriptions () {
+    const users = await _brklyn.db.donator.findMany({ where: { expiresAt: { lt: new Date() }, cancelled: false }, include: { user: true } })
+    for (const user of users) {
+      // if there are no more subscriptions, remove premium
+      const subs = await _brklyn.db.donator.findMany({ where: { userId: user.userId } })
+      if (subs.filter((s) => s.expiresAt > new Date()).length === 0) {
+        await _brklyn.db.user.update({ where: { id: user.userId }, data: { isPremium: false, maximumDraws: 12 } })
+        await _brklyn.telegram.sendMessage(user.user.tgId.toString(), 'Seu plano premium expirou. Obrigado por apoiar a Giraê! 💗')
+      }
+      await _brklyn.db.donator.update({ where: { id: user.id }, data: { cancelled: true } })
+    }
   }
 
   async resetReps () {

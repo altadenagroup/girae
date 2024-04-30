@@ -15,6 +15,7 @@ import { bootstrap } from './networking/index.js'
 import { S3Storage } from './storage/index.js'
 import { Ditto } from './ditto/index.js'
 import { populateDatabase } from './development/index.js'
+import PaymentSystem from './payments/index.js'
 
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
 
@@ -44,6 +45,7 @@ export default class Brooklyn extends Client {
   images = new S3Storage('girae-images')
   ditto = new Ditto()
   internalCache: RedisClientType = {} as RedisClientType
+  payments = new PaymentSystem()
 
   constructor (cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {

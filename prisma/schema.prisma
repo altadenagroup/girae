@@ -94,6 +94,8 @@ model User {
   updatedAt           DateTime              @default(now()) @updatedAt
   UserCardPreferences UserCardPreferences[]
   UserAchievement     UserAchievement[]
+  Donator             Donator[]
+  StripeCustomer      StripeCustomer[]
 }
 
 model UserCard {
@@ -266,4 +268,44 @@ model GroupConfig {
   disabledCommands String[] @default([])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @default(now()) @updatedAt
+}
+
+model DonationPlan {
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  stripeProductID      String
+  stripeTestProductID  String
+  price                Int
+  maximumCardDonations Int
+  userLuckIncrease     Float
+  maximumDraws         Int
+  changeInDrawCount    Int
+  storeDiscount        Float
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @default(now()) @updatedAt
+  Donator              Donator[]
+}
+
+model Donator {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  planId    Int
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      DonationPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+  expiresAt DateTime
+  cancelled Boolean      @default(false)
+
+  @@index([userId], name: "donator_user_index")
+}
+
+model StripeCustomer {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  stripeId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beta      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }

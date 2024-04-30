@@ -3,8 +3,17 @@ import { startStandaloneServer } from '@apollo/server/standalone'
 import { info } from 'melchior'
 import { fastify } from 'fastify'
 import * as Sentry from '@sentry/node'
+import { stripeWebhook } from './webhooks.js'
 
 const app = process.env.MAIN_CONTAINER ? null : fastify()
+await app?.register?.(import('fastify-raw-body'), {
+  field: 'rawBody', // change the default request.rawBody property name
+  global: true, // add the rawBody to every request. **Default true**
+  encoding: 'utf8', // set it to false to set rawBody as a Buffer **Default utf8**
+  runFirst: true, // get the body before any preParsing hook change/uncompress it. **Default false**
+  routes: [], // array of routes, **`global`** will be ignored, wildcard routes not supported
+  jsonContentTypes: [], // array of content-types to handle as JSON. **Default ['application/json']**
+})
 
 export const bootstrapGQLServer = async () => {
   const { schema } = await import('./graphql.js')
@@ -27,7 +36,6 @@ export const bootstrap = async () => {
       secretToken: undefined
     })
 
-
     // @ts-ignore
     app!.post(`/telegraf/${process.env.WEBHOOK_PATH || _brklyn.secretPathComponent()}`, async (req, res) => {
       try {
@@ -40,6 +48,8 @@ export const bootstrap = async () => {
         res.status(200).send()
       }
     })
+
+    app!.post('/webhooks/stripe', stripeWebhook)
 
     app!.get('/status', async (_, res) => {
       const stat = await _brklyn.isBotHealthy()
