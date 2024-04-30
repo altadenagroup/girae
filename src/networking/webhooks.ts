@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import Stripe from "stripe"
-import { markDonator } from "../utilities/engine/donation"
+import { markDonator } from "../utilities/engine/donation.js"
 
 export const stripeWebhook = async (req: FastifyRequest, res: FastifyReply) => {
   const sig = req.headers['stripe-signature'] as string
