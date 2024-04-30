@@ -104,7 +104,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 
   await ctx.editMessageMedia({
     type: 'animation',
-    media: 'https://altadena.space/assets/girar-two.mp4',
+    media: 'https://altadena.space/assets/girar-two.mp4?c',
     caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
     parse_mode: 'HTML'
   }, {
