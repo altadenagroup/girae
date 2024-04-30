@@ -6,7 +6,7 @@ export default class PaymentSystem {
 
   createCustomer = async (user: User) => {
     return this.client.customers.create({
-      description: `${user.first_name} ${user.last_name} (${user.id})`
+      description: `${user.first_name} ${user.last_name || ''} (${user.id})`
     })
   }
 
