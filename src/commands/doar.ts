@@ -10,19 +10,19 @@ export default async (ctx: BotContext) => {
     const session = await _brklyn.payments.createSessionForProduct(customer, process.env.RUN_BETA ? plan.stripeTestProductID : plan.stripeProductID)
     if (!session) return ctx.reply('Ocorreu um erro ao criar a sessão de pagamento. Por favor, contate um administrador.')
 
-    await ctx.replyWithHTML(`<b> 💗 Doar para a Giraê</b>
-  Obrigado por considerar ajudar o desenvolvimento da bot! Sua contribuição é valiosa para o bom funcionamento e desenvolvimento do projeto.
+    return await ctx.replyWithHTML(`<b> 💗 Doar para a Giraê</b>
+Obrigado por considerar ajudar o desenvolvimento da bot! Sua contribuição é valiosa para o bom funcionamento e desenvolvimento do projeto.
 
-  As doações da bot funcionam de modo <b>mensal</b>. Ao se tornar doador, você terá diversos benefícios, como:
+As doações da bot funcionam de modo <b>mensal</b>. Ao se tornar doador, você terá diversos benefícios, como:
   - doar cartas usando o comando /doar;
   - fazer trocas simples (/stroca) em qualquer grupo;
   - descontos na loja;
   - acesso a grupos exclusivos;
   - e muito mais!
 
-  <b>🤔 Como doar?</b>
-  Clique no botão abaixo! Você será redirecionado para o site do Stripe, nosso processador de pagamentos seguro. Lá, você poderá escolher sua forma de pagamento.
-  Não teremos acesso a nenhum dado sensível seu, como número de cartão ou informações bancárias.`, {
+<b>🤔 Como doar?</b>
+Clique no botão abaixo! Você será redirecionado para o site do Stripe, nosso processador de pagamentos seguro. Lá, você poderá escolher sua forma de pagamento.
+Não teremos acesso a nenhum dado sensível seu, como número de cartão ou informações bancárias.`, {
       reply_markup: {
         inline_keyboard: [
           [{
