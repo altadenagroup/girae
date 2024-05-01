@@ -18,12 +18,12 @@ export default async (ctx: BotContext) => {
 
 💭 Remover stickers e papéis de parede não os deletam. Você poderá reequipá-los normalmente depois.`
     return ctx.replyWithHTML(text)
-  } else if (ctx.args[0]?.startsWith?.('remove')) {
+  } else if (ctx.args[0]?.startsWith?.('rem')) {
     if (ctx.args[1] === 'bg') {
-      await _brklyn.db.userProfile.update({ where: { userId: ctx.from.id }, data: { backgroundId: 1 } })
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.userData.id }, data: { backgroundId: 1 } })
       return ctx.reply('Papel de parede removido com sucesso! 🎨')
     } else if (ctx.args[1] === 'sticker') {
-      await _brklyn.db.userProfile.update({ where: { userId: ctx.from.id }, data: { stickerId: null } })
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.userData.id }, data: { stickers: { disconnect: true } } })
       return ctx.reply('Sticker removido com sucesso! 🎨')
     } else {
       return ctx.reply('Comando inválido. 😔')
