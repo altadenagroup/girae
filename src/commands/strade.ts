@@ -161,8 +161,8 @@ tcqc.add<{ tradeID: string }>('qt.confirm', async (ctx) => {
 
   // delete first card with matching id
   await _brklyn.db.$transaction([
-    _brklyn.db.userCard.delete({ where: { id: data.card1UserCardId } }),
-    _brklyn.db.userCard.delete({ where: { id: data.card2UserCardId } }),
+    _brklyn.db.userCard.delete({ where: { id: userCardCount1.id } }),
+    _brklyn.db.userCard.delete({ where: { id: userCardCount2.id } }),
     _brklyn.db.userCard.create({
       data: {
         cardId: data.card1.id,
