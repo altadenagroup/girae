@@ -43,12 +43,12 @@ export class Sidecar {
 
   async increaseUserDraws () {
     debug('sidecar', 'called increaseUserDraws')
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 1 WHERE "usedDraws" > 0 AND "isPremium" = false`
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 1 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = false`
+    await _brklyn.db.$executeRawUnsafe(`UPDATE "User" SET "usedDraws" = "usedDraws" - 1 WHERE "usedDraws" > 0 AND "isPremium" = false`)
+    await _brklyn.db.$executeRawUnsafe(`UPDATE "User" SET "usedDraws" = "maximumDraws" - 1 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = false`)
 
     // for premium, decrease 2
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "usedDraws" - 2 WHERE "usedDraws" > 0 AND "isPremium" = true`
-    await _brklyn.db.$executeRaw`UPDATE "User" SET "usedDraws" = "maximumDraws" - 3 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = true`
+    await _brklyn.db.$executeRawUnsafe(`UPDATE "User" SET "usedDraws" = "usedDraws" - 2 WHERE "usedDraws" > 0 AND "isPremium" = true`)
+    await _brklyn.db.$executeRawUnsafe(`UPDATE "User" SET "usedDraws" = "maximumDraws" - 3 WHERE "usedDraws" >= "maximumDraws" AND "isPremium" = true`)
   }
 
   async findExpiredSubscriptions () {

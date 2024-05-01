@@ -213,7 +213,8 @@ export const parseImageString = (imageString: string, modifications: string | bo
     imageString = `url:https://s3.girae.altadena.space/${imageString.replace('id:', '')}.jpg`
   }
 
+
   const url = imageString.split('url:')[1].replace('https://', '').replace('http://', '').replace('.gifv', '.gif')
-  if ((typeof modifications === 'boolean' && !modifications) || aa) return imageString.replace('url:', '')
+  if ((typeof modifications === 'boolean' && !modifications) || aa || imageString.endsWith('no_resize')) return imageString.replace('url:', '')
   return `https://${process.env.CLOUDIMAGE_TOKEN}.cloudimg.io/${url}?aspect_ratio=3:4`
 }

@@ -5,3 +5,5 @@ dist
 
 # Sentry Config File
 .sentryclirc
+
+rescue.js

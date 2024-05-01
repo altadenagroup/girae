@@ -64,6 +64,8 @@ const CARD_MARKUP = Markup.inlineKeyboard([[
   Markup.button.callback('📓 Nome', 'EDIT_NAME'),
   Markup.button.callback('📁 Categoria', 'EDIT_CATEGORY')
 ], [
+  Markup.button.callback('🚫 Não redimensionar imagem', 'DO_NOT_RESIZE_CARD')
+], [
   Markup.button.callback('✅ Confirmar', 'CONFIRM_ADD_CARD')
 ], [
   Markup.button.callback('❌ Cancelar', 'CANCEL_ADD_CARD')
@@ -181,6 +183,13 @@ composer.action('CANCEL_ADD_CARD', async (ctx) => {
   await _brklyn.telegram.deleteMessage(ctx.chat?.id, ctx.wizard.state.messageId)
   // @ts-ignore
   return ctx.scene.leave()
+})
+
+composer.action('DO_NOT_RESIZE_CARD', async (ctx) => {
+  // @ts-ignore
+  ctx.wizard.state.cardData.image = ctx.wizard.state.cardData.image + '?no_resize'
+  // @ts-ignore
+  await updateCardView(ctx)
 })
 
 composer.action('EDIT_SUBCATEGORY', async (ctx) => {

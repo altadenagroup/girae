@@ -111,7 +111,8 @@ export class UserCardsResolver {
             category: true
           }
         }
-      }
+      },
+      take: 1000
     })
 
     let userCardCount: any[] = []
