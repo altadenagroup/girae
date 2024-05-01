@@ -11,6 +11,7 @@ export interface Change {
       | 'BANIMENTO_DE_USUÁRIO' | 'DESBANIMENTO_DE_USUÁRIO'
       | 'CRIAÇÃO_DE_PAPEL_DE_PAREDE' | 'EDIÇÃO_DE_PAPEL_DE_PAREDE' | 'REMOÇÃO_DE_PAPEL_DE_PAREDE'
       | 'CRIAÇÃO_DE_STICKER' | 'EDIÇÃO_DE_STICKER' | 'REMOÇÃO_DE_STICKER'
+      | 'RENOVAÇÃO_DE_ASSINATURA' | 'CANCELAMENTO_DE_ASSINATURA' | 'CRIAÇÃO_DE_ASSINATURA' | 'FALHA_NA_RENOVAÇÃO_DA_ASSINATURA'
   user: { giraeID: number, tgID: string, name: string }
   object: { cardID: number, name: string, rarityName: string, categoryEmoji: string }
     | { subcategoryID: number, name: string, categoryEmoji: string }
@@ -37,8 +38,8 @@ const formatObject = (object: Change['object']) => {
   return `📝 <b>Card:</b> ${object.categoryEmoji} <code>${object.cardID}</code>. ${object.name} (${object.rarityName})`
 }
 
-export const reportWithContext = async (ctx: BotContext, id: Change['id'], object: Change['object'] | User, change?: Change['change']) => {
-  const user = { giraeID: ctx.userData.id.toString(), tgID: ctx.from!.id.toString(), name: ctx.from!.first_name }
+export const reportWithContext = async (ctx: BotContext | null, id: Change['id'], object: Change['object'] | User, change?: Change['change']) => {
+  const user = ctx ? { giraeID: ctx.userData.id.toString(), tgID: ctx.from!.id.toString(), name: ctx.from!.first_name } : { giraeID: 1983, tgID: _brklyn.botInfo?.id, name: 'Giraê' }
   let fixedObj = object
 
   // @ts-ignore
