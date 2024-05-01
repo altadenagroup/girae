@@ -133,7 +133,7 @@ export const functionEditing = (ctx: Context, next: () => void) => {
   }
 
   // @ts-ignore
-  if (ctx.chat?.id === -1002119624679 && !ctx.message?.text?.endsWith?.('@giraebetabot')) return
+  if (ctx.chat?.id === -1002119624679 && !ctx.message?.text?.endsWith?.('@giraebetabot') && process.env.RUN_BETA) return
 
   // add a small error handling system for the answerCallbackQuery method (so old queries won't throw an error and halt stack exec fully)
   if (ctx.answerCbQuery) {
