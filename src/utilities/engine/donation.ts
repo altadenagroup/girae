@@ -11,9 +11,15 @@ export const generateVIPGroupInvite = async () => {
   return r.invite_link
 }
 
+export const markDonatorByTgID = async (tgId: number | bigint) => {
+  const user = await _brklyn.db.user.findFirst({ where: { tgId }})
+  if (!user) return
+  await markDonator(user.id, tgId as any)
+}
+
 export const markDonator = async (userId: number, tgId: bigint) => {
   // check if user is already a donator
-  const donator = await _brklyn.db.donator.findFirst({ where: { userId, cancelled: false }, include: { plan: true }})
+  const donator = await _brklyn.db.donator.findFirst({ where: { userId, cancelled: false }, include: { plan: true, user: true }})
   const tgUser = await getUserFromNamekeeper(tgId.toString())
   if (donator) {
     // if user is already a donator, extend the subscription
