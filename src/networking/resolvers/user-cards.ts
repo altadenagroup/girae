@@ -95,7 +95,8 @@ export class UserCardsResolver {
     @Ctx() _: any,
     @Info() _a: any,
     // user ids are bigint
-    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
+    @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 1
   ) {
     let cards = await _brklyn.db.userCard.findMany({
       where: {
@@ -112,7 +113,8 @@ export class UserCardsResolver {
           }
         }
       },
-      take: 1000
+      take: 500,
+      skip: (page - 1) * 500
     })
 
     let userCardCount: any[] = []
