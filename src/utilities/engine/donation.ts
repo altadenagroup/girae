@@ -3,12 +3,19 @@ import { getUserFromNamekeeper } from "../telegram.js"
 
 export const checkIfUserInVIPGroup = async (tgID: number | string) => {
   const d = await _brklyn.telegram.getChatMember(process.env.VIP_GROUP_ID!, tgID as any)
-  return d.status === 'member' || d.status === 'creator' || d.status === 'administrator' || d.status === 'left'
+  if (!d) return false
+  return d.status === 'member' || d.status === 'creator' || d.status === 'administrator'
 }
 
 export const generateVIPGroupInvite = async () => {
   const r = await _brklyn.telegram.createChatInviteLink(process.env.VIP_GROUP_ID!, { member_limit: 1 })
   return r.invite_link
+}
+
+export const sendInviteLinkByGiraeID = async (giraeID: number) => {
+  const user = await _brklyn.db.user.findFirst({ where: { id: giraeID }})
+  if (!user) return
+  await sendInviteLinkToUser(user.tgId.toString())
 }
 
 export const markDonatorByTgID = async (tgId: number | bigint) => {
@@ -34,8 +41,8 @@ export const markDonator = async (userId: number, tgId: bigint) => {
   await _brklyn.db.user.update({ where: { id: userId }, data: { isPremium: true, maximumDraws: plan?.maximumDraws ?? 12, luckModifier: plan?.userLuckIncrease ?? 0 } })
 
   let extra = ''
-  const isMember = await checkIfUserInVIPGroup(tgId.toString())
-  if (!isMember) {
+  const inGroup = await checkIfUserInVIPGroup(tgId.toString())
+  if (!inGroup) {
     const inv = await generateVIPGroupInvite()
     extra = `\n\nPara ficar por dentro das novidades antes de todos e ter contato direto com a staff, entre no grupo VIP exclusivo para os usuários premium. 🌟\n${inv}`
   }
