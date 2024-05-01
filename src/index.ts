@@ -9,6 +9,11 @@ import { checkIfIsFirstBoot } from './development/index.js'
 
 checkIfIsFirstBoot()
 
+console.log('-'.repeat(50))
+console.log('Project Brooklyn is now booting')
+console.log('All rights reserved to The Altadena Group, 2024')
+console.log('-'.repeat(50))
+
 import Brooklyn from './Brooklyn.js'
 
 if (process.env.RUN_BETA) {
@@ -29,7 +34,12 @@ client.on('error', (err) => {
 await client.connect()
 
 global._brklyn = new Brooklyn(client as RedisClientType)
-if (!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) _brklyn.launchPlugins()
+if ((!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) || process.env.COLD_RUN) _brklyn.launchPlugins().then(() => {
+  if (process.env.COLD_RUN) {
+    info('giraê', 'cold run ok')
+    process.exit(0)
+  }
+})
 
 if (process.env.LAUNCH_POLLING) {
   process.env.RUN_GQL = undefined

@@ -16,6 +16,7 @@
     "build:client": "prisma generate",
     "build:source": "swc src -d dist --source-maps",
     "start:node": "PREBUILT_VERSION=true node index.mjs",
+    "test": "npm run build:source && PREBUILT_VERSION=true COLD_RUN=true node index.mjs",
     "postinstall": "prisma generate"
   },
   "repository": {
