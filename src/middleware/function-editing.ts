@@ -132,6 +132,9 @@ export const functionEditing = (ctx: Context, next: () => void) => {
     ctx.from.first_name = escapeForHTML(ctx.from.first_name)
   }
 
+  // @ts-ignore
+  if (ctx.chat?.id === -1002119624679 && !ctx.message?.text?.endsWith?.('@giraebetabot')) return
+
   // add a small error handling system for the answerCallbackQuery method (so old queries won't throw an error and halt stack exec fully)
   if (ctx.answerCbQuery) {
     // @ts-ignore

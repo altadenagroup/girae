@@ -45,6 +45,10 @@ export class SessionManager {
     return [{ text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('es2-end-session', 'CANCEL') }]
   }
 
+  safeCancelButtonArray (userID: string): InlineKeyboardButton[] {
+    return [{ text: '❌ Cancelar', callback_data: tcqc.generateCallbackQuery('es2-end-session', 'CANCEL.'+ userID) }]
+  }
+
   async middleware (ctx: BotContext, next: () => void) {
     if (!ctx.from || ctx.chatBoost) {
       return next()
@@ -397,6 +401,15 @@ export class SessionManager {
   }
 }
 
-tcqc.add<{}>('es2-end-session', async (ctx) => {
+tcqc.add<string>('es2-end-session', async (ctx) => {
+  const data = ctx.data
+  if (data.split('.').length === 2) {
+    const [_, uid] = data.split('.')
+    if (ctx.from.id.toString() != uid) return
+
+    await _brklyn.es2.cancelSession(ctx)
+    return
+  }
+
   await _brklyn.es2.cancelSession(ctx)
 })

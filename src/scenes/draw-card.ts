@@ -56,7 +56,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {
-      inline_keyboard: [...chunked, _brklyn.es2.cancelButtonArray]
+      inline_keyboard: [...chunked, _brklyn.es2.safeCancelButtonArray(ctx.from?.id.toString())]
     }
   }).then(async (msg) => {
     ctx.session.setMainMessage(msg.message_id)

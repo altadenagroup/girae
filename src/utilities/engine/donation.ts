@@ -57,8 +57,8 @@ export const sendInviteLinkToUser = async (tgId: string) => {
 }
 
 export const kickFromVIPGroup = async (tgId: string) => {
-  await _brklyn.telegram.banChatMember(process.env.VIP_GROUP_ID!, tgId as unknown as number).then(() => {
-    return _brklyn.telegram.unbanChatMember(process.env.VIP_GROUP_ID!, tgId as unknown as number)
+  await _brklyn.telegram.banChatMember(process.env.VIP_GROUP_ID!, parseInt(tgId)).then(() => {
+    return _brklyn.telegram.unbanChatMember(process.env.VIP_GROUP_ID!, parseInt(tgId))
   })
 }
 

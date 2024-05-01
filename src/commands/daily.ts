@@ -29,7 +29,7 @@ export default async (ctx: BotContext) => {
 
     weeklyBonus = '🥵 Vi aqui e você obteve seu daily por um mês sem falta! Que dedicação...\nTe dei mais dois giros por dia e mais dinheiro pelos seus esforços.\n\n'
   }
-  if (ctx.userData.isPremium) added = added * 1.2
+  if (ctx.userData.isPremium) added = added * 2
   const daysToNextBonus = 7 - (streak % 7)
 
   await addBalance(ctx.userData!.id, added)

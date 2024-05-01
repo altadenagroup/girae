@@ -61,14 +61,14 @@ export default async (ctx: BotContext) => {
   const favCardText = favoriteCard ? `\n\n${MEDAL_MAP[favoriteCard.rarity.name]} <code>${favoriteCard.id}</code>. <b>${favoriteCard.name}</b>\n${favoriteCard.category.emoji} <i>${favoriteCard.subcategory!.name}</i>` : ''
 
   await ctx.replyWithPhoto(dittoData.url, {
-    caption: `🖼 <code>${userD.id}</code>. <b>${escapeForHTML(tgUser.first_name)}</b>
+    caption: `🖼 <code>${userD.id}</code>. <b>${escapeForHTML(tgUser.first_name)}</b> ${userD.isPremium ? '💎' : ''}
 
 🌠 <b>Reputação</b> - <i>${pluralize(completeUserData.reputation, 'ponto')}</i>
 🃏 <b>Cartas</b> - <i>${pluralize(await getUserCardsCount(userD.id), 'colecionável', 'is', 1)}</i>
 💸 <b>Moedas</b> - <i>${pluralize(userD.coins, 'moeda')}</i>
 🎲 <b>Giros</b> - <i>${pluralize(userD.maximumDraws - userD.usedDraws, 'giro')} sobrando</i>${favCardText}
 
-<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil</i>`,
+<i>dica: use <code>/perfil editar</code> para aprender como customizar seu perfil ou tirar stickers e papéis de parede</i>`,
     parse_mode: 'HTML'
   })
 
