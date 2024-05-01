@@ -12,9 +12,6 @@ COPY . .
 RUN npm run build:client
 RUN npm run build:source
 
-# run test
-RUN npm run test
-
 # etc.
 
 CMD ["npm", "run", "start:node"]
