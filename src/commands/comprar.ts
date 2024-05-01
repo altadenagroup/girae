@@ -1,4 +1,5 @@
 import { TYPE_TO_EMOJI } from "../constants.js"
+import { generateUserProfile } from "../scenes/add-item.js"
 import { tcqc } from "../sessions/tcqc.js"
 import { BotContext } from "../types/context.js"
 import { buyStoreItem, equipItem } from "../utilities/engine/store.js"
@@ -81,13 +82,17 @@ export default async (ctx: BotContext) => {
     amount: type === 'giros' ? id : undefined
   }
 
-  const img = parseImageString(shopItem.image, false, true)
+  // @ts-ignore
+  ctx.session = { data: { type, fileLink: shopItem.image } }
+  // @ts-ignore
+  const up = type === 'giros' ? parseImageString(shopItem.image, false, true) : await generateUserProfile(ctx, true)
+
   const orderID = await createPurchaseCache(purchaseOrder)
 
   const text = type === 'giros' ? _getGiroText(purchaseOrder) : _getItemText(purchaseOrder, shopItem)
   const buttons = type === 'giros' ? _generateGiroButtons(orderID) : _generateItemButtons(orderID)
 
-  return ctx.replyWithPhoto(img, { caption: text, parse_mode: 'HTML', reply_markup: { inline_keyboard: buttons } })
+  return ctx.replyWithPhoto(up, { caption: text, parse_mode: 'HTML', reply_markup: { inline_keyboard: buttons } })
 }
 
 tcqc.add<{ purchaseID: string, aq?: boolean }>('store.confirm', async (ctx) => {

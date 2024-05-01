@@ -8,10 +8,26 @@ import { getMentionedTgUser, getMentionedUser } from '../utilities/telegram.js'
 
 export default async (ctx: BotContext) => {
   if (ctx.args[0]?.startsWith?.('edit')) {
-    const text = `<b>🖼 Como editar o perfil?</b>\n\n/fav - define sua carta favorita (exemplo: <code>/fav ningning</code>)
+    const text = `<b>🖼 Como editar o perfil?</b>
+
+/fav - define sua carta favorita (exemplo: <code>/fav ningning</code>)
 /bio - define sua biografia (exemplo: <code>/bio eu amo a ningning</code>)
-/color - define sua cor favorita (exemplo: <code>/color #ff0000</code>)`
+/color - define sua cor favorita (exemplo: <code>/color #ff0000</code>)
+/ppc remove bg - aplica o papel de parede padrão ao seu perfil (exemplo: <code>/ppc remove bg</code>)
+/ppc remove sticker - remove qualquer sticker do seu perfil (exemplo: <code>/ppc remove sticker</code>)
+
+💭 Remover stickers e papéis de parede não os deletam. Você poderá reequipá-los normalmente depois.`
     return ctx.replyWithHTML(text)
+  } else if (ctx.args[0]?.startsWith?.('remove')) {
+    if (ctx.args[1] === 'bg') {
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.from.id }, data: { backgroundId: 1 } })
+      return ctx.reply('Papel de parede removido com sucesso! 🎨')
+    } else if (ctx.args[1] === 'sticker') {
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.from.id }, data: { stickerId: null } })
+      return ctx.reply('Sticker removido com sucesso! 🎨')
+    } else {
+      return ctx.reply('Comando inválido. 😔')
+    }
   }
 
   const tgUser = await getMentionedTgUser(ctx, ctx.args[0])

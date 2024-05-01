@@ -47,7 +47,7 @@ const editSentMessage = (ctx) => ctx.session.editMainMessageCaption(editingText(
 })
 
 const prefixed = (a) => a.startsWith('url:') || a.startsWith('id') ? a : `url:${a}`
-const generateUserProfile = async (ctx: SessionContext<ItemData>) => {
+export const generateUserProfile = async (ctx: SessionContext<ItemData>, addPreviewOverlay: boolean = false) => {
   switch (ctx.session.data.type) {
     case 'BACKGROUND':
       // @ts-ignore
@@ -62,7 +62,7 @@ const generateUserProfile = async (ctx: SessionContext<ItemData>) => {
   }
 
   // @ts-ignore
-  const dittoData = await _brklyn.ditto.generateProfile(ctx.userData, ctx.profileData, null, ctx.from as User)
+  const dittoData = await _brklyn.ditto.generateProfile(ctx.userData, ctx.profileData, null, ctx.from as User, addPreviewOverlay)
   return dittoData?.url
 }
 

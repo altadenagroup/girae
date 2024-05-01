@@ -4,6 +4,7 @@ import { cachedGetUserPhotoAndFile, getAvatarURL } from '../utilities/telegram.j
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
 import { MISSING_CARD_IMG } from '../constants.js'
+import { getCardByID } from '../utilities/engine/cards.js'
 
 const rarityIdToName = {
   1: 'Common',
@@ -21,9 +22,13 @@ export class Ditto {
     background: ProfileBackground | null,
     stickers: ProfileSticker | null,
     favoriteCard: UserCard | null
-  }, favoriteCard: Card | null, tgUser: TelegramUser) {
+  }, favoriteCard: Card | null, tgUser: TelegramUser, applyPreviewOverlay: boolean = false) {
     const file = await cachedGetUserPhotoAndFile(tgUser!.id)
     const avatarURL = getAvatarURL(file)
+
+    if (!favoriteCard && completeUserData.favoriteCardId) {
+      favoriteCard = await getCardByID(completeUserData.favoriteCard?.cardId)
+    }
 
     let badges: string[] = []
     if (userD.isAdmin) badges = [...badges, '👮‍♂️']
@@ -50,7 +55,7 @@ export class Ditto {
       stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, false)
     }
 
-    return _brklyn.generateImage('user_profile', data)
+    return _brklyn.generateImage('user_profile', data, { applyPreviewOverlay })
   }
 
   async generateTrade (user1: UserData, user2: UserData, user1Images: string[], user2Images: string[]) {

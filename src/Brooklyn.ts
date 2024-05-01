@@ -86,7 +86,7 @@ export default class Brooklyn extends Client {
     this.setUpMainContainerTasks()
   }
 
-  async generateImage (templateKey: string, data: Record<string, any>) {
+  async generateImage (templateKey: string, data: Record<string, any>, addData: any = {}) {
     // if there's no INTERNAL_DITTO_URL, we can't generate images
     if (!process.env.INTERNAL_DITTO_URL) return null
 
@@ -101,6 +101,7 @@ export default class Brooklyn extends Client {
         theme: templateKey,
         story: false,
         hide_username: false,
+        ...addData,
         data
       })
     }).then(t => t.json()).catch(e => {
