@@ -14,6 +14,7 @@ import { MEDAL_MAP } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 import { warn } from 'melchior'
 import * as Sentry from '@sentry/node'
+import { escapeForHTML } from '../utilities/responses.js'
 
 const ACCEPT_TRADE = 'accept_trade'
 const DECLINE_TRADE = 'decline_trade'
@@ -30,7 +31,7 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
   const user = ctx.session.arguments!.tradingWith as User
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
   await ctx.session.attachUserToSession(user)
-  ctx.session.data.tradingWith = user
+  ctx.session.data.tradingWith = { ...user, first_name: escapeForHTML(user.first_name) }
   ctx.session.data.ogUser = ctx.from!
   // @ts-ignore
   ctx.session.data.chatId = ctx.chat!.username ? `@${ctx.chat!.username}` : ctx.chat!.id
@@ -175,7 +176,7 @@ Para cancelar, use /cancelar.
     }).then((t) => setUserDisplayMessageID({
       from: { id: trade.users[0] } as any,
       chat: { id: trade.users[0] } as any
-    }, t.message_id))
+    }, t.message_id)).catch((e) => warn('updateDisplayMessages', 'could not send message: ' + e.message))
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[0], displayMessageID1, undefined, {
       type: 'photo',
@@ -194,7 +195,7 @@ Para cancelar, use /cancelar.
     }).then((t) => setUserDisplayMessageID({
       from: { id: trade.users[1] } as any,
       chat: { id: trade.users[1] } as any
-    }, t.message_id))
+    }, t.message_id)).catch((e) => warn('updateDisplayMessages', 'could not send message: ' + e.message))
   } else {
     await _brklyn.telegram.editMessageMedia(trade.users[1], displayMessageID2, undefined, {
       type: 'photo',
