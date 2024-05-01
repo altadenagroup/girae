@@ -67,6 +67,19 @@ ${subcategory.category.emoji} <code>${subcategory.id}</code>. <b>${subcategory.n
 🎲 <code>${subcategory.cards.length}</code> cards adicionados no total.
 
 ${sortedCards}`
+
+  // if the text has more than 3.5k characters, break it into two messages
+  if (text.length > 3500) {
+    const firstPart = text.slice(0, 3500)
+    const secondPart = text.slice(3500)
+
+    const image = parseImageString(subcategory.image, false, true)
+
+    await _brklyn.telegram.sendPhoto(process.env.ADDITION_CHANNEL_ID!, image, { caption: firstPart, parse_mode: 'HTML' })
+    await _brklyn.telegram.sendMessage(process.env.ADDITION_CHANNEL_ID!, secondPart, { parse_mode: 'HTML' })
+    return
+  }
+
   const image = parseImageString(subcategory.image, false, true)
 
   await _brklyn.telegram.sendPhoto(process.env.ADDITION_CHANNEL_ID!, image, { caption: text, parse_mode: 'HTML' })
@@ -74,6 +87,9 @@ ${sortedCards}`
 
 export const notifySubcategoryImageChange = async (subcategory: Subcategory & { category: { emoji: string } }) => {
   if (!subcategory.image) return
+
+  // if the subcategory is less than 24 h old, don't notify
+  if (new Date().getTime() - subcategory.createdAt.getTime() < 24 * 60 * 60 * 1000) return
 
   const ddmmyyyy = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())
 
