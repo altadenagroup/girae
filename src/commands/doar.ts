@@ -41,14 +41,14 @@ Clique no botão abaixo! Você será redirecionado para o site do <b>Stripe</b>,
     })
   }
   if (ctx.chat!.type === 'private') return ctx.replyWithHTML('Você já é assinante premium! 😊\n\nPara modificar sua assinatura, <a href="https://billing.stripe.com/p/login/3cs2b55ztfVYfny000">clique aqui</a>.')
-  if (!(ctx.message as CommonMessageBundle).reply_to_message) return ctx.responses.gottaQuote('quem você quer suque receba suas cartas')
+  if (!(ctx.message as CommonMessageBundle).reply_to_message) return ctx.responses.gottaQuote('você quer que receba suas cartas')
 
-    const user = await getUserFromQuotesOrAt(ctx, ctx.args[0])
+  const user = await getUserFromQuotesOrAt(ctx, undefined)
   if (!user) return ctx.responses.replyCouldNotFind('o usuário que você quer realizar a doação de cartas')
   if (user?.id === ctx.from!.id) return ctx.reply('Você não pode doar cartas com você mesmo! 😅')
   if (user.is_bot) return ctx.reply('Você não pode doar cartas para um bot! 😅')
 
-    const nUser = await _brklyn.db.user.findFirst({ where: { tgId: user.id } })
+  const nUser = await _brklyn.db.user.findFirst({ where: { tgId: user.id } })
   if (!nUser) return ctx.reply('O usuário mencionado nunca usou a bot! Talvez você marcou a pessoa errada?')
   if (nUser.isBanned) return ctx.reply('Esse usuário está banido de usar a Giraê e não pode receber cartas.')
 
@@ -57,5 +57,21 @@ Clique no botão abaixo! Você será redirecionado para o site do <b>Stripe</b>,
   if (ids.some(isNaN)) return ctx.reply('Um dos IDs fornecidos não é um número.')
   if (ids.length > 5) return ctx.reply('Você só pode doar até 5 cartas por vez.')
   const resolvedCards = await _brklyn.db.card.findMany({ where: { id: { in: ids } } })
-  if (resolvedCards.length !== ids.length) return ctx.reply('Uma ou mais cartas não foram encontradas: ' + ids.filter((id) => !resolvedCards.some((c) => c.id === id)).join(', '))
+  if (ids.filter((id) => !resolvedCards.some((c) => c.id === id)).length > 0) return ctx.reply('Uma ou mais cartas não foram encontradas: ' + ids.filter((id) => !resolvedCards.some((c) => c.id === id)).join(', '))
+
+  // check if author has said cards
+  let userCardIDs: number[] = []
+  for (const card of resolvedCards) {
+    const d = await _brklyn.db.userCard.findFirst({ where: { userId: ctx.userData.id, cardId: card.id, id: { notIn: userCardIDs } } })
+    if (!d) return ctx.reply(`Você não possui a carta ${card.name} para doar!`)
+    userCardIDs.push(d.id)
+  }
+  if (userCardIDs.length !== ids.length) return ctx.reply('Você não possui todas as cartas que deseja doar.')
+
+  await _brklyn.db.$transaction([
+    _brklyn.db.userCard.deleteMany({ where: { id: { in: userCardIDs } } }),
+    _brklyn.db.userCard.createMany({ data: ids.map((id) => ({ userId: nUser.id, cardId: id })) })
+  ])
+
+  return ctx.reply(`Você doou ${ids.length} carta${ids.length > 1 ? 's' : ''} para ${user.first_name}! 🎁`)
 }

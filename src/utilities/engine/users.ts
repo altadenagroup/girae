@@ -116,7 +116,8 @@ export const checkIfUserHasCards = async (user: number, cards: number[]): Promis
 export const getRarityForUserDraw = async (user: User): Promise<Rarity> => {
   const rarities = await getAllRarities()
 
-  const userChance = getRandomNumber() - user.luckModifier
+  // luck modifier increases the chance of getting a higher rarity card. e.g., 0.09 means 9% more chance of getting a higher rarity card.
+  const userChance = getRandomNumber() * (1 - user.luckModifier)
   let sum = 0
   let rarity = rarities[0]
   for (const r of rarities) {
