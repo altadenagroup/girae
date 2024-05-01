@@ -89,7 +89,7 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
   await ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.')
 }
 
-export default new AdvancedScene('DELETE_CARD_ES2', [
+export default new AdvancedScene('DELETE_CONFIRM', [
   // @ts-ignore
   firstStep,
   // @ts-ignore
