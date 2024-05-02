@@ -64,18 +64,19 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
   if (ctx.message?.text?.toLowerCase() === ctx.session.data.card.name.toLowerCase()) {
     ctx.session.steps.leave()
 
-    await _brklyn.db.userCard.delete({
+    const t = await _brklyn.db.userCard.delete({
       where: {
         id: ctx.session.data.usercardId
       }
     }).catch((e) => {
       warn('es²', `failed to delete card: ${e.message}`)
-      return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente novamente mais tarde.')
+      return false
     })
+    if (t === false) return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente novamente mais tarde.')
 
     const money = rarityIdToPrice[ctx.session.data.card.rarityId][1]
     await addBalance(ctx.userData.id, money)
-    await ctx.session.deleteMainMessage()
+    await ctx.session.deleteMainMessage().catch(() => 0)
     await ctx.replyWithHTML(`👍 <b>${ctx.session.data.card.name}</b> foi deletado com sucesso! Você recebeu <b>${money}</b> moedas.`)
     return
     // @ts-ignore
@@ -86,7 +87,7 @@ const secondStep = async (ctx: SessionContext<DeleteData>) => {
     return
   }
 
-  await ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.')
+  await ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.').catch(() => 0)
 }
 
 export default new AdvancedScene('DELETE_CONFIRM', [
