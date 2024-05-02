@@ -120,6 +120,7 @@ export const functionEditing = (ctx: Context, next: () => void) => {
     ctx.ogReplyWithHTML = ctx.replyWithHTML
     // @ts-ignore
     ctx.replyWithHTML = (data: any, extra: any) => {
+      if (ctx.chat?.type === 'private') return ctx.ogReplyWithHTML(data, extra).catch(errorHandler(ctx.ogReplyWithHTML, ctx, data, extra))
       const args = { reply_to_message_id: ctx.message!.message_id, ...extra }
       // @ts-ignore
       return ctx.ogReplyWithHTML(data, args).catch(errorHandler(ctx.ogReplyWithHTML, ctx, data, extra))
