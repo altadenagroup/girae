@@ -41,12 +41,11 @@ export const bootstrap = async () => {
       try {
         // @ts-ignore
         const t = await webhook(req, res)
-        return t
       } catch (e) {
         Sentry.setTags({ type: 'webhook' })
         Sentry.captureException(e)
-        res.status(200).send()
       }
+      res.status(200).send()
     })
 
     app!.post('/webhooks/stripe', stripeWebhook)
