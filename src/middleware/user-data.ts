@@ -8,7 +8,7 @@ const getUserCached = async (ctx) => {
   const user = await _brklyn.db.user.findFirst({ where: { tgId: ctx.from.id } }).catch(() => null)
   if (!user) return null
   user.tgId = ctx.from.id.toString()
-  await _brklyn.cache.setexp('users', ctx.from.id.toString(), user, 5)
+  await _brklyn.cache.setexp('users', ctx.from.id.toString(), user, 1)
   return user
 }
 
@@ -21,7 +21,7 @@ const getUserProfileCached = async (ctx) => {
     include: { stickers: true, background: true }
   }).catch(() => null)
   if (!profile) return null
-  await _brklyn.cache.setexp('profiles', ctx.from.id.toString(), profile, 5)
+  await _brklyn.cache.setexp('profiles', ctx.from.id.toString(), profile, 1)
   return profile
 }
 
