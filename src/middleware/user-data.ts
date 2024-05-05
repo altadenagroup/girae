@@ -2,26 +2,17 @@ import { error } from 'melchior'
 import ResponseSystem from '../utilities/responses.js'
 
 const getUserCached = async (ctx) => {
-  const c = await _brklyn.cache.get('users', ctx.from.id.toString())
-  if (c) return c
-
   const user = await _brklyn.db.user.findFirst({ where: { tgId: ctx.from.id } }).catch(() => null)
   if (!user) return null
-  user.tgId = ctx.from.id.toString()
-  await _brklyn.cache.setexp('users', ctx.from.id.toString(), user, 1)
   return user
 }
 
 const getUserProfileCached = async (ctx) => {
-  const c = await _brklyn.cache.get('profiles', ctx.from.id.toString())
-  if (c) return c
-
   const profile = await _brklyn.db.userProfile.findFirst({
     where: { userId: ctx.userData.id },
     include: { stickers: true, background: true }
   }).catch(() => null)
   if (!profile) return null
-  await _brklyn.cache.setexp('profiles', ctx.from.id.toString(), profile, 1)
   return profile
 }
 
