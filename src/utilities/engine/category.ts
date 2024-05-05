@@ -37,7 +37,7 @@ export const getAllCategories = async () => {
   if (cached) return cached
 
   let categories = await _brklyn.db.category.findMany()
-  categories = categories.filter((c) => c.id !== 0).filter(a => !a.hidden)
+  categories = categories.filter((c) => c.id !== 0).filter(a => !a.hidden).sort((a, b) => a.id - b.id)
   await _brklyn.cache.setexp('categories_all', 'all', categories, 24 * 60 * 60)
 
   return categories
