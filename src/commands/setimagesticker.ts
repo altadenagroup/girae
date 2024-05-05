@@ -8,12 +8,11 @@ export default async (ctx: BotContext) => {
     return ctx.reply('Você precisa especificar o ID do sticker para editar a imagem.\n\nUsa-se setimagesticker id')
   }
 
-  const cs = await getStickerByID(parseInt(ctx.args[0]))
-  if (!cs || !cs[0]) {
+  const c = await getStickerByID(parseInt(ctx.args[0]))
+  if (!c) {
     return ctx.reply('Sticker não encontrado.')
   }
 
-  const c = cs[0]
   const imgString = await uploadAttachedPhoto(ctx, true, true)
   if (!imgString) return
 
