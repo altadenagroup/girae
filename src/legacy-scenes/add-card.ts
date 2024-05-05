@@ -188,8 +188,7 @@ composer.action('CANCEL_ADD_CARD', async (ctx) => {
 composer.action('DO_NOT_RESIZE_CARD', async (ctx) => {
   // @ts-ignore
   ctx.wizard.state.cardData.image = ctx.wizard.state.cardData.image + '?no_resize'
-  // @ts-ignore
-  await updateCardView(ctx)
+  await ctx.reply('Imagem não será redimensionada.')
 })
 
 composer.action('EDIT_SUBCATEGORY', async (ctx) => {
