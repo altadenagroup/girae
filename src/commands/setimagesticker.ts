@@ -10,7 +10,7 @@ export default async (ctx: BotContext) => {
 
   const cs = await getStickerByID(parseInt(ctx.args[0]))
   if (!cs || !cs[0]) {
-    return ctx.reply('Papel de parede não encontrado.')
+    return ctx.reply('Sticker não encontrado.')
   }
 
   const c = cs[0]
