@@ -54,7 +54,7 @@ export const getCategoryByID = async (id: number) => {
   })
 
   if (category) {
-    await _brklyn.cache.setexp('categories_id', id.toString(), category, 60 * 60 * 24)
+    await _brklyn.cache.setexp('categories_id', id.toString(), category, 60)
   }
 
   return category

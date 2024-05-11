@@ -12,7 +12,9 @@ export const createSubcategory = async (name: string, categoryID: number) => {
 }
 
 export const getSubcategoryByID = async (id: number): Promise<Subcategory | null | undefined> => {
-  return _brklyn.db.subcategory.findUnique({
+  const cached = await _brklyn.cache.get('subcategories_id', id.toString())
+  if (cached) return cached
+  const before = await _brklyn.db.subcategory.findUnique({
     where: {
       id
     },
@@ -20,6 +22,12 @@ export const getSubcategoryByID = async (id: number): Promise<Subcategory | null
       category: true
     }
   })
+
+  if (before) {
+    await _brklyn.cache.setexp('subcategories_id', id.toString(), before, 60)
+  }
+
+  return cached
 }
 
 export const getSubcategoryByName = async (name: string, isSecondary: boolean = false) => {
@@ -169,4 +177,91 @@ export const migrateCardsToSubcategory = async (tagName: string) => {
   }))
 
   return getSubcategoryByID(sub.id)
+}
+
+export const getCardsFromSubcategory = async (subcategoryID: number) => {
+  const cached = await _brklyn.cache.get('subcategories_cards', subcategoryID.toString())
+  if (cached) return cached
+
+  const cards = await _brklyn.db.card.findMany({
+    where: {
+      OR: [
+        { subcategoryId: subcategoryID },
+        { secondarySubcategories: { some: { id: subcategoryID } } }
+      ]
+    }
+  })
+
+  if (cards) {
+    await _brklyn.cache.setexp('subcategories_cards', subcategoryID.toString(), cards, 60 * 60)
+  }
+
+  return cards
+}
+
+export const getCountOfCardsOnSubcategory = async (subcategoryID: number) => {
+  const cached = await _brklyn.cache.get('subcategories_card_count', subcategoryID.toString())
+  if (cached) return cached
+
+  const count = await _brklyn.db.card.count({
+    where: {
+      OR: [
+        { subcategoryId: subcategoryID },
+        { secondarySubcategories: { some: { id: subcategoryID } } }
+      ]
+    }
+  })
+
+  if (!count) return 0
+  await _brklyn.cache.setexp('subcategories_card_count', subcategoryID.toString(), count, 60 * 60 * 24)
+
+  return count
+}
+
+export interface SubcategoryWithCompletionInfo extends Subcategory {
+  totalCards: number
+  userOwned: number
+}
+
+// checks if a user has completed a certain subcategory (if they have all cards in it)
+export const getSubcategoryForUser = async (userID: number, subcategoryID: number): Promise<SubcategoryWithCompletionInfo | null> => {
+  const cached = await _brklyn.cache.get('subcategories_user', userID.toString() + subcategoryID.toString())
+  if (cached) return cached
+
+  const cards = await _brklyn.db.userCard.findMany({
+    where: {
+      userId: userID,
+      card: {
+        OR: [
+          { subcategoryId: subcategoryID },
+          { secondarySubcategories: { some: { id: subcategoryID } } }
+        ]
+      }
+    },
+    select: {
+      cardId: true
+    },
+    distinct: ['cardId']
+  })
+
+  if (!cards[0]) return null
+
+  const sub = await getSubcategoryByID(subcategoryID) as Subcategory
+  const subcategoryCards = await getCountOfCardsOnSubcategory(subcategoryID)
+  const data = {
+    ...sub,
+    totalCards: subcategoryCards,
+    userOwned: cards.length
+  }
+
+  await _brklyn.cache.setexp('subcategories_user', userID.toString() + subcategoryID.toString(), data, 60 * 60)
+  return data
+}
+
+export const getSubcategoriesForUser = async (userID: number) => {
+  const cached = await _brklyn.cache.get('subcategories_user_all', userID.toString())
+  if (cached) return cached
+
+  await _brklyn.cache.setexp('subcategories_user_all', userID.toString(), null, 60 * 60)
+  return null
 }

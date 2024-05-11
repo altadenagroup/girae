@@ -4,6 +4,12 @@ import { parseImageString } from '../../utilities/lucky-engine.js'
 import { MISSING_CARD_IMG } from '../../constants.js'
 import { buyStoreItem } from '../../utilities/engine/store.js'
 import { getUserFromNamekeeper } from '../../utilities/telegram.js'
+import { getSubcategoryByID } from '../../utilities/engine/subcategories.js'
+import { getCategoryByID } from '../../utilities/engine/category.js'
+import { getRarityByID } from '../../utilities/engine/rarity.js'
+import { Category } from '@prisma/client'
+
+const PAGE_TO_CATEGORY_MAP = [2, 3, 4, 5, 6, 7, 17]
 
 @ObjectType({
   description: 'Subcategory information'
@@ -88,43 +94,81 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
   userInfo!: UserInfo
 }
 
+@ObjectType({
+  description: 'Compact SubcategoryProgessWithCards, containing only the cards, if they are tradeable and their image'
+})
+export class CompactSubcategoryProgressWithCards {
+  @Field(_type => [UserCard], { nullable: false, description: 'The user cards in this subcategory' })
+  userCards!: UserCard[]
+
+  @Field(_type => [CardImage], { nullable: false, description: 'The card images' })
+  cardImages!: CardImage[]
+
+  @Field(_type => [UserCardCountInfo], { nullable: false, description: 'The user card count' })
+  userCardCount!: UserCardCountInfo[]
+}
+
 @Resolver()
 export class UserCardsResolver {
-  @Query(_returns => SubcategoryProgressWithCards)
-  async fullUserCards (
+  @Query(_returns => CompactSubcategoryProgressWithCards)
+  async userCards (
     @Ctx() _: any,
     @Info() _a: any,
     // user ids are bigint
     @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
-    @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 1
+    @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 0
   ) {
+    // check if page_to_category has a category under this page number (and yes, pages start at 0)
+    if (!PAGE_TO_CATEGORY_MAP[page]) {
+      return {
+        userCards: [],
+        cardImages: [],
+        untradeableCards: []
+      }
+    }
+
+    const categoryId = PAGE_TO_CATEGORY_MAP[page]
     let cards = await _brklyn.db.userCard.findMany({
       where: {
         user: {
           tgId: parseInt(userId)
+        },
+        card: {
+          categoryId
         }
       },
       include: {
-        card: {
-          include: {
-            subcategory: true,
-            rarity: true,
-            category: true
-          }
-        }
-      },
-      take: 500,
-      skip: (page - 1) * 500
+        card: true
+      }
     })
 
-    let userCardCount: any[] = []
-    let userCardImages: any[] = []
-    // sort cards by rarity and add image. also add
+    if (cards.length === 0) return {
+      userCards: [],
+      cardImages: [],
+      untradeableCards: []
+    }
+
+    // add subcategory, category and rarity data from cache
+    cards = await Promise.all(cards.map(async card => {
+      // @ts-ignore
+      card.card.subcategory = await getSubcategoryByID(card.card.subcategoryId!) as unknown as Category
+      // @ts-ignore
+      card.card.category = await getCategoryByID(card.card.categoryId)
+      // @ts-ignore
+      card.card.rarity = await getRarityByID(card.card.rarityId)
+      return card
+    }))
+
+    // sort cards by rarity and add image
     cards = cards.sort((a, b) => {
+      // @ts-ignore
       return a.card.rarity.chance - b.card.rarity.chance
     })
 
     // add count
+    const userCardCount: any[] = []
+    const userCardImages: any[] = []
+
     cards.forEach(card => {
       if (userCardCount.find(c => c.cardId === card.card.id)) {
         userCardCount.find(c => c.cardId === card.card.id)!.count += 1
@@ -148,8 +192,22 @@ export class UserCardsResolver {
       return cards.find(card => card.card.id === cardId)!
     })
 
+    return {
+      userCards: cards,
+      cardImages: userCardImages,
+      userCardCount
+    }
+  }
+
+  @Query(_returns => SubcategoryProgressWithCards)
+  async fullUserCards (
+    @Ctx() _: any,
+    @Info() _a: any,
+    // user ids are bigint
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
+  ) {
     // get all unique subcategories
-    const subcategories = Array.from(new Set(cards.map(card => card.card.subcategoryId)))
+    const subcategories = []
     let subcategoryInfo = await Promise.all(subcategories.map(async subcategoryId => {
       const totalCards = await _brklyn.db.card.count({
         where: {
@@ -157,21 +215,19 @@ export class UserCardsResolver {
         }
       })
 
-      // remove duplicates
-      const cardsOwned = Array.from(new Set(cards.filter(card => card.card.subcategoryId === subcategoryId).map(card => card.cardId)).values()).length
-      // get image and name for the subcategory from the first card
-      const subcategory = cards.find(card => card.card.subcategoryId === subcategoryId)?.card.subcategory
       return {
         subcategoryId,
         totalCards,
-        cardsOwned,
+        // @ts-ignore
         subcategoryName: subcategory?.name || '',
+        // @ts-ignore
         subcategoryImage: subcategory?.image ? await parseImageString(subcategory.image, false) : MISSING_CARD_IMG
       }
     }))
 
     // sort subcategories by closest to completion
     subcategoryInfo = subcategoryInfo.sort((a, b) => {
+      // @ts-ignore
       return (b.cardsOwned / b.totalCards) - (a.cardsOwned / a.totalCards)
     })
 
@@ -196,9 +252,6 @@ export class UserCardsResolver {
 
     return {
       subcategoryInfo,
-      userCards: cards,
-      userCardCount,
-      cardImages: userCardImages,
       untradeableCards,
       userInfo
     }

@@ -24,3 +24,20 @@ export const getAllRarities = async () => {
 
   return rarities
 }
+
+export const getRarityByID = async (id: number) => {
+  const cached = await _brklyn.cache.get('rarities_id', id.toString())
+  if (cached) return cached
+
+  const rarity = await _brklyn.db.rarity.findFirst({
+    where: {
+      id
+    }
+  })
+
+  if (rarity) {
+    await _brklyn.cache.setexp('rarities_id', id.toString(), rarity, 60)
+  }
+
+  return rarity
+}
