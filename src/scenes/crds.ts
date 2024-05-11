@@ -48,7 +48,8 @@ class CardPages extends PaginatedScene<UserData> {
       include: {
         card: {
           include: {
-            rarity: true
+            rarity: true,
+            category: true
           }
         }
       },
@@ -56,13 +57,23 @@ class CardPages extends PaginatedScene<UserData> {
       take: 20,
       // sort by rarity id: 4 first, 3 second, 1 last
       orderBy: [{
-        id: 'asc'
+        card: {
+          rarityId: 'desc'
+        }
+      }, {
+        card: {
+          categoryId: 'asc'
+        }
+      }, {
+        card: {
+          id: 'asc'
+        }
       }],
       distinct: ['cardId']
     })
 
 
-    const resultCount = r.length
+    const resultCount = await _brklyn.db.userCard.count({ where: { userId: data.id, ...filter } })
     data.resultsCount = resultCount
 
     // update total pages. if it differs from current total, change current page to 0
@@ -75,7 +86,7 @@ class CardPages extends PaginatedScene<UserData> {
   }
 
   formatCard (card) {
-    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> ${card.category?.emoji}`
+    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> ${card.card.category?.emoji}`
   }
 
   generateFilterAdvise (data) {
@@ -105,7 +116,7 @@ class CardPages extends PaginatedScene<UserData> {
     const texts = cards.map((c) => this.formatCard(c))
 
     return `👤 <code>${data.id}</code>. Cards de <b>${data.name}</b>
-🎲 <code>${data.totalCards}</code> cards no total, <code>${data.userOwnedCards}</code> na sua coleção.
+🎲 <code>${data.totalCards}</code> cards no total.
 ${this.generateFilterAdvise(data)}
 ${texts.join('\n') || '<i>Nenhum card para mostrar.</i>'}
 
