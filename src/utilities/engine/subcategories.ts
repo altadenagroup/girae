@@ -12,9 +12,7 @@ export const createSubcategory = async (name: string, categoryID: number) => {
 }
 
 export const getSubcategoryByID = async (id: number): Promise<Subcategory | null | undefined> => {
-  const cached = await _brklyn.cache.get('subcategories_id', id.toString())
-  if (cached) return cached
-  const before = await _brklyn.db.subcategory.findUnique({
+  return _brklyn.db.subcategory.findUnique({
     where: {
       id
     },
@@ -22,12 +20,6 @@ export const getSubcategoryByID = async (id: number): Promise<Subcategory | null
       category: true
     }
   })
-
-  if (before) {
-    await _brklyn.cache.setexp('subcategories_id', id.toString(), before, 60)
-  }
-
-  return cached
 }
 
 export const getSubcategoryByName = async (name: string, isSecondary: boolean = false) => {
