@@ -18,18 +18,18 @@ Obrigado por considerar ajudar o desenvolvimento da bot! Sua contribuição é v
 
 As doações da bot funcionam de modo <b>mensal</b>. Ao se tornar doador, você terá diversos benefícios, como:
 
-— doar cartas usando o comando <i>/doar</i>;
-— fazer trocas simples (<i>/stroca</i>) em qualquer grupo;
-— acumulo máximo de giros para <b>24 + giros em dobro</b> a cada 3 horas.
-— descontos na loja;
-— acesso a grupo exclusivo;
-— e muito mais!
+📨 Doar cartas usando o comando <i>/doar</i>;
+🤝 Fazer trocas simples (<i>/stroca</i>) em qualquer grupo;
+🔮 Giros em dobro e acumulo máximo aumentado para <b>24 giros</b>.
+💰 Daily <b>em dobro</b>;
+🥇 Chances de drop de cartas raras e lendárias aumentadas (<b>apenas 9% a mais</b>).
+💎 Acesso a grupo exclusivo e emoji de diamante no perfil;
 
 🤔 <b>Como doar?</b>
 
-Clique no botão abaixo! Você será redirecionado para o site do <b>Stripe</b>, nosso processador de pagamentos seguro. Lá, você poderá escolher sua forma de pagamento.
+Clique no botão abaixo! Você será redirecionado para o site do Stripe, nosso processador de pagamentos seguro. Lá, você poderá escolher sua forma de pagamento. Não teremos acesso a nenhum dado sensível seu, como número de cartão ou informações bancárias.
 
-<i>Não teremos acesso a nenhum dado sensível seu, como número de cartão ou informações bancárias.</i>`, {
+⚠️ <b>AVISO IMPORTANTE</b>: O reembolso pode ser solicitado em até 7 dias. No entanto, devido nossa política de segurança, sua conta será banida permanente da Giraê.`, {
       reply_markup: {
         inline_keyboard: [
           [{
