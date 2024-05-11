@@ -14,6 +14,7 @@ import { ExtendedBotContext, tcqc } from './tcqc.js'
 import { TelegramError } from 'telegraf'
 import * as Sentry from '@sentry/node'
 import showCategory from '../scenes/ctg.js'
+import showCards from '../scenes/crds.js'
 
 export interface ES2Methods {
   enter (sceneID: string, args?: { [key: string]: any } | undefined): Promise<void>
@@ -39,6 +40,8 @@ export class SessionManager {
     this.scenes.push(showCollection)
     // @ts-ignore
     this.scenes.push(showCategory)
+    // @ts-ignore
+    this.scenes.push(showCards)
   }
 
   get cancelButtonArray (): InlineKeyboardButton[] {
