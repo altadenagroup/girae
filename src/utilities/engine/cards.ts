@@ -486,3 +486,15 @@ export const deleteCard = async (userId: number, card: Card) => {
     addBalance(userId, CARD_DELETION_REWARD[card.rarityId])
   ])
 }
+
+export const getCardByIDSimple = async (id: number) => {
+  const cached = await _brklyn.cache.get('cardByIDsim', id.toString())
+  if (cached) return cached
+  const card = await _brklyn.db.card.findFirst({
+    where: {
+      id
+    }
+  })
+  if (card) await _brklyn.cache.setexp('cardByIDsim', id.toString(), card, 15)
+  return card
+}

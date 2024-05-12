@@ -7,9 +7,30 @@ import { getUserFromNamekeeper } from '../../utilities/telegram.js'
 import { getSubcategoryByID } from '../../utilities/engine/subcategories.js'
 import { getRarityByID } from '../../utilities/engine/rarity.js'
 import { Subcategory } from '@prisma/client'
-import { deleteCard, getCardByID } from '../../utilities/engine/cards.js'
+import { deleteCard, getCardByID, getCardByIDSimple } from '../../utilities/engine/cards.js'
 
-const PAGE_TO_CATEGORY_MAP = [2, 3, 4, 5, 6, 7, 17]
+interface CardDB {
+  userId: number
+  cardId: number
+  count: number
+  card: {
+    id: number
+    categoryId: number
+    subcategoryId: number
+    rarityId: number
+    image: string
+    name: string
+    subcategory: {
+      name: string
+      id: number
+    }
+    rarity: {
+      chance: number
+      name: string
+      id: number
+    }
+  }
+}
 
 @ObjectType({
   description: 'Subcategory information'
@@ -95,6 +116,20 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
 }
 
 @ObjectType({
+  description: 'Category representation'
+})
+export class Category {
+  @Field(_type => Int, { nullable: false, description: 'The category id' })
+  id!: number
+
+  @Field(_type => String, { nullable: false, description: 'The category name' })
+  name!: string
+
+  @Field(_type => String, { nullable: false, description: 'The category emoji' })
+  emoji!: string
+}
+
+@ObjectType({
   description: 'Compact SubcategoryProgessWithCards, containing only the cards, if they are tradeable and their image'
 })
 export class CompactSubcategoryProgressWithCards {
@@ -106,6 +141,9 @@ export class CompactSubcategoryProgressWithCards {
 
   @Field(_type => [UserCardCountInfo], { nullable: false, description: 'The user card count' })
   userCardCount!: UserCardCountInfo[]
+
+  @Field(_type => [Category], { nullable: false, description: 'The categories' })
+  categories!: Category[]
 }
 
 @Resolver()
@@ -116,39 +154,26 @@ export class UserCardsResolver {
     @Info() _a: any,
     // user ids are bigint
     @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
-    @Arg('categoryIndex', _type => Int, { nullable: false, description: 'The category index' }) categoryIndex: number,
     @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 0,
     @Arg('limit', _type => Int, { nullable: true, description: 'The limit' }) limit: number = 20
   ) {
-    // check if page_to_category has a category under this page number (and yes, pages start at 0)
-    if (!PAGE_TO_CATEGORY_MAP[categoryIndex]) {
-      return {
-        userCards: [],
-        cardImages: [],
-        untradeableCards: []
-      }
-    }
-
-    const categoryId = PAGE_TO_CATEGORY_MAP[categoryIndex]
-    let cards = await _brklyn.db.userCard.findMany({
+    let cards: CardDB[] = await _brklyn.db.userCard.findMany({
       where: {
         user: {
           tgId: parseInt(userId)
-        },
-        card: {
-          categoryId
         }
       },
-      include: {
-        card: true
-      },
-      orderBy: {
+      orderBy: [{
         cardId: 'asc'
-      },
+      }, {
+        card: {
+          categoryId: 'asc'
+        }
+      }],
       skip: page * limit,
       take: limit,
       distinct: ['cardId']
-    })
+    }) as unknown as CardDB[]
 
     if (cards.length === 0) return {
       userCards: [],
@@ -156,14 +181,23 @@ export class UserCardsResolver {
       untradeableCards: []
     }
 
+    let categoriesPresent: number[] = []
+
     // add subcategory, category and rarity data from cache
     cards = await Promise.all(cards.map(async card => {
+      card.card = await getCardByIDSimple(card.cardId)
+      if (!card.card) return null
+      if (!categoriesPresent.includes(card.card.categoryId)) {
+        categoriesPresent.push(card.card.categoryId)
+      }
+
       // @ts-ignore
       card.card.subcategory = await getSubcategoryByID(card.card.subcategoryId!) as unknown as Subcategory
-      // @ts-ignore
       card.card.rarity = await getRarityByID(card.card.rarityId)
       return card
-    }))
+    })).then((c) => {
+      return c.filter((i) => i !== null)
+    }) as unknown as CardDB[]
 
     // sort cards by rarity and add image
     cards = cards.sort((a, b) => {
@@ -193,15 +227,23 @@ export class UserCardsResolver {
       }
     })
 
-    // remove duplicates, use card.id as the unique identifier
     cards = Array.from(new Set(cards.map(card => card.card.id)).values()).map(cardId => {
       return cards.find(card => card.card.id === cardId)!
+    })
+
+    const categories = await _brklyn.db.category.findMany({
+      where: {
+        id: {
+          in: categoriesPresent
+        }
+      }
     })
 
     return {
       userCards: cards,
       cardImages: userCardImages,
-      userCardCount
+      userCardCount,
+      categories
     }
   }
 
