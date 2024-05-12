@@ -5,9 +5,9 @@ import { MISSING_CARD_IMG } from '../../constants.js'
 import { buyStoreItem } from '../../utilities/engine/store.js'
 import { getUserFromNamekeeper } from '../../utilities/telegram.js'
 import { getSubcategoryByID } from '../../utilities/engine/subcategories.js'
-import { getCategoryByID } from '../../utilities/engine/category.js'
 import { getRarityByID } from '../../utilities/engine/rarity.js'
-import { Category } from '@prisma/client'
+import { Subcategory } from '@prisma/client'
+import { deleteCard, getCardByID } from '../../utilities/engine/cards.js'
 
 const PAGE_TO_CATEGORY_MAP = [2, 3, 4, 5, 6, 7, 17]
 
@@ -116,10 +116,12 @@ export class UserCardsResolver {
     @Info() _a: any,
     // user ids are bigint
     @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
-    @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 0
+    @Arg('categoryIndex', _type => Int, { nullable: false, description: 'The category index' }) categoryIndex: number,
+    @Arg('page', _type => Int, { nullable: true, description: 'The page number' }) page: number = 0,
+    @Arg('limit', _type => Int, { nullable: true, description: 'The limit' }) limit: number = 20
   ) {
     // check if page_to_category has a category under this page number (and yes, pages start at 0)
-    if (!PAGE_TO_CATEGORY_MAP[page]) {
+    if (!PAGE_TO_CATEGORY_MAP[categoryIndex]) {
       return {
         userCards: [],
         cardImages: [],
@@ -127,7 +129,7 @@ export class UserCardsResolver {
       }
     }
 
-    const categoryId = PAGE_TO_CATEGORY_MAP[page]
+    const categoryId = PAGE_TO_CATEGORY_MAP[categoryIndex]
     let cards = await _brklyn.db.userCard.findMany({
       where: {
         user: {
@@ -139,7 +141,13 @@ export class UserCardsResolver {
       },
       include: {
         card: true
-      }
+      },
+      orderBy: {
+        cardId: 'asc'
+      },
+      skip: page * limit,
+      take: limit,
+      distinct: ['cardId']
     })
 
     if (cards.length === 0) return {
@@ -151,9 +159,7 @@ export class UserCardsResolver {
     // add subcategory, category and rarity data from cache
     cards = await Promise.all(cards.map(async card => {
       // @ts-ignore
-      card.card.subcategory = await getSubcategoryByID(card.card.subcategoryId!) as unknown as Category
-      // @ts-ignore
-      card.card.category = await getCategoryByID(card.card.categoryId)
+      card.card.subcategory = await getSubcategoryByID(card.card.subcategoryId!) as unknown as Subcategory
       // @ts-ignore
       card.card.rarity = await getRarityByID(card.card.rarityId)
       return card
@@ -255,6 +261,33 @@ export class UserCardsResolver {
       untradeableCards,
       userInfo
     }
+  }
+
+  @Query(_returns => Int)
+  async userCardsCount (
+    @Ctx() _: any,
+    @Info() _a: any,
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string
+  ) {
+    return await _brklyn.db.userCard.count({
+      where: {
+        user: {
+          tgId: parseInt(userId)
+        }
+      }
+    })
+  }
+
+  @Mutation(_returns => Boolean)
+  async deleteCard (
+    @Arg('userId', _type => String, { nullable: false, description: 'The user id' }) userId: string,
+    @Arg('cardId', _type => Int, { nullable: false, description: 'The card id' }) cardId: number
+  ) {
+    const card = await getCardByID(cardId)
+    const user = await _brklyn.db.user.findUnique({ where: { tgId: parseInt(userId) } })
+    if (!card || !user) return false
+    await deleteCard(user.id, card)
+    return true
   }
 
   @Mutation(_returns => Boolean)

@@ -17,3 +17,9 @@ export const TYPE_TO_EMOJI: Record<ItemType, string> = {
   'DRAWS': '🎡',
   'MARRIAGE_RING': '💍'
 }
+
+export const CARD_DELETION_REWARD = {
+  1: 250,
+  3: 500,
+  4: 1000
+}

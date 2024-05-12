@@ -4,6 +4,8 @@ import { getRarityForUserDraw } from './users.js'
 import { getRarityById } from '../lucky-engine.js'
 import { getCategoryByID } from './category.js'
 import { getRandomNumber } from '../misc.js'
+import { addBalance } from './economy.js'
+import { CARD_DELETION_REWARD } from '../../constants.js'
 
 export interface CreateCardOptions {
   name: string
@@ -440,4 +442,47 @@ export const transferCards = async (from: User, to: User, cardIds: number[]) => 
       userId: to.id
     }
   })
+}
+
+// deletes repeated cards and generates a new card document with the count property
+export const migrateCardToNewCountSystem = async (userId: number, cardId: number) => {
+  if (await _brklyn.cache.get('card-mig', `${userId}:${cardId}`)) return _brklyn.db.userCard.findFirst({ where: { userId, cardId } })
+
+  const count = await _brklyn.db.userCard.count({
+    where: {
+      userId,
+      cardId
+    }
+  })
+
+  if (count <= 1) return _brklyn.db.userCard.findFirst({ where: { userId, cardId } })
+
+  await _brklyn.db.$transaction([
+    _brklyn.db.userCard.deleteMany({
+      where: {
+        userId,
+        cardId
+      }
+    }),
+    _brklyn.db.userCard.create({
+      data: {
+        userId,
+        cardId,
+        count
+      }
+    })
+  ])
+
+  await _brklyn.cache.setexp('card-mig', `${userId}:${cardId}`, count, 30 * 60)
+  return _brklyn.db.userCard.findFirst({ where: { userId, cardId } })
+}
+
+export const deleteCard = async (userId: number, card: Card) => {
+  // find first card w conditions
+  const userCard = await _brklyn.db.userCard.findFirst({ where: { userId, cardId: card.id } })
+  if (!userCard) return null
+  return _brklyn.db.$transaction([
+    _brklyn.db.userCard.deleteMany({ where: { id: userCard!.id } }),
+    addBalance(userId, CARD_DELETION_REWARD[card.rarityId])
+  ])
 }

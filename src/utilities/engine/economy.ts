@@ -1,5 +1,5 @@
-export const addBalance = async (userID: number, amount: number) => {
-  return await _brklyn.db.user.update({
+export const addBalance = (userID: number, amount: number) => {
+  return _brklyn.db.user.update({
     where: {
       id: userID
     },
