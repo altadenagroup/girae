@@ -49,7 +49,8 @@ class CardPages extends PaginatedScene<UserData> {
         card: {
           include: {
             rarity: true,
-            category: true
+            category: true,
+            subcategory: true
           }
         }
       },
@@ -86,7 +87,7 @@ class CardPages extends PaginatedScene<UserData> {
   }
 
   formatCard (card) {
-    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> ${card.card.category?.emoji}`
+    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> ${card.card.category?.emoji} <i>${card.card.subcategory?.name}</i>`
   }
 
   generateFilterAdvise (data) {
