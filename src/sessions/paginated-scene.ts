@@ -2,6 +2,7 @@ import { InlineKeyboardButton } from 'telegraf/types'
 import { SessionContext } from './context.js'
 import { CurrentSceneStatus, SceneHandler } from './scene.js'
 import { UpdateType } from 'telegraf/typings/telegram-types.js'
+import { determineMethodToSendMedia } from '../utilities/telegram.js'
 
 export interface PaginatedSceneData {
   currentPage: number
@@ -126,7 +127,8 @@ export class PaginatedScene<T extends PaginatedSceneData> {
     const text = await this.generateText(ctx.session.data)
     if (ctx.session.arguments?.imageURL) {
       ctx.session.data.hasImage = true
-      return ctx.replyWithPhoto(ctx.session.arguments.imageURL, {
+      const method = determineMethodToSendMedia(ctx.session.arguments.imageURL)
+      return ctx[method](ctx.session.arguments.imageURL, {
         caption: text,
         parse_mode: 'HTML',
         reply_markup: {

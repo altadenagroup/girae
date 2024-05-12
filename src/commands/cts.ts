@@ -11,12 +11,13 @@ export default async (ctx: BotContext) => {
     favCard = await _brklyn.db.userCard.findUnique({ where: { id: ctx.profileData.favoriteCardId }, include: { card: true } }).then(t => t?.card)
   }
 
+  const img = favCard ? parseImageString(favCard.image, 'ar_3:4,c_crop') : null
   const args = {
     totalPages: Math.ceil(cardCount / 20),
     totalCards: cardCount,
     name: ctx.from.first_name,
     id: ctx.userData.id,
-    imageURL: favCard ? parseImageString(favCard.image, false) : null,
+    imageURL: img,
     userID: ctx.userData.id
   }
 
