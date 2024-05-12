@@ -1,3 +1,4 @@
+import { CARDS_PER_PAGE } from '../scenes/crds.js'
 import { BotContext } from '../types/context.js'
 import { getUserCardsCount } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
@@ -13,7 +14,7 @@ export default async (ctx: BotContext) => {
 
   const img = favCard ? parseImageString(favCard.image, 'ar_3:4,c_crop') : null
   const args = {
-    totalPages: Math.ceil(cardCount / 20),
+    totalPages: Math.ceil(cardCount / CARDS_PER_PAGE),
     totalCards: cardCount,
     name: ctx.from.first_name,
     id: ctx.userData.id,

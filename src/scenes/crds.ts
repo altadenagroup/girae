@@ -14,6 +14,8 @@ const modifierDescriptions = {
   '3': 'com raridade lendária'
 }
 
+export const CARDS_PER_PAGE = 15
+
 class CardPages extends PaginatedScene<UserData> {
   constructor () {
     super('SHOW_CRDS', [])
@@ -54,8 +56,8 @@ class CardPages extends PaginatedScene<UserData> {
           }
         }
       },
-      skip: data.currentPage * 20 || 0,
-      take: 20,
+      skip: data.currentPage * CARDS_PER_PAGE || 0,
+      take: CARDS_PER_PAGE,
       // sort by rarity id: 4 first, 3 second, 1 last
       orderBy: [{
         card: {
@@ -78,8 +80,8 @@ class CardPages extends PaginatedScene<UserData> {
     data.resultsCount = resultCount
 
     // update total pages. if it differs from current total, change current page to 0
-    if (Math.ceil(resultCount / 20) !== data.totalPages) {
-      data.totalPages = Math.ceil(resultCount / 20)
+    if (Math.ceil(resultCount / CARDS_PER_PAGE) !== data.totalPages) {
+      data.totalPages = Math.ceil(resultCount / CARDS_PER_PAGE)
       data.currentPage = 0
     }
 
