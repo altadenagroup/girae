@@ -139,9 +139,6 @@ export class CompactSubcategoryProgressWithCards {
   @Field(_type => [CardImage], { nullable: false, description: 'The card images' })
   cardImages!: CardImage[]
 
-  @Field(_type => [UserCardCountInfo], { nullable: false, description: 'The user card count' })
-  userCardCount!: UserCardCountInfo[]
-
   @Field(_type => [CategoryGQL], { nullable: false, description: 'The categories' })
   categories!: CategoryGQL[]
 }
@@ -163,13 +160,11 @@ export class UserCardsResolver {
           tgId: parseInt(userId)
         }
       },
-      orderBy: [{
-        cardId: 'asc'
-      }, {
+      orderBy: {
         card: {
           categoryId: 'asc'
         }
-      }],
+      },
       skip: page * limit,
       take: limit,
       distinct: ['cardId']
@@ -199,36 +194,16 @@ export class UserCardsResolver {
       return c.filter((i) => i !== null)
     }) as unknown as CardDB[]
 
-    // sort cards by rarity and add image
-    cards = cards.sort((a, b) => {
-      // @ts-ignore
-      return a.card.rarity.chance - b.card.rarity.chance
-    })
-
     // add count
-    const userCardCount: any[] = []
     const userCardImages: any[] = []
 
     cards.forEach(card => {
-      if (userCardCount.find(c => c.cardId === card.card.id)) {
-        userCardCount.find(c => c.cardId === card.card.id)!.count += 1
-      } else {
-        userCardCount.push({
-          count: 1,
-          cardId: card.card.id
-        })
-      }
-
       if (!userCardImages.find(c => c.cardId === card.card.id)) {
         userCardImages.push({
           cardId: card.card.id,
           image: card.card.image ? parseImageString(card.card.image, 'ar_3:4,c_crop', true) : MISSING_CARD_IMG
         })
       }
-    })
-
-    cards = Array.from(new Set(cards.map(card => card.card.id)).values()).map(cardId => {
-      return cards.find(card => card.card.id === cardId)!
     })
 
     const categories = await _brklyn.db.category.findMany({
@@ -242,8 +217,7 @@ export class UserCardsResolver {
     return {
       userCards: cards,
       cardImages: userCardImages,
-      userCardCount,
-      categories
+      categories: categories || []
     }
   }
 
