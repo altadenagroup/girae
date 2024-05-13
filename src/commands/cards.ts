@@ -5,7 +5,6 @@ export default async (ctx: BotContext) => {
   if (ctx.chat!.type !== 'private') {
     const tgUser = await getMentionedTgUser(ctx, ctx.args[0])
     const url = `https://t.me/giraebot/giraecards?startapp=${tgUser.id}`
-    return ctx.replyWithHTML('Este comando está em manutenção e voltará em até 24 horas a partir da meia-noite do dia 11/05. FIque atento ao canal da Giraê para mais informações.\n\nEnquanto isso, use /cts para ver seus cards.')
     return ctx.replyWithHTML(`<a href="${url}">Veja todas as cartas e coleções ${ctx.from.id === tgUser.id ? 'suas' : ('de ' + mentionUser(tgUser))} clicando aqui!</a>`)
   }
 
