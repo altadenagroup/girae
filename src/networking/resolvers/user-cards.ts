@@ -118,7 +118,7 @@ export class SubcategoryProgressWithCards extends SubcategoryProgress {
 @ObjectType({
   description: 'Category representation'
 })
-export class Category {
+export class CategoryGQL {
   @Field(_type => Int, { nullable: false, description: 'The category id' })
   id!: number
 
@@ -142,8 +142,8 @@ export class CompactSubcategoryProgressWithCards {
   @Field(_type => [UserCardCountInfo], { nullable: false, description: 'The user card count' })
   userCardCount!: UserCardCountInfo[]
 
-  @Field(_type => [Category], { nullable: false, description: 'The categories' })
-  categories!: Category[]
+  @Field(_type => [CategoryGQL], { nullable: false, description: 'The categories' })
+  categories!: CategoryGQL[]
 }
 
 @Resolver()
