@@ -1,6 +1,7 @@
 import userCooldown from '../middleware/user-cooldown.js'
 import { BotContext } from '../types/context.js'
 import { isUserOnNewsChannel } from '../utilities/telegram.js'
+import isWhitelistedGroup from './isWhitelistedGroup.js'
 
 async function checkCooldown (ctx: BotContext) {
   let hasNextBeenCalled = false
@@ -37,5 +38,5 @@ export default async (ctx: BotContext) => {
   }
 
   const noCooldown = await checkCooldown(ctx)
-  return noCooldown
+  return noCooldown && await isWhitelistedGroup(ctx)
 }
