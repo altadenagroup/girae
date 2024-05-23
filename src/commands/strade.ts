@@ -40,8 +40,8 @@ interface TradeData {
 
 export default async (ctx: BotContext) => {
   if (ctx.chat?.type === 'private') return ctx.reply('Esse comando só pode ser usado em grupos!')
-  const config = await getOrCreateGroupConfig(ctx.chat!.id)
-  if (!config.allowSimpleTrade && !ctx.userData.isAdmin && !ctx.userData.isPremium) return ctx.reply('Esse grupo não tem permissão para realizar trocas simples. Sinto muito! 😅\n\nQuer usar o /strade em todos grupos? Doe para a Giraê e receba isso e mais! Use /doar para mais informações.')
+  // const config = await getOrCreateGroupConfig(ctx.chat!.id)
+  // if (!config.allowSimpleTrade && !ctx.userData.isAdmin && !ctx.userData.isPremium) return ctx.reply('Esse grupo não tem permissão para realizar trocas simples. Sinto muito! 😅\n\nQuer usar o /strade em todos grupos? Doe para a Giraê e receba isso e mais! Use /doar para mais informações.')
 
   if (!(ctx.message as CommonMessageBundle).reply_to_message) return ctx.reply('Você precisa responder a uma mensagem de um usuário para trocar cartas com ele. Do mesmo jeito que fiz nessa mensagem aqui! 😊')
   const user = await getUserFromQuotesOrAt(ctx, '')

@@ -3,7 +3,7 @@ import { BotContext } from '../types/context.js'
 import { getUserFromQuotesOrAt } from '../utilities/parser.js'
 
 export default async (ctx: BotContext) => {
-  if (!ctx.userData.isPremium) {
+  if (false) {
     if (ctx.chat!.type !== 'private') return ctx.reply('Somente usuários doadores podem usar esse comando. Use /doar na DM para saber mais!')
     const customer = await _brklyn.payments.createOrGetCustomer(ctx.from, ctx.userData.id)
     // TODO: add abstraction for this
