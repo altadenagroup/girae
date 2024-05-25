@@ -19,7 +19,7 @@ export default async (ctx: BotContext) => {
   }
 
   return ctx.replyWithHTML(
-    `Boas-vindas à ${process.env.BOT_NAME}!\n\nDigite / para ver meus comandos. O mais importante é, obviamente, o /girar.\n\nPara usar a bot, entre no nosso canal de notícias <a href="https://t.me/${process.env.NEWS_CHANNEL_ID?.replace('@', '')}">clicando aqui</a>.`
+    `Boas-vindas à ${process.env.BOT_NAME}!\n\nDigite / para ver meus comandos. O mais importante é, obviamente, o ${process.env.JANET_VERSION ? '/rechear' : '/girar'}.\n\nPara usar a bot, entre no nosso canal de notícias <a href="https://t.me/${process.env.NEWS_CHANNEL_ID?.replace('@', '')}">clicando aqui</a>.`
   )
 }
 
