@@ -19,7 +19,7 @@ export default async (ctx: BotContext) => {
   }
 
   return ctx.replyWithHTML(
-    `Boas-vindas à Giraê!\n\nDigite / para ver meus comandos. O mais importante é, obviamente, o /girar.\n\nPara usar a bot, entre no nosso canal de notícias <a href="https://t.me/giraenews">clicando aqui</a>.`
+    `Boas-vindas à ${process.env.BOT_NAME}!\n\nDigite / para ver meus comandos. O mais importante é, obviamente, o /girar.\n\nPara usar a bot, entre no nosso canal de notícias <a href="https://t.me/${process.env.NEWS_CHANNEL?.replace('@', '')}">clicando aqui</a>.`
   )
 }
 
@@ -28,7 +28,7 @@ async function tradeMessage (ctx: BotContext) {
   const imgURL = await generateImageURL(tradeData)
 
   const m = await ctx.sendPhoto(imgURL ?? 'https://altadena.space/assets/banner-beta-low.jpg', {
-    caption: '<b>Como trocar de cartas com a Giraê?</b>\n\n1. Selecione o card que você quer trocar usando o comando <code>/card</code>\n2. Clique no botão <b>➕ Trocar este card</b>\n3. Quando tiver selecionado todos os cards (3 no máximo), clique no botão <b>🔄 Pronto pra trocar</b>.\n\nEsta mensagem será automaticamente atualizada com os cards de vocês.',
+    caption: `<b>Como trocar de cartas com a ${process.env.BOT_NAME}?</b>\n\n1. Selecione o card que você quer trocar usando o comando <code>/card</code>\n2. Clique no botão <b>➕ Trocar este card</b>\n3. Quando tiver selecionado todos os cards (3 no máximo), clique no botão <b>🔄 Pronto pra trocar</b>.\n\nEsta mensagem será automaticamente atualizada com os cards de vocês.`,
     parse_mode: 'HTML'
   })
   await setUserDisplayMessageID(ctx, m.message_id)

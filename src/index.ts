@@ -16,6 +16,7 @@ console.log('-'.repeat(50))
 
 import Brooklyn from './Brooklyn.js'
 
+process.env.BOT_NAME = process.env.BOT_NAME || 'Giraê'
 if (process.env.RUN_BETA) {
   info('giraê', 'running in beta mode')
   process.env.OG_TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN
