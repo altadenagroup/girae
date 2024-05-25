@@ -23,11 +23,20 @@ export default async (ctx: BotContext) => {
     }
   }
 
-  if (ctx.userData.isBanned) {
+  if (ctx.userData.isBanned && !process.env.JANET_VERSION) {
     const warnedAboutBan = await _brklyn.cache.get('banned', ctx.from.id.toString())
     if (!warnedAboutBan) {
       await ctx.replyWithHTML(`Você foi banido de usar a Giraê. 😢\n\nMotivo do ban: <pre>${ctx.userData.banMessage || 'Sem motivo especificado.'}</pre>\n\nCaso você ache que isso tenha sido um erro, por favor, entre em contato com o suporte <a href="https://t.me/giraesuportebot">clicando aqui.</a>`)
       await _brklyn.cache.set('banned', ctx.from.id.toString(), true)
+    }
+    return false
+  }
+
+  if (!ctx.userData.isBanned && process.env.JANET_VERSION) {
+    const warnedAboutLackOfPerm = await _brklyn.cache.get('lackOfPerm', ctx.from.id.toString())
+    if (!warnedAboutLackOfPerm) {
+      await ctx.replyWithHTML(`Você não tem permissão para usar a ${process.env.BOT_NAME}. Que pena!`)
+      await _brklyn.cache.set('lackOfPerm', ctx.from.id.toString(), true)
     }
     return false
   }

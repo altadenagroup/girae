@@ -102,7 +102,8 @@ export default class Brooklyn extends Client {
         story: false,
         hide_username: false,
         ...addData,
-        data
+        data,
+        is_evil_mode: process.env.JANET_VERSION ? true : false
       })
     }).then(t => t.json()).catch(e => {
       info('ditto.generateImage', `got an error: ${e}`)

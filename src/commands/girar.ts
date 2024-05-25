@@ -2,6 +2,9 @@ import { DRAW_CRON } from '../sidecar/index.js'
 import { BotContext } from '../types/context.js'
 
 export default async (ctx: BotContext) => {
+  // @ts-ignore
+  if (process.env.JANET_VERSION && !ctx.message!.text?.startsWith('/rechear')) return
+
   if (await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {
     const url = await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())
     if (url.startsWith) {
@@ -31,5 +34,5 @@ export default async (ctx: BotContext) => {
 
 export const info = {
   guards: ['hasJoinedGroup', 'isWhitelistedGroup'],
-  aliases: ['draw']
+  aliases: process.env.JANET_VERSION ? ['rechear'] : ['draw', 'rodar'],
 }
