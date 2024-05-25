@@ -2,7 +2,6 @@ import { CommonMessageBundle } from 'telegraf/types'
 import { BotContext } from '../types/context.js'
 import { getUserFromQuotesOrAt } from '../utilities/parser.js'
 import { getCardFullByID } from '../utilities/engine/cards.js'
-import { getOrCreateGroupConfig } from '../utilities/engine/group.js'
 import { tcqc } from '../sessions/tcqc.js'
 import { escapeForHTML } from '../utilities/responses.js'
 import { formatCard } from '../constants.js'
@@ -56,7 +55,7 @@ export default async (ctx: BotContext) => {
   if (!nUser) {
     return ctx.reply('O usuário mencionado nunca usou a bot! Talvez você marcou a pessoa errada?')
   }
-  if (nUser.isBanned) {
+  if (nUser.isBanned && !process.env.JANET_VERSION) {
     return ctx.reply('Esse usuário está banido de usar a Giraê e não pode realizar trocas de cartas.')
   }
 

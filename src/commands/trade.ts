@@ -30,7 +30,7 @@ export default async (ctx: BotContext) => {
   if (user.is_bot) return ctx.reply('Você não pode trocar cartas com um bot! 😅')
   const nUser = await _brklyn.db.user.findFirst({ where: { tgId: user.id } })
   if (!nUser) return ctx.reply('O usuário mencionado nunca usou a bot! Talvez você marcou a pessoa errada?')
-  if (nUser.isBanned) return ctx.reply('Esse usuário está banido de usar a Giraê e não pode realizar trocas de cartas.')
+  if (nUser.isBanned && !process.env.JANET_VERSION) return ctx.reply('Esse usuário está banido de usar a Giraê e não pode realizar trocas de cartas.')
   const ecData = await _brklyn.es2.getEC(ctx.from.id, 'tradeData')
   if (ecData?.tradingWith) return ctx.reply('Você já está em uma troca de cartas! 😅\nFinalize-a para trocar mais cartas.')
   const ecData2 = await _brklyn.es2.getEC(user.id, 'tradeData')

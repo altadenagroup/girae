@@ -42,7 +42,7 @@ const firstStep = async (ctx: SessionContext<TradeData>) => {
 
   ctx.session.steps.next()
 
-  return ctx.replyWithPhoto('https://altadena.space/assets/banner-beta-low.jpg', {
+  return ctx.replyWithPhoto(process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-banner.png' : 'https://altadena.space/assets/banner-beta-low.jpg', {
     caption: `<b>${mentionUser(user)}</b>, você quer trocar cartas com <b>${ctx.from!.first_name}</b>?\n\n<b>${ctx.from!.first_name}</b>, você ainda pode cancelar clicando em recusar!`,
     reply_markup: {
       inline_keyboard: [

@@ -52,7 +52,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
   await _brklyn.cache.set('is_drawing', ctx.from?.id.toString(), true)
 
-  await ctx.replyWithAnimation('https://altadena.space/assets/girar-one.mp4', {
+  await ctx.replyWithAnimation(process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-one.mp4' : 'https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {
@@ -104,7 +104,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 
   await ctx.editMessageMedia({
     type: 'animation',
-    media: 'https://altadena.space/assets/girar-two.mp4?c',
+    media: process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-two.mp4' : 'https://altadena.space/assets/girar-two.mp4?c',
     caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
     parse_mode: 'HTML'
   }, {
