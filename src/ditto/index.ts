@@ -31,7 +31,7 @@ export class Ditto {
     }
 
     let badges: string[] = []
-    if (userD.isAdmin) badges = [...badges, '👮‍♂️']
+    if (userD.isAdmin) badges = [...badges, process.env.JANET_VERSION ? '🧁' : '👮‍♂️']
     if (userD.isBanned) badges = [...badges, '🚫']
     if (userD.isPremium) badges = [...badges, '💎']
     if (completeUserData?.badgeEmojis.length > 0) badges = [...badges, ...completeUserData.badgeEmojis]
