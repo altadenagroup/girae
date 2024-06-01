@@ -32,7 +32,8 @@ export default async (ctx: BotContext) => {
     return false
   }
 
-  if (!ctx.userData.isBanned && process.env.JANET_VERSION) {
+  //if (!ctx.userData.isBanned && process.env.JANET_VERSION) {
+  if (false) {
     const warnedAboutLackOfPerm = await _brklyn.cache.get('lackOfPerm', ctx.from.id.toString())
     if (!warnedAboutLackOfPerm) {
       await ctx.replyWithHTML(`Você não tem permissão para usar a ${process.env.BOT_NAME}. Que pena!`)
