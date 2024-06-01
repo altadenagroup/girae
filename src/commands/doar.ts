@@ -50,7 +50,7 @@ Clique no botão abaixo! Você será redirecionado para o site do Stripe, nosso 
 
   const nUser = await _brklyn.db.user.findFirst({ where: { tgId: user.id } })
   if (!nUser) return ctx.reply('O usuário mencionado nunca usou a bot! Talvez você marcou a pessoa errada?')
-  if (nUser.isBanned) return ctx.reply('Esse usuário está banido de usar a Giraê e não pode receber cartas.')
+  if (nUser.isBanned && !process.env.JANET_VERSION) return ctx.reply('Esse usuário está banido de usar a Giraê e não pode receber cartas.')
 
   const ids = ctx.args.map(Number)
   if (ids.length === 0) return ctx.reply('Você precisa especificar o ID da carta que deseja doar. Use /doar id id id...')
