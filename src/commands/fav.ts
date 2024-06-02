@@ -33,7 +33,7 @@ export default async (ctx: BotContext) => {
       const emoji = ctx.args[1]
       // on or off
       if (!emoji) return ctx.responses.replyMissingArgument('on ou off', '/fav emoji on')
-      if (!['on', 'off'].includes(emoji)) return ctx.reply('Escolha entre <code>on</code> e <code>off</code>.')
+      if (!['on', 'off'].includes(emoji)) return ctx.replyWithHTML('Escolha entre <code>on</code> e <code>off</code>.')
       await _brklyn.db.userProfile.update({ where: { userId: ctx.userData.id }, data: { hideCardEmojis: emoji === 'off' } })
       return ctx.reply(`Os emojis de cards estão agora ${emoji === 'off' ? 'desativados' : 'ativados'}.`)
     }

@@ -32,6 +32,7 @@ export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) =
     if (cardCount >= 10) return '💋'
     if (cardCount >= 5) return '✨'
   } else {
+    return '' // under maintenance
     if (cardCount >= 100) return '❤‍🔥'
     if (cardCount >= 70) return '💘'
     if (cardCount >= 55) return '❣'
@@ -43,3 +44,6 @@ export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) =
   if (returnFalseInsteadOfNothing) return false
   return ''
 }
+
+export const allowCustomPhoto = (cardCount) =>
+  process.env.JANET_VERSION ? cardCount >= 30 : cardCount >= 70
