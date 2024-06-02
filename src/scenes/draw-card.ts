@@ -50,7 +50,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
   await _brklyn.cache.set('is_drawing', ctx.from?.id.toString(), true)
 
-  await ctx.replyWithAnimation(process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-one.mp4' : 'https://altadena.space/assets/girar-one.mp4', {
+  await ctx.replyWithAnimation(process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-one.mp4?q' : 'https://altadena.space/assets/girar-one.mp4', {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {

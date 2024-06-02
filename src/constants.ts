@@ -25,11 +25,21 @@ export const CARD_DELETION_REWARD = {
 }
 
 export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) => {
-  if (cardCount >= 25) return '❤‍🔥'
-  if (cardCount >= 20) return '💌'
-  if (cardCount >= 15) return '🎀'
-  if (cardCount >= 10) return '💋'
-  if (cardCount >= 5) return '✨'
+  if (process.env.JANET_VERSION) {
+    if (cardCount >= 25) return '❤‍🔥'
+    if (cardCount >= 20) return '💌'
+    if (cardCount >= 15) return '🎀'
+    if (cardCount >= 10) return '💋'
+    if (cardCount >= 5) return '✨'
+  } else {
+    if (cardCount >= 100) return '❤‍🔥'
+    if (cardCount >= 70) return '💘'
+    if (cardCount >= 55) return '❣'
+    if (cardCount >= 40) return '💞'
+    if (cardCount >= 25) return '❤'
+    if (cardCount >= 5) return '✨'
+  }
+
   if (returnFalseInsteadOfNothing) return false
   return ''
 }
