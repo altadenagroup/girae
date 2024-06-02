@@ -2,8 +2,8 @@ import { Card, ProfileBackground, ProfileSticker, User, UserCard, UserProfile } 
 import { User as TelegramUser } from 'telegraf/types'
 import { cachedGetUserPhotoAndFile, getAvatarURL } from '../utilities/telegram.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { getUserCardsCount } from '../utilities/engine/users.js'
-import { MISSING_CARD_IMG } from '../constants.js'
+import { getHowManyCardsUserHas, getUserCardsCount } from '../utilities/engine/users.js'
+import { MISSING_CARD_IMG, cativeiroEmoji } from '../constants.js'
 import { getCardByID } from '../utilities/engine/cards.js'
 
 const rarityIdToName = {
@@ -25,9 +25,15 @@ export class Ditto {
   }, favoriteCard: Card | null, tgUser: TelegramUser, applyPreviewOverlay: boolean = false) {
     const file = await cachedGetUserPhotoAndFile(tgUser!.id)
     const avatarURL = getAvatarURL(file)
+    let customCardEmoji
 
     if (!favoriteCard && completeUserData.favoriteCardId) {
       favoriteCard = await getCardByID(completeUserData.favoriteCard?.cardId)
+    }
+
+    if (favoriteCard) {
+      const count = await getHowManyCardsUserHas(userD.id, favoriteCard.id)
+      customCardEmoji = cativeiroEmoji(count, true)
     }
 
     let badges: string[] = []
@@ -37,6 +43,7 @@ export class Ditto {
     if (completeUserData?.badgeEmojis.length > 0) badges = [...badges, ...completeUserData.badgeEmojis]
     // remove duplicates
     badges = [...new Set(badges)]
+    if (completeUserData.hideProfileEmojis) badges = []
 
     const data = {
       avatarURL,
@@ -52,7 +59,10 @@ export class Ditto {
       position: 1,
       badgeEmojis: badges,
       totalCards: await getUserCardsCount(userD.id),
-      stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, false)
+      stickerURL: completeUserData?.stickers?.image && parseImageString(completeUserData?.stickers?.image!, false),
+      favoriteCardEmoji: customCardEmoji || undefined,
+      favoriteCardColor: completeUserData.favoriteCardColor || undefined,
+      favoriteCardDisableEmojis: completeUserData.hideCardEmojis
     }
 
     return _brklyn.generateImage('user_profile', data, { applyPreviewOverlay })

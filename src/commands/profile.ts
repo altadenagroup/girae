@@ -11,10 +11,12 @@ export default async (ctx: BotContext) => {
     const text = `<b>🖼 Como editar o perfil?</b>
 
 /fav - define sua carta favorita (exemplo: <code>/fav ningning</code>)
+/fav cor - define a cor que aparece atrás do seu card favorito (exemplo: <code>/fav cor #ff0000</code>)
 /bio - define sua biografia (exemplo: <code>/bio eu amo a ningning</code>)
 /color - define sua cor favorita (exemplo: <code>/color #ff0000</code>)
 /ppc remove bg - aplica o papel de parede padrão ao seu perfil (exemplo: <code>/ppc remove bg</code>)
 /ppc remove sticker - remove qualquer sticker do seu perfil (exemplo: <code>/ppc remove sticker</code>)
+/ppc emojis off - esconde os emojis de VIP e outros do seu perfil (exemplo: <code>/ppc emojis off</code>)
 
 💭 Remover stickers e papéis de parede não os deletam. Você poderá reequipá-los normalmente depois.`
     return ctx.replyWithHTML(text)
@@ -28,7 +30,16 @@ export default async (ctx: BotContext) => {
     } else {
       return ctx.reply('Comando inválido. 😔')
     }
+  } else if (ctx.args[0]?.startsWith?.('emo')) {
+    if (ctx.args[1] === 'off') {
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.userData.id }, data: { hideProfileEmojis: true } })
+      return ctx.reply('Emojis de VIP e outros escondidos com sucesso! 🎨')
+    } else {
+      await _brklyn.db.userProfile.update({ where: { userId: ctx.userData.id }, data: { hideProfileEmojis: false } })
+      return ctx.reply('Emojis de VIP e outros ativados com sucesso! 🎨')
+    }
   }
+
 
   const tgUser = await getMentionedTgUser(ctx, ctx.args[0])
   const userD = await getMentionedUser(ctx, ctx.args[0])

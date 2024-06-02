@@ -23,3 +23,13 @@ export const CARD_DELETION_REWARD = {
   3: 500,
   4: 1000
 }
+
+export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) => {
+  if (cardCount >= 25) return '❤‍🔥'
+  if (cardCount >= 20) return '💌'
+  if (cardCount >= 15) return '🎀'
+  if (cardCount >= 10) return '💋'
+  if (cardCount >= 5) return '✨'
+  if (returnFalseInsteadOfNothing) return false
+  return ''
+}

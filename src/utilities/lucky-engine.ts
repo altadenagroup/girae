@@ -154,8 +154,12 @@ export const pickFourRandomSubcategories = async (category: Category): Promise<S
   return result
 }
 
-export const getUserTotalGivenCardAmount = async (user: User, card: Card): Promise<number> => {
-  const baa = await _brklyn.db.userCard.findMany({ where: { userId: user.id, cardId: card.id } })
+export const getUserTotalGivenCardAmount = async (user: User, card: Card | number): Promise<number> => {
+  const cardId = typeof card === 'number' ? card : card.id
+  const cached = await _brklyn.cache.get('userCardCountTot', `${user.id}:${cardId}`)
+  if (cached) return cached
+  const baa = await _brklyn.db.userCard.findMany({ where: { userId: user.id, cardId } })
+  if (baa.length > 0) await _brklyn.cache.setexp('userCardCountTot', `${user.id}:${cardId}`, baa.length, 5 * 60)
   return baa.length
 }
 

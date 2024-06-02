@@ -135,21 +135,25 @@ model ProfileSticker {
 
 // model to store the user's custom profile data (so, favorite color, favorite card, reputation, background, badge, stickers, background, etc)
 model UserProfile {
-  id             Int                @id @default(autoincrement())
-  userId         Int                @unique
-  favoriteColor  String             @default("#01A9DB")
-  favoriteCardId Int?
-  biography      String             @default("Eu ainda não mudei isso com /bio!")
-  reputation     Int                @default(0)
-  backgroundId   Int                @default(1)
-  stickers       ProfileSticker?    @relation(fields: [stickerId], references: [id])
-  stickerId      Int?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @default(now()) @updatedAt
-  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  favoriteCard   UserCard?          @relation(fields: [favoriteCardId], references: [id])
-  background     ProfileBackground? @relation(fields: [backgroundId], references: [id])
-  badgeEmojis    String[]           @default([])
+  id                Int                @id @default(autoincrement())
+  userId            Int                @unique
+  favoriteColor     String             @default("#01A9DB")
+  favoriteCardId    Int?
+  biography         String             @default("Eu ainda não mudei isso com /bio!")
+  reputation        Int                @default(0)
+  backgroundId      Int                @default(1)
+  stickers          ProfileSticker?    @relation(fields: [stickerId], references: [id])
+  stickerId         Int?
+  favoriteCardColor String?
+  hideProfileEmojis Boolean            @default(false)
+  hideCardEmojis    Boolean            @default(false)
+  lastFmUsername    String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCard      UserCard?          @relation(fields: [favoriteCardId], references: [id])
+  background        ProfileBackground? @relation(fields: [backgroundId], references: [id])
+  badgeEmojis       String[]           @default([])
 }
 
 // defines a purchasable item: the marriage ring. can be used to marry two users
