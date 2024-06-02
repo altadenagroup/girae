@@ -91,7 +91,7 @@ class CardPages extends PaginatedScene<UserData> {
 
   async formatCard (userId, card) {
     const count = await getHowManyCardsUserHas(userId, card.card.id)
-    return `${card.card.category?.emoji} ${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> <code>${count}x</code> — <i>${card.card.subcategory?.name}</i>`
+    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> <code>${count}x</code> — ${card.card.category?.emoji} <i>${card.card.subcategory?.name}</i>`
   }
 
   generateFilterAdvise (data) {
