@@ -1,5 +1,6 @@
 import { PaginatedScene, PaginatedSceneData } from '../sessions/paginated-scene.js'
 import { MEDAL_MAP } from '../constants.js'
+import { getHowManyCardsUserHas } from '../utilities/engine/users.js'
 
 interface UserData extends PaginatedSceneData {
   id: number
@@ -88,8 +89,9 @@ class CardPages extends PaginatedScene<UserData> {
     return r
   }
 
-  formatCard (card) {
-    return `${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> ${card.card.category?.emoji} <i>${card.card.subcategory?.name}</i>`
+  async formatCard (userId, card) {
+    const count = await getHowManyCardsUserHas(userId, card.card.id)
+    return `${card.card.category?.emoji} ${MEDAL_MAP[card.card.rarity?.name || 'Comum']} <code>${card.card.id}</code>. <b>${card.card.name}</b> <code>${count}x</code> — <i>${card.card.subcategory?.name}</i>`
   }
 
   generateFilterAdvise (data) {
@@ -116,7 +118,7 @@ class CardPages extends PaginatedScene<UserData> {
 
   async generateText (data): Promise<string> {
     const cards = await this.getCards(data)
-    const texts = cards.map((c) => this.formatCard(c))
+    const texts = await Promise.all(cards.map((card) => this.formatCard(data.id, card)))
 
     return `👤 <code>${data.id}</code>. Cards de <b>${data.name}</b>
 🎲 <code>${data.totalCards}</code> cards no total.
