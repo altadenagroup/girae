@@ -8,7 +8,10 @@ import { warn } from 'melchior'
 
 interface DeleteData {
   card: Card
-  usercardId: number
+  multipleCards: Card[]
+  usercardIds: number[]
+  deletionPhrase: string
+  price: number
 }
 
 const rarityIdToPrice = {
@@ -17,77 +20,127 @@ const rarityIdToPrice = {
   4: ['🎖️ Lendário', 1000]
 }
 
+const BUTTONS = [[
+  { text: '🚮 Confirmar', callback_data: 'mkmdlqwfq' },
+  { text: '❌ Cancelar', callback_data: 'fepkpkp' }
+]]
+
 const firstStep = async (ctx: SessionContext<DeleteData>) => {
   ctx.session.setMessageToBeQuoted(ctx.message?.message_id)
   if (!ctx.session.arguments) {
     ctx.session.steps.leave()
     return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente deletar o card novamente.')
   }
-  ctx.session.data.card = ctx.session.arguments!.card
-  const first = await _brklyn.db.userCard.findFirst({
-    where: {
-      cardId: ctx.session.data.card.id,
-      userId: ctx.userData.id
-    }
-  })
-  if (!first) {
+  const card = ctx.session.arguments!.card
+  const multipleCards = ctx.session.arguments!.multipleCards
+
+  ctx.session.data.card = card
+  ctx.session.data.multipleCards = multipleCards
+
+  let cards
+  let hasCards
+  let missingCards
+  if (card) {
+    const c = await _brklyn.db.userCard.findFirst({
+      where: {
+        cardId: ctx.session.data.card.id,
+        userId: ctx.userData.id
+      },
+      include: {
+        card: true
+      }
+    })
+    cards = c ? [c] : []
+    hasCards = c ? true : false
+  } else {
+    const c = await _brklyn.db.userCard.findMany({
+      where: {
+        cardId: {
+          in: ctx.session.data.multipleCards.map((c) => c.id)
+        },
+        userId: ctx.userData.id
+      },
+      include: {
+        card: true
+      }
+    })
+    cards = c
+    hasCards = c.length > 0
+    missingCards = ctx.session.data.multipleCards.filter((c) => !c)
+  }
+
+  if (!hasCards) {
     ctx.session.steps.leave()
+    if (missingCards) {
+      return ctx.reply(`❌ Você não possui os seguintes cards: ${missingCards.map((c) => c.name).join(', ')}.`)
+    }
     return ctx.reply('❌ Você não possui esse card. Você clicou no botão errado, provavelmente.')
   }
-  ctx.session.data.usercardId = first?.id
+
+  const deletionCards = cards.map((c) => `${rarityIdToPrice[c.card.rarityId][0].split(' ')[0]} <code>${c.card.id}</code>. <b>${c.card.name}</b>`).join('\n')
+  let price = 0
+
+  for (const c of cards) {
+    price += rarityIdToPrice[c.card.rarityId][1]
+  }
+
+  ctx.session.data.usercardIds = cards.map((c) => c.id)
+  ctx.session.data.price = price
   ctx.session.steps.next()
 
-  const img = parseImageString(ctx.session.data.card.image, 'ar_3:4,c_crop')
-  const method = determineMethodToSendMedia(img)
+  const img = ctx.session.data.card?.image ? parseImageString(ctx.session.data.card.image, 'ar_3:4,c_crop') : null
+  const method = img ? determineMethodToSendMedia(img) : null
   const text = `Você está deletando...
 
-🃏 <code>${ctx.session.data.card.id}</code>. <b>${ctx.session.data.card.name}</b>
+${deletionCards}
 
-<b>${rarityIdToPrice[ctx.session.data.card.rarityId][0]}</b>
-💱 Valor que você receberá: ${rarityIdToPrice[ctx.session.data.card.rarityId][1]} moedas
+💱 Valor que você receberá: ${price} moedas
 
-
-❌ Para deletar esse card, digite:
-
-<code>${ctx.session.data.card.name.toLowerCase()}</code>
-
-Para cancelar, digite /cancelar.
+Para confirmar a deleção, clique em <b>🚮 Confirmar</b>, ou;
+cancele clicando em <b>❌ Cancelar</b>.
 `
-  return ctx[method](img, {
+  if (!method) return ctx.replyWithHTML(text, {
+    reply_markup: {
+      inline_keyboard: BUTTONS
+    }
+  }).then((m) => ctx.session.setMainMessage(m.message_id))
+
+  return ctx[method](img!, {
     caption: text,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: BUTTONS
+    }
   }).then((m) => ctx.session.setMainMessage(m.message_id))
 }
 
 const secondStep = async (ctx: SessionContext<DeleteData>) => {
-  // @ts-ignore
-  if (ctx.message?.text?.toLowerCase() === ctx.session.data.card.name.toLowerCase()) {
-    ctx.session.steps.leave()
-
-    const t = await _brklyn.db.userCard.delete({
-      where: {
-        id: ctx.session.data.usercardId
-      }
-    }).catch((e) => {
-      warn('es²', `failed to delete card: ${e.message}`)
-      return false
-    })
-    if (t === false) return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente novamente mais tarde.')
-
-    const money = rarityIdToPrice[ctx.session.data.card.rarityId][1]
-    await addBalance(ctx.userData.id, money)
-    await ctx.session.deleteMainMessage().catch(() => 0)
-    await ctx.replyWithHTML(`👍 <b>${ctx.session.data.card.name}</b> foi deletado com sucesso! Você recebeu <b>${money}</b> moedas.`)
-    return
-    // @ts-ignore
-  } else if (ctx.message?.text?.startsWith?.('/cancel')) {
+  if (ctx.callbackQuery?.data !== 'mkmdlqwfq') {
     ctx.session.steps.leave()
     await ctx.session.deleteSession()
-    await ctx.reply('Operação cancelada.')
-    return
+    await ctx.session.deleteMainMessage().catch(() => 0)
+    return ctx.reply('Operação cancelada.')
   }
 
-  await ctx.reply('❌ Resposta inválida. Digite /cancelar ou o nome do card para ser deletado.').catch(() => 0)
+  ctx.session.steps.leave()
+
+  const t = await _brklyn.db.userCard.deleteMany({
+    where: {
+      id: {
+        in: ctx.session.data.usercardIds
+      }
+    }
+  }).catch((e) => {
+    warn('es²', `failed to delete card: ${e.message}`)
+    return false
+  })
+  if (t === false) return ctx.reply('❌ Ocorreu um erro ao deletar o card. Tente novamente mais tarde.')
+
+  await ctx.session.deleteSession()
+  await addBalance(ctx.userData.id, ctx.session.data.price)
+  await ctx.session.deleteMainMessage().catch(() => 0)
+  await ctx.replyWithHTML(`👍 ${ctx.session.data.usercardIds.length > 1 ? 'Os cards foram deletados' : 'O card foi deletado'} com sucesso! Você recebeu <b>${ctx.session.data.price}</b> moedas.`)
+  return
 }
 
 export default new AdvancedScene('DELETE_CONFIRM', [
@@ -95,4 +148,4 @@ export default new AdvancedScene('DELETE_CONFIRM', [
   firstStep,
   // @ts-ignore
   secondStep
-], ['message'])
+])

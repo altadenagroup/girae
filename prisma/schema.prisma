@@ -77,11 +77,11 @@ model User {
   id                  Int                   @id @default(autoincrement())
   tgId                BigInt                @unique
   isAdmin             Boolean               @default(false)
-  isPremium           Boolean               @default(false)
+  isPremium           Boolean               @default(true)
   isBanned            Boolean               @default(false)
   banMessage          String?
   cards               UserCard[]
-  maximumDraws        Int                   @default(12)
+  maximumDraws        Int                   @default(24)
   usedDraws           Int                   @default(0)
   luckModifier        Float                 @default(0)
   coins               Int                   @default(0)
