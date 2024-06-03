@@ -49,7 +49,7 @@ const generateCardView = async (cardData: any) => {
   if (cardData.tags && tags.length < cardData.tags.length) {
     addText += `\n<b>⚠️ As seguintes tags não existem e serão transformadas em subcategorias secundárias: ${cardData.tags.filter(t => !tags.includes(t)).join(', ')}</b>`
   }
-  if (cardData.image.endsWith('?no_resize')) addText += '\n<b>ℹ️ Esta imagem não será redimensionada.</b>'
+  if (cardData.image?.endsWith?.('?no_resize')) addText += '\n<b>ℹ️ Esta imagem não será redimensionada.</b>'
 
   const isEditing = cardData.id ? `(<i>editando card ${cardData.id}</i>)\n` : ''
   return `${isEditing}<b>Nome:</b> ${cardData.name}\n<b>Subcategoria:</b> ${cardData.subcategory}\n<b>Categoria:</b> ${cardData.category}\n<b>Raridade:</b> ${cardData.rarity}\n<b>Subcategorias secundárias (tags):</b> ${cardData.tags?.join?.(', ')}${addText}`
@@ -312,6 +312,8 @@ export default new Telegraf.Scenes.WizardScene('ADD_CARD_SCENE', async (ctx) => 
   if (!editing) ctx.wizard.state.cardData = { ...cardData, image: imgString }
   // @ts-ignore
   if (ctx.scene.session.state?.noResize) ctx.wizard.state.cardData.image = ctx.wizard.state.cardData.image + '?no_resize'
+  // @ts-ignore
+  cardData.image = ctx.wizard.state.cardData.image
 
   const text = await generateCardView(cardData)
 
