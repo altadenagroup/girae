@@ -1,4 +1,4 @@
-import { DISCOTECA_ID } from '../constants'
+import { DISCOTECA_ID } from '../constants.js'
 import { BotContext } from '../types/context.js'
 
 export default async (ctx: BotContext) => {
