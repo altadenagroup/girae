@@ -13,6 +13,37 @@ export class LastFMController {
     return data.user.playCount
   }
 
+  async getHowManyTimesUserScrobbledArtist (user: string, artist: string) {
+    const cached = await _brklyn.cache.get('fm-user-artist-pc', `${user}:${artist}`)
+    if (cached) return cached
+
+    const data = await this.client.artist.getInfo(artist, { username: user }).catch(() => null)
+    if (!data?.user?.playCount) return 0
+    await _brklyn.cache.setexp('fm-user-artist-pc', `${user}:${artist}`, data.user.playCount, 4 * 60)
+    return data.user.playCount
+  }
+
+  async getHowManyTimesUserScrobbledTrack (user: string, track: string, artist: string) {
+    const cached = await _brklyn.cache.get('fm-user-track-pc', `${user}:${track}:${artist}`)
+    if (cached) return cached
+
+    const data = await this.client.track.getInfo(track, artist, { username: user }).catch(() => null)
+    if (!data?.user?.playCount) return 0
+    await _brklyn.cache.setexp('fm-user-track-pc', `${user}:${track}:${artist}`, data.user.playCount, 4 * 60)
+    return data.user.playCount
+  }
+
+  async getHowManyTimesUserHasScrobbled (type: 'album' | 'artist' | 'track', user: string, name: string, artist: string = '') {
+    switch (type) {
+      case 'album':
+        return this.getHowManyTimesUserScrobbledAlbum(user, name, artist)
+      case 'artist':
+        return this.getHowManyTimesUserScrobbledArtist(user, name)
+      case 'track':
+        return this.getHowManyTimesUserScrobbledTrack(user, name, artist)
+    }
+  }
+
   async getFmUser (user: string) {
     return this.client.user.getInfo(user)
       .catch(() => null)

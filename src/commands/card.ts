@@ -10,7 +10,7 @@ import {
 } from '../utilities/engine/cards.js'
 import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from '../utilities/engine/users.js'
 import { readableNumber } from '../utilities/misc.js'
-import { DISCOTECA_ID, MEDAL_MAP, MISSING_CARD_IMG, cativeiroEmoji } from '../constants.js'
+import { ALBUM_SUBCATEGORIES, ARTIST_CATEGORY_IDS, DISCOTECA_ID, MEDAL_MAP, MISSING_CARD_IMG, TRACK_SUBCATEGORIES, cativeiroEmoji } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 
 interface FullCard extends Card {
@@ -47,6 +47,21 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
   const inCirc = await getHowManyCardsAreThere(char.id)
   const secondNames = await getNamesOfSecondarySubcategories(char.id)
   let extraAlbumText = ''
+
+  if (ALBUM_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername) {
+    const album = await _brklyn.fm.getHowManyTimesUserHasScrobbled('album', ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
+    if (album) extraAlbumText = ` e ${album} scrobble${album === 1 ? '' : 's'} neste álbum`
+  }
+
+  if (TRACK_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername) {
+    const track = await _brklyn.fm.getHowManyTimesUserHasScrobbled('track', ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
+    if (track) extraAlbumText = ` e ${track} scrobble${track === 1 ? '' : 's'} nesta música`
+  }
+
+  if (ARTIST_CATEGORY_IDS.includes(char.categoryId) && ctx.profileData.lastFmUsername) {
+    const artist = await _brklyn.fm.getHowManyTimesUserHasScrobbled('artist', ctx.profileData.lastFmUsername, char.name)
+    if (artist) extraAlbumText = ` e ${artist} scrobble${artist === 1 ? '' : 's'} neste artista`
+  }
 
   if (char.categoryId === DISCOTECA_ID && ctx.profileData.lastFmUsername) {
     const album = await _brklyn.fm.getHowManyTimesUserScrobbledAlbum(ctx.profileData.lastFmUsername, char.name, secondNames[0].name)

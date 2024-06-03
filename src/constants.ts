@@ -49,3 +49,14 @@ export const allowCustomPhoto = (cardCount) =>
   process.env.JANET_VERSION ? cardCount >= 30 : cardCount >= 70
 
 export const DISCOTECA_ID = process.env.JANET_VERSION ? 4 : 17
+
+export const ARTIST_CATEGORY_IDS =
+  process.env.JANET_VERSION
+  ? [1]
+  : [2, 7]
+export const ALBUM_SUBCATEGORIES = process.env.JANET_VERSION
+  ? [86, 84, 78, 70, 66, 61, 54, 42, 41]
+  : [11647, 11650, 11651, 11653, 11654, 11655, 11656, 11722, 11770]
+export const TRACK_SUBCATEGORIES = process.env.JANET_VERSION
+  ? [151]
+  : []
