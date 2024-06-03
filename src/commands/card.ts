@@ -48,14 +48,14 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
   const secondNames = await getNamesOfSecondarySubcategories(char.id)
   let extraAlbumText = ''
 
-  if (ALBUM_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername) {
-    const album = await _brklyn.fm.getHowManyTimesUserHasScrobbled('album', ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
-    if (album) extraAlbumText = ` e ${album} scrobble${album === 1 ? '' : 's'} neste álbum`
-  }
-
-  if (TRACK_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername) {
+  if (TRACK_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername && secondNames.length > 0) {
     const track = await _brklyn.fm.getHowManyTimesUserHasScrobbled('track', ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
     if (track) extraAlbumText = ` e ${track} scrobble${track === 1 ? '' : 's'} nesta música`
+  }
+
+  if (ALBUM_SUBCATEGORIES.includes(char.subcategoryId!) && ctx.profileData.lastFmUsername && !TRACK_SUBCATEGORIES.includes(char.subcategoryId!)) {
+    const album = await _brklyn.fm.getHowManyTimesUserHasScrobbled('album', ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
+    if (album) extraAlbumText = ` e ${album} scrobble${album === 1 ? '' : 's'} neste álbum`
   }
 
   if (ARTIST_CATEGORY_IDS.includes(char.categoryId) && ctx.profileData.lastFmUsername) {
