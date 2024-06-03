@@ -16,9 +16,9 @@ import { S3Storage } from './storage/index.js'
 import { Ditto } from './ditto/index.js'
 import { populateDatabase } from './development/index.js'
 import PaymentSystem from './payments/index.js'
+import { LastFMController } from './fm/index.js'
 
 const { nodeProfilingIntegration } = process.versions.bun ? { nodeProfilingIntegration: null } : await import('@sentry/profiling-node')
-
 
 export const prebuiltPath = (c: string) => process.versions.bun ? c : `./dist${c.replace('.', '')}`
 
@@ -46,6 +46,7 @@ export default class Brooklyn extends Client {
   ditto = new Ditto()
   internalCache: RedisClientType = {} as RedisClientType
   payments = new PaymentSystem()
+  fm = new LastFMController()
 
   constructor (cache: RedisClientType) {
     super(process.env.TELEGRAM_TOKEN!, {

@@ -10,7 +10,7 @@ import {
 } from '../utilities/engine/cards.js'
 import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from '../utilities/engine/users.js'
 import { readableNumber } from '../utilities/misc.js'
-import { MEDAL_MAP, MISSING_CARD_IMG, cativeiroEmoji } from '../constants.js'
+import { DISCOTECA_ID, MEDAL_MAP, MISSING_CARD_IMG, cativeiroEmoji } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 
 interface FullCard extends Card {
@@ -46,6 +46,12 @@ const viewCard = async (ctx: BotContext, char: FullCard) => {
   const userWithCard = await getHowManyUsersHaveCard(char.id)
   const inCirc = await getHowManyCardsAreThere(char.id)
   const secondNames = await getNamesOfSecondarySubcategories(char.id)
+  let extraAlbumText = ''
+
+  if (char.categoryId === DISCOTECA_ID && ctx.profileData.lastFmUsername) {
+    const album = await _brklyn.fm.getHowManyTimesUserScrobbledAlbum(ctx.profileData.lastFmUsername, char.name, secondNames[0].name)
+    if (album) extraAlbumText = ` e ${album} scrobble${album === 1 ? '' : 's'} neste álbum`
+  }
 
   const tagExtra = secondNames.length > 0 ? `\n🔖 ${secondNames.map(t => t.name).join(', ')}` : ''
   const text = `${MEDAL_MAP[char.rarity?.name || 'Comum']} <code>${char.id}</code>. <b>${char.name}</b> ${cativeiroEmoji(repeated)}
@@ -53,7 +59,7 @@ ${char.category?.emoji || '?'} <i>${char.subcategory?.name || '?'}</i>${tagExtra
 
 👨‍👨‍👧‍👧 ${readableNumber(userWithCard)} pessoa${userWithCard === 1 ? '' : 's'} com este card
 📦 ${readableNumber(inCirc)} vez${inCirc === 1 ? '' : 'es'} girado
-👾 ${ctx.from?.first_name} tem ${repeated} card${repeated === 1 ? '' : 's'}`
+👾 ${ctx.from?.first_name} tem ${repeated} card${repeated === 1 ? '' : 's'}${extraAlbumText}`
 
   // check if is currently trading
   let additionOpts = {}

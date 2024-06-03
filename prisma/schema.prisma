@@ -97,6 +97,7 @@ model User {
   UserAchievement     UserAchievement[]
   Donator             Donator[]
   StripeCustomer      StripeCustomer[]
+  ProposedAction      ProposedAction[]
 }
 
 model UserCard {
@@ -313,4 +314,18 @@ model StripeCustomer {
   beta      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum ProposedActionType {
+  CATIVEIRO_CUSTOM_PHOTO
+}
+
+model ProposedAction {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  type      ProposedActionType
+  data      String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @default(now()) @updatedAt
 }
