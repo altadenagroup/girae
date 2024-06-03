@@ -10,3 +10,7 @@ export default async (ctx: BotContext) => {
   const [name, subcategory, _, rarity, artist] = args
   return ctx.scene.enter('ADD_CARD_SCENE', { name, subcategory, category: DISCOTECA_ID, rarity, tags: [artist], noResize: true })
 }
+
+export const info = {
+  guards: ['hasJoinedGroup', 'isAdmin']
+}
