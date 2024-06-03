@@ -17,7 +17,7 @@ interface DeleteData {
 const rarityIdToPrice = {
   1: ['🥉 Comum', 250],
   3: ['🥈 Raro', 500],
-  4: ['🎖️ Lendário', 1000]
+  4: ['🥇 Lendário', 1000]
 }
 
 const BUTTONS = [[
@@ -53,7 +53,7 @@ const firstStep = async (ctx: SessionContext<DeleteData>) => {
     cards = c ? [c] : []
     hasCards = c ? true : false
   } else {
-    const c = await _brklyn.db.userCard.findMany({
+    let c = await _brklyn.db.userCard.findMany({
       where: {
         cardId: {
           in: ctx.session.data.multipleCards.map((c) => c.id)
@@ -64,6 +64,20 @@ const firstStep = async (ctx: SessionContext<DeleteData>) => {
         card: true
       }
     })
+    // only one card per id, unless the multipleCards has multiple cards with the same id
+    for (const card of new Set(ctx.session.data.multipleCards)) {
+      // TODO: refactor this, it's too late at night n my brain isnt working as it should
+      let cardCount = ctx.session.data.multipleCards.filter((c) => c.id === card.id).length
+      // if cardCount is 1 but there are 3 cards in c with the same id, remove 2 items
+      if (c.filter((cc) => cc.cardId === card.id).length > cardCount) {
+        const matches = c.filter((cc) => cc.cardId === card.id)
+        c = c.filter((cc) => cc.cardId !== card.id)
+        for (let i = 0; i < cardCount; i++) {
+          c.push(matches[i])
+        }
+      }
+    }
+
     cards = c
     hasCards = c.length > 0
     missingCards = ctx.session.data.multipleCards.filter((c) => !c)
