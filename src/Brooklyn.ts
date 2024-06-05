@@ -88,7 +88,7 @@ export default class Brooklyn extends Client {
   }
 
   async notifyBotReboot () {
-    if (process.env.JANET_VERSION) await this.telegram.sendMessage('-1004245893850', `✅ Bot atualizado. Verificações iniciais completas.`)
+    if (process.env.JANET_VERSION) await this.telegram.sendMessage(-1004245893850, `✅ Bot atualizado. Verificações iniciais completas.`)
   }
   async generateImage (templateKey: string, data: Record<string, any>, addData: any = {}) {
     // if there's no INTERNAL_DITTO_URL, we can't generate images
