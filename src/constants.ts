@@ -45,8 +45,7 @@ export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) =
   return ''
 }
 
-export const allowCustomPhoto = (cardCount) =>
-  process.env.JANET_VERSION ? cardCount >= 30 : cardCount >= 70
+export const ALLOW_CUSTOM_PHOTO = process.env.JANET_VERSION ? 30 : 70
 
 export const DISCOTECA_ID = process.env.JANET_VERSION ? 4 : 17
 
