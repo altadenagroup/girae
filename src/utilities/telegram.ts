@@ -149,7 +149,7 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     respond && await ctx.reply('Não foi possível obter o link da foto.')
     return false
   }
-  const id = generateID(32)
+  const name = generateFileName(photo.mime_type)
   // upload with the correct extension
   let exts = mimeToExtension[photo.mime_type]
   if (!exts && photo.mime_type) {
@@ -157,16 +157,24 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
     return false
   }
   if (!exts) exts = 'jpg'
-  const aa = await _brklyn.images.uploadFileFromUrl(`${id}.${exts}`, link).catch(async (e) => {
+  const aa = await _brklyn.images.uploadFileFromUrl(name, link).catch(async (e) => {
     respond && await ctx.reply('Erro ao fazer upload da imagem. Erro: '+ e.message)
     return false
   })
 
-  info('storage', `uploaded image id ${id}.${exts}`)
+  info('storage', `uploaded image id ${name}`)
 
-  if (aa) return `url:https://s3.girae.altadena.space/${id}.${exts}`
+  if (aa) return `url:${cdnItemURL(name)}`
   else return false
 }
+
+export const generateFileName = (mimetype: string) => {
+  let exts = mimeToExtension[mimetype]
+  if (!exts) exts = 'jpg'
+  return `${generateID(32)}.${exts}`
+}
+
+export const cdnItemURL = (fileName) => `https://s3.girae.altadena.space/${fileName}`
 
 export const getTgUserFromText = async (text: string) => {
   if (text.startsWith('@')) {
