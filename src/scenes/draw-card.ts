@@ -83,7 +83,11 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   ctx.session.data.chosenCategory = cat
-  const subcategories = await getRandomSubcategories(cat.id, 6)
+  const subcategories = await getRandomSubcategories(cat.id, cat.subcategoriesToShow || 6)
+
+  let imgURL = process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-two.mp4' : 'https://altadena.space/assets/girar-two.mp4?c'
+  if (cat.drawCustomImage) imgURL = parseImageString(cat.drawCustomImage, false, true)
+
   const keyboard = subcategories.map((sub, i) => {
     return {
       text: `${NUMBER_EMOJIS[i + 1]}`,
@@ -102,7 +106,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
 
   await ctx.editMessageMedia({
     type: 'animation',
-    media: process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-two.mp4' : 'https://altadena.space/assets/girar-two.mp4?c',
+    media: imgURL,
     caption: `🎲 Escolha uma subcategoria para girar:\n\n${text}`,
     parse_mode: 'HTML'
   }, {
@@ -126,7 +130,7 @@ const thirdStep = async (ctx: SessionContext<DrawData>) => {
   }
 
   if (!ctx.session.data.chosenCategory) {
-    ctx.session.data.chosenCategory = await getCategoryByID(sub.categoryId)
+    ctx.session.data.chosenCategory = await getCategoryByID(sub.categoryId) as Category
   }
 
   if (!await _brklyn.cache.get('is_drawing', ctx.from?.id.toString())) {

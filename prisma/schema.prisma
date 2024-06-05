@@ -25,14 +25,16 @@ model Rarity {
 
 // Category: defines a category of cards. it has a name and a set of tags
 model Category {
-  id            Int           @id @default(autoincrement())
-  name          String        @unique
-  emoji         String        @default("🃏")
-  image         String?
-  subcategories Subcategory[]
-  cards         Card[]
-  ShopItem      ShopItem[]
-  hidden        Boolean       @default(false)
+  id                  Int           @id @default(autoincrement())
+  name                String        @unique
+  emoji               String        @default("🃏")
+  image               String?
+  subcategories       Subcategory[]
+  cards               Card[]
+  ShopItem            ShopItem[]
+  hidden              Boolean       @default(false)
+  subcategoriesToShow Int?
+  drawCustomImage     String?
 }
 
 // Subcategory: defines a subcategory of cards. it has a name and a set of tags

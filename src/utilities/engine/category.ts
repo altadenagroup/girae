@@ -1,3 +1,5 @@
+import { Category } from "@prisma/client"
+
 export const getCategoryByName = async (name: string) => {
   const cached = await _brklyn.cache.get('categories_name', name)
   if (cached) return cached
@@ -43,7 +45,7 @@ export const getAllCategories = async () => {
   return categories
 }
 
-export const getCategoryByID = async (id: number) => {
+export const getCategoryByID = async (id: number): Promise<Category | null> => {
   const cached = await _brklyn.cache.get('categories_id', id.toString())
   if (cached) return cached
 
