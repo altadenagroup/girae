@@ -1,9 +1,10 @@
 import { ALLOW_CUSTOM_PHOTO } from '../constants.js'
 import { BotContext } from '../types/context.js'
-import { getCardByIDSimple, getCardByIDSimple } from '../utilities/engine/cards.js'
+import { getCardByIDSimple } from '../utilities/engine/cards.js'
 import { insertCativeiroPhotoSwitch } from '../utilities/engine/proposed-action.js'
 import { getHowManyCardsUserHas } from '../utilities/engine/users.js'
-import { cdnItemURL, generateFileName, uploadAttachedPhoto } from '../utilities/telegram.js'
+import { parseImageString } from '../utilities/lucky-engine.js'
+import { cdnItemURL, determineMethodToSendMediaNoReply, generateFileName, uploadAttachedPhoto } from '../utilities/telegram.js'
 
 const determineMimeByURLEnding = (url: string) => {
   if (url.endsWith('.gif') || url.endsWith('.gifv')) return 'image/gif'
@@ -52,6 +53,17 @@ export default async (ctx: BotContext) => {
 
   const d = await insertCativeiroPhotoSwitch(ctx.userData.id, card.id, imgString)
 
+  const imgUrl = await parseImageString(imgString, false, true)
+  const method = determineMethodToSendMediaNoReply(imgUrl)
+  await _brklyn.telegram[method](process.env.STAFF_GROUP_ID!, imgUrl, {
+    caption: `📸 <b>${ctx.from.first_name}</b> (<code>${ctx.userData.id}</code>) enviou um vídeo customizado para o card <b>${card.name}</b>!\n\nAprove clicando em <b>✅ Aprovar</b>, ou rejeite usando <b>❌</b>.`,
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '✅ Aprovar', callback_data: d.acceptanceData }, { text: '❌ Rejeitar', callback_data: d.rejectionData }]
+      ]
+    }
+  })
 
   return ctx.replyWithHTML(`✅ Anotado! Minha equipe irá verificar se está tudo certo com seu vídeo e, se estiver, ele será adicionado ao card <b>${card.name}</b>!\nTe informarei na DM se o vídeo foi aprovado ou não.`)
 }

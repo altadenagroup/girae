@@ -49,6 +49,15 @@ export const determineMethodToSendMedia = (link: string) => {
   return 'replyWithPhoto'
 }
 
+export const determineMethodToSendMediaNoReply = (link: string) => {
+  // remove query parameters
+  link = link.split('?')[0]
+  // if it is an animation (.gif, .gifv), use replyWithAnimation
+  if (link.endsWith('.gif') || link.endsWith('.gifv')) return 'sendAnimation'
+  if (link.endsWith('.mp4')) return 'sendVideo'
+  return 'sendPhoto'
+}
+
 export const determineMediaType = (link: string) => {
   // remove query parameters
   link = link.split('?')[0]
