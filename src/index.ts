@@ -47,6 +47,7 @@ if (process.env.LAUNCH_POLLING) {
   await _brklyn.launch(undefined, () => {
     _brklyn.setUpNetworkingFeatures()
     info('giraê', `logged in as @${_brklyn.botInfo!.username}`)
+    return _brklyn.notifyBotReboot()
   })
 } else {
   _brklyn.setUpNetworkingFeatures()
