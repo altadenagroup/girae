@@ -75,7 +75,6 @@ export default async (ctx: BotContext) => {
 }
 
 export const info = {
-  guards: ['isAdmin'],
   aliases: ['upload']
 }
 
