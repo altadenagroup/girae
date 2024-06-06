@@ -16,7 +16,7 @@ export default async (ctx: BotContext) => {
     }
 
     const name = generateFileName(determineMimeByURLEnding(url))
-    const t = await _brklyn.images.uploadFileFromUrl(name, url).catch(async (e) => {
+    const t = await _brklyn.images.uploadFileFromUrl(name, url).catch(async () => {
       return false
     })
 
