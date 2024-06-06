@@ -57,7 +57,7 @@ export default async (ctx: BotContext) => {
   const imgUrl = await parseImageString(imgString, false, true)
   const method = determineMethodToSendMediaNoReply(imgUrl)
   await _brklyn.telegram[method](process.env.STAFF_GROUP_ID!, imgUrl, {
-    caption: `📸 <b>${ctx.from.first_name}</b> (<code>${ctx.userData.id}</code>) enviou um vídeo customizado para o card <b>${card.name}</b>!\n\nAprove clicando em <b>✅ Aprovar</b>, ou rejeite usando <b>❌</b>.`,
+    caption: `📸 <b>${ctx.from.first_name}</b> (<code>${ctx.userData.id}</code>) enviou um vídeo customizado para o card <b>${card.name}</b>!\n\nAprove clicando em <b>✅ Aprovar</b>, ou rejeite usando <b>❌ Rejeitar</b>.`,
     parse_mode: 'HTML',
     reply_markup: {
       inline_keyboard: [
