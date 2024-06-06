@@ -141,7 +141,7 @@ export const uploadAttachedPhoto = async (ctx: BotContext, respond: boolean = tr
   // @ts-ignore
   const photos = ctx.message?.photo || ctx.message?.reply_to_message?.photo
   // @ts-ignore
-  let photo = photos?.[0] ? photos[photos.length - 1] : (ctx.message?.video || null)
+  let photo = photos?.[0] ? photos[photos.length - 1] : (ctx.message?.reply_to_message?.video || null)
   // @ts-ignore
   const doc = ctx.message.document || ctx.message.reply_to_message?.document
   if (onlyDocuments && (!doc || !(doc.mime_type?.startsWith('image') || doc.mime_type?.startsWith('video')))) {
