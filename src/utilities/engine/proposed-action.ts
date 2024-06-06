@@ -6,6 +6,17 @@ interface ProposedActionReturn {
   rejectionData: string
 }
 
+export const userHasPendingPhotoSwitch = async (userID: number): Promise<boolean> => {
+  const data = await _brklyn.db.proposedAction.findFirst({
+    where: {
+      userId: userID,
+      type: 'CATIVEIRO_CUSTOM_PHOTO'
+    }
+  })
+
+  return !!data
+}
+
 export const insertCativeiroPhotoSwitch = async (userID, cardID, imageString): Promise<ProposedActionReturn> => {
   const payload = JSON.stringify({ id: cardID, image: imageString })
   const data = await _brklyn.db.proposedAction.create({

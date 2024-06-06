@@ -2,7 +2,7 @@ import { ALLOW_CUSTOM_PHOTO } from '../constants.js'
 import { tcqc } from '../sessions/tcqc.js'
 import { BotContext } from '../types/context.js'
 import { getCardByIDSimple, updateCardPreferencesImage } from '../utilities/engine/cards.js'
-import { getPhotoSwitch, insertCativeiroPhotoSwitch } from '../utilities/engine/proposed-action.js'
+import { getPhotoSwitch, insertCativeiroPhotoSwitch, userHasPendingPhotoSwitch } from '../utilities/engine/proposed-action.js'
 import { getHowManyCardsUserHas, getUserByID } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { cdnItemURL, determineMethodToSendMediaNoReply, generateFileName, uploadAttachedPhoto } from '../utilities/telegram.js'
@@ -14,6 +14,11 @@ const determineMimeByURLEnding = (url: string) => {
 }
 
 export default async (ctx: BotContext) => {
+  const hasPendingSwitch = await userHasPendingPhotoSwitch(ctx.userData.id)
+  if (hasPendingSwitch) {
+    return ctx.reply('Você já tem um vídeo customizado em análise! Aguarde a aprovação ou rejeição do vídeo anterior para enviar outro.')
+  }
+
   const cardID = ctx.args[0]
   if (!cardID || isNaN(parseInt(cardID))) {
     return ctx.replyWithHTML('Você precisa especificar o ID do card que você deseja editar a imagem.\n\nUse <code>/uploadvid id</code> ou <code>/uploadvid id url</code>.')
