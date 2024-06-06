@@ -5,7 +5,7 @@ import { getCardByIDSimple, updateCardPreferencesImage } from '../utilities/engi
 import { getPhotoSwitch, insertCativeiroPhotoSwitch, userHasPendingPhotoSwitch } from '../utilities/engine/proposed-action.js'
 import { getHowManyCardsUserHas, getUserByID } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
-import { cdnItemURL, determineMethodToSendMediaNoReply, generateFileName, uploadAttachedPhoto } from '../utilities/telegram.js'
+import { cdnItemURL, determineMethodToSendMediaNoReply, generateFileName, getUserFromNamekeeper, uploadAttachedPhoto } from '../utilities/telegram.js'
 
 const determineMimeByURLEnding = (url: string) => {
   if (url.endsWith('.gif') || url.endsWith('.gifv')) return 'image/gif'
@@ -82,7 +82,6 @@ export const info = {
 interface CategoryActionCommand {
   id: number
   d: 'yes' | 'no'
-
 }
 
 tcqc.add<CategoryActionCommand>('catpsw', async (ctx) => {
@@ -102,5 +101,8 @@ tcqc.add<CategoryActionCommand>('catpsw', async (ctx) => {
     await ctx.answerCbQuery('Vídeo rejeitado.')
   }
 
+  const us = await getUserFromNamekeeper(user.tgId.toString())
+  await ctx.deleteMessage().catch(() => 0)
   await _brklyn.db.proposedAction.delete({ where: { id } })
+  await _brklyn.telegram.sendMessage(process.env.STAFF_GROUP_ID!, `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> ${d === 'yes' ? 'aprovou' : 'rejeitou'} o vídeo customizado de <a href="tg://user?id=${user.tgId}">${us?.first_name || 'Usuário desconhecido'}</a> para o card ${data.cardID}.`, { parse_mode: 'HTML' })
 })
