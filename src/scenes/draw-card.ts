@@ -6,7 +6,7 @@ import { getAllCategories, getCategoryByID } from '../utilities/engine/category.
 import { getRandomSubcategories, getSubcategoryByID } from '../utilities/engine/subcategories.js'
 import { error, warn } from 'melchior'
 import { drawCard } from '../utilities/engine/cards.js'
-import { MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
+import { ALLOW_CUSTOM_PHOTO, MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
 import { determineMediaType, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
@@ -175,6 +175,8 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
         [{ text: '🎲', url: launchStartURL('delete', card.id.toString()) }]
       ]
     }
+  }).then(() => {
+    if (repeated === ALLOW_CUSTOM_PHOTO) return _brklyn.telegram.sendMessage(ctx.from?.id!, `📸 Você completou 50 cards de <b>${card.name}</b>!`)
   }).catch(async (e) => {
     if (final) return false
     if (e.message.includes('file identifier') && !final) {
