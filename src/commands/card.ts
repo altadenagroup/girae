@@ -6,6 +6,7 @@ import {
   getCardByID,
   getHowManyCardsAreThere,
   getNamesOfSecondarySubcategories,
+  getOrCreteCardPreferences,
   searchCards
 } from '../utilities/engine/cards.js'
 import { getHowManyCardsUserHas, getHowManyUsersHaveCard } from '../utilities/engine/users.js'
@@ -40,7 +41,8 @@ export default async (ctx: BotContext) => {
 }
 
 const viewCard = async (ctx: BotContext, char: FullCard) => {
-  const img = parseImageString(char.image, 'ar_3:4,c_crop')
+  const prefs = await getOrCreteCardPreferences(ctx.userData.id, char.id)
+  const img = parseImageString(prefs.customImage || char.image, 'ar_3:4,c_crop')
 
   const repeated = await getHowManyCardsUserHas(ctx.userData.id, char.id)
   const userWithCard = await getHowManyUsersHaveCard(char.id)

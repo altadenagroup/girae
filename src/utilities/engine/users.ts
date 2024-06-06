@@ -3,6 +3,20 @@ import { debug, warn } from 'melchior'
 import { getAllRarities } from './rarity.js'
 import { getRandomNumber } from '../misc.js'
 
+export const getUserByID = async (id: number): Promise<User | null> => {
+  const cached = await _brklyn.cache.get('user', id.toString())
+  if (cached) return cached
+
+  const user = await _brklyn.db.user.findUnique({
+    where: {
+      id
+    }
+  })
+
+  if (user) await _brklyn.cache.setexp('user', id.toString(), user, 5)
+  return user
+}
+
 // get how many cards a user has
 export const getUserCardsCount = async (userId: number) => {
   const cards = await _brklyn.db.userCard.count({

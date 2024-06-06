@@ -1,8 +1,9 @@
 import { ALLOW_CUSTOM_PHOTO } from '../constants.js'
+import { tcqc } from '../sessions/tcqc.js'
 import { BotContext } from '../types/context.js'
-import { getCardByIDSimple } from '../utilities/engine/cards.js'
-import { insertCativeiroPhotoSwitch } from '../utilities/engine/proposed-action.js'
-import { getHowManyCardsUserHas } from '../utilities/engine/users.js'
+import { getCardByIDSimple, updateCardPreferencesImage } from '../utilities/engine/cards.js'
+import { getPhotoSwitch, insertCativeiroPhotoSwitch } from '../utilities/engine/proposed-action.js'
+import { getHowManyCardsUserHas, getUserByID } from '../utilities/engine/users.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { cdnItemURL, determineMethodToSendMediaNoReply, generateFileName, uploadAttachedPhoto } from '../utilities/telegram.js'
 
@@ -37,7 +38,7 @@ export default async (ctx: BotContext) => {
     }
 
     const name = generateFileName(determineMimeByURLEnding(url))
-    const t = await _brklyn.images.uploadFileFromUrl(name, url).catch(async (e) => {
+    const t = await _brklyn.images.uploadFileFromUrl(name, url).catch(async () => {
       return false
     })
 
@@ -72,3 +73,29 @@ export const info = {
   guards: ['isAdmin'],
   aliases: ['upload']
 }
+
+interface CategoryActionCommand {
+  id: number
+  d: 'yes' | 'no'
+
+}
+
+tcqc.add<CategoryActionCommand>('catpsw', async (ctx) => {
+  const { id, d } = ctx.data
+  const data = await getPhotoSwitch(id)
+  if (!data) return ctx.answerCbQuery('Ação não encontrada. 😔')
+  const user = await getUserByID(data.userID)
+  if (!user) return ctx.answerCbQuery('Usuário não encontrado. 😔')
+
+  if (d === 'yes') {
+    // find user preferences for card id, or create
+    await updateCardPreferencesImage(data.userID, data.cardID, data.imageString)
+    await _brklyn.telegram.sendMessage(user.tgId.toString(), `🎉 Seu vídeo customizado foi aprovado e adicionado ao card! Use /card ${data.cardID} para ver. Aproveite!`).catch(() => 0)
+    await ctx.answerCbQuery('Vídeo aprovado.')
+  } else {
+    await _brklyn.telegram.sendMessage(user.tgId.toString(), `😔 Seu vídeo customizado para o card foi rejeitado. Tente novamente com outro vídeo!`).catch(() => 0)
+    await ctx.answerCbQuery('Vídeo rejeitado.')
+  }
+
+  await _brklyn.db.proposedAction.delete({ where: { id } })
+})

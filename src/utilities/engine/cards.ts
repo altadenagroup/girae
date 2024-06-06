@@ -498,3 +498,48 @@ export const getCardByIDSimple = async (id: number) => {
   if (card) await _brklyn.cache.setexp('cardByIDsim', id.toString(), card, 15)
   return card
 }
+
+export const getOrCreteCardPreferences = async (userId: number, cardId: number) => {
+  const cached = await _brklyn.cache.get('cardPrefs', `${userId}:${cardId}`)
+  if (cached) return cached
+  const prefs = await _brklyn.db.userCardPreferences.findFirst({
+    where: {
+      userId,
+      cardId
+    }
+  })
+
+  if (prefs) {
+    await _brklyn.cache.setexp('cardPrefs', `${userId}:${cardId}`, prefs, 15)
+    return prefs
+  }
+
+  return _brklyn.db.userCardPreferences.create({
+    data: {
+      userId,
+      cardId
+    }
+  })
+}
+
+export const updateCardPreferencesImage = async (userId: number, cardId: number, image: string) => {
+  const t = await _brklyn.db.userCardPreferences.updateMany({
+    where: {
+      userId,
+      cardId
+    },
+    data: {
+      customImage: image
+    }
+  })
+  // if no rows were affected, we'll create a new one
+  if (t.count === 0) {
+    await _brklyn.db.userCardPreferences.create({
+      data: {
+        userId,
+        cardId,
+        customImage: image
+      }
+    })
+  }
+}
