@@ -104,5 +104,5 @@ tcqc.add<CategoryActionCommand>('catpsw', async (ctx) => {
   const us = await getUserFromNamekeeper(user.tgId.toString())
   await ctx.deleteMessage().catch(() => 0)
   await _brklyn.db.proposedAction.delete({ where: { id } })
-  await _brklyn.telegram.sendMessage(process.env.STAFF_GROUP_ID!, `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> ${d === 'yes' ? 'aprovou' : 'rejeitou'} o vídeo customizado de <a href="tg://user?id=${user.tgId}">${us?.first_name || 'Usuário desconhecido'}</a> para o card ${data.cardID}.`, { parse_mode: 'HTML' })
+  await _brklyn.telegram.sendMessage(process.env.STAFF_GROUP_ID!, `#APROVAÇÃO_DE_VÍDEO\n<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> ${d === 'yes' ? 'aprovou' : 'rejeitou'} o vídeo customizado de <a href="tg://user?id=${user.tgId}">${us?.first_name || 'Usuário desconhecido'}</a> para o card ${data.cardID}.`, { parse_mode: 'HTML' })
 })
