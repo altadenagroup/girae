@@ -1,6 +1,6 @@
 import { Card } from '@prisma/client'
 import { PaginatedScene, PaginatedSceneData } from '../sessions/paginated-scene.js'
-import { MEDAL_MAP } from '../constants.js'
+import { MEDAL_MAP, cativeiroEmoji } from '../constants.js'
 
 interface CollectionData extends PaginatedSceneData {
   id: number
@@ -107,7 +107,11 @@ class CollectionPages extends PaginatedScene<CollectionData> {
 
   formatCard (card, data: CollectionData) {
     const userOwnsCard = data.userOwned.filter(uc => uc === card.id).length
-    return `${MEDAL_MAP[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b> ${userOwnsCard > 0 ? `<code>${userOwnsCard}x</code>` : card.category?.emoji}`
+    const begin = `${MEDAL_MAP[card.rarity?.name || 'Comum']} <code>${card.id}</code>. <b>${card.name}</b>`
+    const ending = userOwnsCard > 0 ? `<code>${userOwnsCard}x</code>` : card.category?.emoji
+    const catEmoji = cativeiroEmoji(userOwnsCard, true)
+
+    return `${begin} ${catEmoji ? catEmoji + ' ' : ''}${ending}`
   }
 
   generateFilterAdvise (data: CollectionData) {
