@@ -32,7 +32,6 @@ export const cativeiroEmoji = (cardCount, returnFalseInsteadOfNothing = false) =
     if (cardCount >= 10) return '💋'
     if (cardCount >= 5) return '✨'
   } else {
-    return '' // under maintenance
     if (cardCount >= 100) return '❤‍🔥'
     if (cardCount >= 70) return '💘'
     if (cardCount >= 55) return '❣'
