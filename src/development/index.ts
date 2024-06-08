@@ -24,6 +24,8 @@ export const checkIfDockerIsInstalled = () => {
 }
 
 export const checkIfIsFirstBoot = () => {
+  if (process.env.COLD_RUN) return
+
   // if there's no .env.TELEGRAM_TOKEN, it's development.
   if (!process.env.DATABASE_URL) {
     console.log(rainbow('Boas-vindas à Giraê!'))
