@@ -176,7 +176,7 @@ ${card.category.emoji} <i>${card.subcategory.name}</i>${tagExtra}
       ]
     }
   }).then(() => {
-    if (repeated === ALLOW_CUSTOM_PHOTO) return _brklyn.telegram.sendMessage(ctx.from?.id!, `📸 Você completou 50 cards de <b>${card.name}</b>!`)
+    if (repeated === ALLOW_CUSTOM_PHOTO) return _brklyn.telegram.sendMessage(ctx.from?.id!, `📸 Você completou 50 cards de <b>${card.name}</b>!\n\nAgora, você pode enviar um vídeo customizado para aparecer quando você usar <code>/card ${card.name}</code>!\nBasta enviar o vídeo e responder/quotar a ele com /uploadvid. Divirta-se!`)
   }).catch(async (e) => {
     if (final) return false
     if (e.message.includes('file identifier') && !final) {
