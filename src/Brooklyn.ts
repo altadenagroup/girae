@@ -85,6 +85,14 @@ export default class Brooklyn extends Client {
     this.setUpExitHandler()
     this.setUpSentry()
     this.setUpMainContainerTasks()
+    this.setUpErrorHandler()
+  }
+
+  setUpErrorHandler () {
+    this.catch((e: any) => {
+      error('bot', `an error occurred: ${e.stack}`)
+      Sentry.captureException(e)
+    })
   }
 
   async notifyBotReboot () {
