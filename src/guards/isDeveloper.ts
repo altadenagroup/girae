@@ -1,3 +1,6 @@
-export default (ctx) =>
-  (ctx.update.message.from.id === 6354439429) || (ctx.update.message.from.id === 1889562226)
+export default (ctx) => {
+  let ids = [6354439429, 1889562226]
+  if (!process.env.JANET_VERSION) ids = ids.concat([6657417699, 1381335884])
 
+  return ids.includes(ctx.update.message.from.id)
+}
