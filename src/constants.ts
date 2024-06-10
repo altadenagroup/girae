@@ -66,5 +66,5 @@ export const STAGE_ONE_DRAW_GIF = process.env.JANET_VERSION
   : 'https://altadena.space/assets/girar-one.mp4'
 
 export const STAGE_TWO_DRAW_GIF = process.env.JANET_VERSION
-  ? 'https://s3.girae.altadena.space/LMlsuz22gxOvQDsqbFd3bpjypg2ZYa6u.mp4'
+  ? 'https://s3.girae.altadena.space/XxLe7Xdp31jn8oPsWFsBxU7yEmecWN88.mp4'
   : 'https://altadena.space/assets/girar-two.mp4?c'
