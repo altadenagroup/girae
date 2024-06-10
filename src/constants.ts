@@ -52,9 +52,19 @@ export const ARTIST_CATEGORY_IDS =
   process.env.JANET_VERSION
   ? [1]
   : [2, 7]
+
 export const ALBUM_SUBCATEGORIES = process.env.JANET_VERSION
   ? [86, 84, 78, 70, 66, 61, 54, 42, 41]
   : [11647, 11650, 11651, 11653, 11654, 11655, 11656, 11722, 11770]
+
 export const TRACK_SUBCATEGORIES = process.env.JANET_VERSION
   ? [151]
   : []
+
+export const STAGE_ONE_DRAW_GIF = process.env.JANET_VERSION
+  ? 'https://s3.girae.altadena.space/RsdFhJRwQcFNUeKb2mbEoWGybsUMONBr.mp4'
+  : 'https://altadena.space/assets/girar-one.mp4'
+
+export const STAGE_TWO_DRAW_GIF = process.env.JANET_VERSION
+  ? 'https://s3.girae.altadena.space/LMlsuz22gxOvQDsqbFd3bpjypg2ZYa6u.mp4'
+  : 'https://altadena.space/assets/girar-two.mp4?c'

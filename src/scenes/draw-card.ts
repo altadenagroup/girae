@@ -6,7 +6,7 @@ import { getAllCategories, getCategoryByID } from '../utilities/engine/category.
 import { getRandomSubcategories, getSubcategoryByID } from '../utilities/engine/subcategories.js'
 import { error, warn } from 'melchior'
 import { drawCard } from '../utilities/engine/cards.js'
-import { ALLOW_CUSTOM_PHOTO, MEDAL_MAP, NUMBER_EMOJIS } from '../constants.js'
+import { ALLOW_CUSTOM_PHOTO, MEDAL_MAP, NUMBER_EMOJIS, STAGE_ONE_DRAW_GIF, STAGE_TWO_DRAW_GIF } from '../constants.js'
 import { parseImageString } from '../utilities/lucky-engine.js'
 import { addDraw, deduceDraw, getHowManyCardsUserHas } from '../utilities/engine/users.js'
 import { determineMediaType, generateMessageLink, launchStartURL } from '../utilities/telegram.js'
@@ -50,7 +50,7 @@ const firstStep = async (ctx: SessionContext<DrawData>) => {
 
   await _brklyn.cache.set('is_drawing', ctx.from?.id.toString(), true)
 
-  await ctx.replyWithAnimation(process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-one.mp4?a' : 'https://altadena.space/assets/girar-one.mp4', {
+  await ctx.replyWithAnimation(STAGE_ONE_DRAW_GIF, {
     caption: text,
     parse_mode: 'HTML',
     reply_markup: {
@@ -85,7 +85,7 @@ const secondStep = async (ctx: SessionContext<DrawData>) => {
   ctx.session.data.chosenCategory = cat
   const subcategories = await getRandomSubcategories(cat.id, cat.subcategoriesToShow || 6)
 
-  let imgURL = process.env.JANET_VERSION ? 'https://altadena.space/assets/evil-girar-two.mp4' : 'https://altadena.space/assets/girar-two.mp4?c'
+  let imgURL = STAGE_TWO_DRAW_GIF
   if (cat.drawCustomImage) imgURL = parseImageString(cat.drawCustomImage, false, true)
 
   const keyboard = subcategories.map((sub, i) => {
