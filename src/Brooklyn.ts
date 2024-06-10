@@ -68,10 +68,11 @@ export default class Brooklyn extends Client {
 
     this.internalCache = cache
     this.cache = new BrooklynCacheLayer(cache)
-    this.db = new PrismaClient()
+    // @ts-expect-error
+    this.db = process.env.COLD_RUN && new PrismaClient()
     this.es2 = new SessionManager(this)
 
-    populateDatabase(this.db).then(() => true)
+    !process.env.COLD_RUN && populateDatabase(this.db).then(() => true)
     this.use(middlewareSafety(functionEditing))
     this.use(middlewareSafety(argumentParser))
     this.use(middlewareSafety(userData))
@@ -147,10 +148,6 @@ export default class Brooklyn extends Client {
     return `${fromId}:${chatId}`
   }
 
-  async prelaunch () {
-
-  }
-
   setUpSentry () {
     if (!process.env.SENTRY_DSN) return
 
@@ -182,7 +179,7 @@ export default class Brooklyn extends Client {
   }
 
   private onExit (code: number) {
-    info('bot', `Exiting with code ${code}`)
+    info('bot', `exiting with code ${code}`)
     this.db.$disconnect()
     this.internalCache.quit()
     process.exit(code)
