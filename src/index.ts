@@ -24,7 +24,7 @@ if (process.env.RUN_BETA) {
   process.env.LAUNCH_POLLING = 'true'
 }
 
-const client = createClient({ url: process.env.REDIS_URL })
+const client = process.env.COLD_RUN ? { on: () => 0, connect: () => 0 } : createClient({ url: process.env.REDIS_URL })
 client.on('error', (err) => {
   console.error('An error occurred:', err)
   if (err.message.includes('ECONNREFUSED')) {
