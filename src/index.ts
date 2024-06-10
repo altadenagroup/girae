@@ -35,12 +35,12 @@ client.on('error', (err) => {
 await client.connect()
 
 global._brklyn = new Brooklyn(client as RedisClientType)
-if ((!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) || process.env.COLD_RUN) _brklyn.launchPlugins().then(() => {
-  if (process.env.COLD_RUN) {
-    info('giraê', 'cold run ok')
-    process.exit(0)
-  }
-})
+if ((!process.env.MAIN_CONTAINER && !process.env.LAUNCH_POLLING) || process.env.COLD_RUN) await _brklyn.launchPlugins()
+
+if (process.env.COLD_RUN) {
+  info('giraê', 'cold run ok')
+  process.exit(0)
+}
 
 if (process.env.LAUNCH_POLLING) {
   process.env.RUN_GQL = undefined
