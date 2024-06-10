@@ -1,7 +1,7 @@
 import { LastClient } from '@musicorum/lastfm'
 
 export class LastFMController {
-  client = new LastClient(process.env.FM_API_KEY!)
+  client = new LastClient(process.env.FM_API_KEY || 'placeholder_api_key_haha_handle_this_error')
 
   async getHowManyTimesUserScrobbledAlbum (user: string, album: string, artist: string) {
     const cached = await _brklyn.cache.get('fm-user-album-pc', `${user}:${album}:${artist}`)
