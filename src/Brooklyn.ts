@@ -69,7 +69,7 @@ export default class Brooklyn extends Client {
     this.internalCache = cache
     this.cache = new BrooklynCacheLayer(cache)
     // @ts-expect-error
-    this.db = process.env.COLD_RUN && new PrismaClient()
+    this.db = !process.env.COLD_RUN && new PrismaClient()
     this.es2 = new SessionManager(this)
 
     !process.env.COLD_RUN && populateDatabase(this.db).then(() => true)
